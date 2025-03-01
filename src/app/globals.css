@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@tailwind utilities;
+
+:root {
+  /* Primary colors */
+  --color-primary: #000000;
+  --color-secondary: #333333;
+  --color-accent: #555555;
+  
+  /* Background colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f5f5f5;
+  
+  /* Text colors */
+  --color-text-primary: #000000;
+  --color-text-secondary: #333333;
+  --color-text-light: #555555;
+  --color-text-logo: #cfc3c3;
+  
+  /* Border colors */
+  --color-border: #e0e0e0;
+  
+  /* Button colors */
+  --color-button-primary: #000000;
+  --color-button-hover: #333333;
+  
+  /* Focus ring */
+  --color-focus-ring: #000000;
+}
