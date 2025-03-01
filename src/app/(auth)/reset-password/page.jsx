@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
 
-export default function ResetPassword() {
+// Create a component that uses useSearchParams
+function ResetPasswordForm() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // The rest of your handleSubmit code remains the same
     if (formData.password !== formData.confirmPassword) {
       Swal.fire({
         title: 'Error!',
@@ -133,5 +135,19 @@ export default function ResetPassword() {
         Reset Password
       </button>
     </AuthForm>
+  );
+}
+
+// Loading fallback component
+function LoadingFallback() {
+  return <div className="text-center py-8">Loading...</div>;
+}
+
+// Main component that uses Suspense
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
