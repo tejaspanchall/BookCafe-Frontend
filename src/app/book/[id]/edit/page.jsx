@@ -1,4 +1,5 @@
 'use client';
+
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
@@ -41,7 +42,8 @@ export default function EditBook() {
           headers: { 
             "Accept": "application/json",
             "Authorization": `Bearer ${token}`
-          }
+          },
+          next: { revalidate: 3600 }
         });
 
         if (res.status === 401) {
@@ -83,6 +85,7 @@ export default function EditBook() {
           
           setTimeout(() => {
             logout();
+            router.refresh();
             router.push("/login");
           }, 2000);
         }
@@ -171,6 +174,7 @@ export default function EditBook() {
           description: editedBook.description.trim(),
           image: editedBook.image?.trim() || "",
         }),
+        next: { revalidate: 3600 }
       });
 
       if (res.status === 401) {
@@ -200,6 +204,7 @@ export default function EditBook() {
       if (error.message.includes("session has expired")) {
         setTimeout(() => {
           logout();
+          router.refresh();
           router.push("/login");
         }, 2000);
       }

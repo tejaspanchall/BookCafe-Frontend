@@ -16,7 +16,8 @@ export default function ForgotPassword() {
       const res = await fetch(`${BACKEND}/auth/forgot-password.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
+        next: { revalidate: 3600 }
       });
       
       const data = await res.json();
@@ -27,6 +28,9 @@ export default function ForgotPassword() {
           icon: 'success',
           confirmButtonColor: 'var(--color-button-primary)'
         });
+
+        router.refresh();
+
       } else {
         Swal.fire({
           title: 'Error!',

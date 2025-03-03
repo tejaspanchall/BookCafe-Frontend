@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
@@ -28,7 +29,8 @@ export default function Login() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
+        next: { revalidate: 3600 }
       });
 
       const data = await res.json();
@@ -46,6 +48,7 @@ export default function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       window.dispatchEvent(new Event('loginStateChange'));
+      router.refresh();
       router.push('/catalog');
       
     } catch (error) {

@@ -1,4 +1,5 @@
 'use client';
+
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
@@ -23,6 +24,7 @@ export default function BookDetail() {
       const res = await fetch(`${BACKEND}/books/get-books.php?id=${id}`, {
         credentials: "include",
         headers: { "Accept": "application/json" },
+        next: { revalidate: 3600 }
       });
 
       if (!res.ok) {
@@ -66,6 +68,7 @@ export default function BookDetail() {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
         },
+        next: { revalidate: 3600 }
       });
 
       if (res.status === 401) {
@@ -136,6 +139,7 @@ export default function BookDetail() {
           image: book.image || "",
           description: book.description || "",
         }),
+        next: { revalidate: 3600 }
       });
 
       const responseData = await res.json();
@@ -180,6 +184,7 @@ export default function BookDetail() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: book.id }),
+        next: { revalidate: 3600 }
       });
 
       if (!res.ok) {
@@ -236,6 +241,7 @@ export default function BookDetail() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ id: book.id }),
+        next: { revalidate: 3600 }
       });
 
       if (res.status === 401) {
@@ -258,6 +264,7 @@ export default function BookDetail() {
       });
       
       setTimeout(() => {
+        router.refresh();
         router.push("/catalog");
       }, 1500);
     } catch (error) {
@@ -270,6 +277,7 @@ export default function BookDetail() {
       if (error.message.includes("session has expired")) {
         setTimeout(() => {
           logout();
+          router.refresh();
           router.push("/login");
         }, 2000);
       }

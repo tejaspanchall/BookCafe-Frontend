@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
@@ -53,6 +54,7 @@ export default function AddBook() {
           isbn: book.isbn.trim(),
           author: book.author.trim(),
         }),
+        next: { revalidate: 3600 }
       });
 
       if (!res.ok) {
@@ -68,6 +70,7 @@ export default function AddBook() {
         icon: 'success',
         confirmButtonColor: 'var(--color-button-primary)'
       }).then(() => {
+        router.refresh();
         router.push('/catalog');
       });
     } catch (error) {

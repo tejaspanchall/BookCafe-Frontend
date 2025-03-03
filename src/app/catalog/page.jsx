@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BookCard from '@/components/books/BookCard';
@@ -54,7 +55,8 @@ export default function BookCatalog() {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
-        }
+        },
+        next: { revalidate: 3600 }
       });
       
       if (!res.ok) {
@@ -111,6 +113,7 @@ export default function BookCatalog() {
   }, [filter]);
 
   const handleBookClick = (bookId) => {
+    router.refresh();
     router.push(`/book/${bookId}`);
   };
 

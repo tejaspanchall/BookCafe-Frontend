@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
@@ -54,7 +55,8 @@ export default function Register() {
           email: form.email,
           password: form.password,
           role: form.role
-        })
+        }),
+        next: { revalidate: 3600 }
       });
   
       const data = await res.json();
@@ -66,6 +68,7 @@ export default function Register() {
           icon: 'success',
           confirmButtonColor: 'var(--color-button-primary)'
         }).then(() => {
+          router.refresh();
           router.push('/login');
         });
       } else {

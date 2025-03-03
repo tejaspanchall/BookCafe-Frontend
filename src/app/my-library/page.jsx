@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
@@ -39,6 +40,7 @@ export default function MyLibrary() {
         const token = localStorage.getItem('token');
         
         if (!token) {
+          router.refresh();
           router.push("/login");
           return;
         }
@@ -48,7 +50,8 @@ export default function MyLibrary() {
           headers: {
             "Authorization": `Bearer ${token}`,
             "Accept": "application/json"
-          }
+          },
+          next: { revalidate: 3600 }
         });
 
         const data = await response.json();
@@ -69,12 +72,14 @@ export default function MyLibrary() {
         if (error.message?.includes('token')) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+
+          router.refresh();
+
           router.push("/login");
           return;
         }
         setError(error.message || "Failed to fetch library. Please try again later.");
         
-        // Show SweetAlert2 error notification
         Swal.fire({
           title: 'Error',
           text: error.message || "Failed to fetch library. Please try again later.",
@@ -113,8 +118,6 @@ export default function MyLibrary() {
   }
 
   if (error) {
-    // We'll still render a minimal error state in the UI
-    // but the main error notification is now handled by SweetAlert2
     return (
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         <div className="text-center py-5">

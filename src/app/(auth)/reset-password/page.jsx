@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
 
-// Create a component that uses useSearchParams
 function ResetPasswordForm() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const searchParams = useSearchParams();
@@ -26,7 +25,6 @@ function ResetPasswordForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // The rest of your handleSubmit code remains the same
     if (formData.password !== formData.confirmPassword) {
       Swal.fire({
         title: 'Error!',
@@ -54,7 +52,8 @@ function ResetPasswordForm() {
         body: JSON.stringify({
           token,
           password: formData.password
-        })
+        }),
+        next: { revalidate: 3600 }
       });
       
       const data = await res.json();
@@ -65,6 +64,7 @@ function ResetPasswordForm() {
           icon: 'success',
           confirmButtonColor: 'var(--color-button-primary)'
         }).then(() => {
+          router.refresh();
           router.push('/login');
         });
       } else {
@@ -138,12 +138,10 @@ function ResetPasswordForm() {
   );
 }
 
-// Loading fallback component
 function LoadingFallback() {
   return <div className="text-center py-8">Loading...</div>;
 }
 
-// Main component that uses Suspense
 export default function ResetPassword() {
   return (
     <Suspense fallback={<LoadingFallback />}>
