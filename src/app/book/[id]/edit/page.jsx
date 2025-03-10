@@ -37,13 +37,11 @@ export default function EditBook() {
     const fetchBook = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch(`${BACKEND}/books/get-books.php?id=${id}`, {
-          credentials: "include",
+        const res = await fetch(`${BACKEND}/books/get-books?id=${id}`, {
           headers: { 
             "Accept": "application/json",
             "Authorization": `Bearer ${token}`
-          },
-          next: { revalidate: 3600 }
+          }
         });
 
         if (res.status === 401) {
@@ -55,21 +53,22 @@ export default function EditBook() {
           throw new Error(errorData.error || "Failed to fetch book");
         }
 
-        const text = await res.text();
-        let data;
+        const data = await res.json();
 
-        try {
-          data = text.trim() ? JSON.parse(text) : null;
-        } catch (e) {
-          throw new Error("Invalid response format from server");
-        }
-
-        if (!data) {
+        if (!data || data.status !== 'success') {
           throw new Error("No data received from server");
         }
 
-        setBook(data);
-        setEditedBook({ ...data });
+        const foundBook = Array.isArray(data.books) 
+          ? data.books.find(b => parseInt(b.id) === parseInt(id))
+          : null;
+          
+        if (!foundBook) {
+          throw new Error("Book not found");
+        }
+
+        setBook(foundBook);
+        setEditedBook({ ...foundBook });
       } catch (error) {
         console.error("Fetch error:", error);
         setError(error.message);
@@ -95,7 +94,7 @@ export default function EditBook() {
     };
 
     fetchBook();
-  }, [id, token, isAuthenticated, isTeacher, logout, router.push, BACKEND]);
+  }, [id, token, isAuthenticated, isTeacher, logout, router, BACKEND]);
 
   const validateForm = () => {
     const errors = {};
@@ -136,69 +135,61 @@ export default function EditBook() {
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     
-    if (!isAuthenticated() || !isTeacher()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Access Denied',
-        text: 'You must be a teacher to edit books'
-      });
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
-
-    if (!validateForm()) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'Please check the form for errors'
-      });
-      return;
-    }
-
+    
+    setValidationErrors({});
+    setIsSaving(true);
+    
     try {
-      setIsSaving(true);
-      setError(null);
-
-      const res = await fetch(`${BACKEND}/books/update-book.php`, {
-        method: "POST",
-        credentials: "include",
+      if (!isAuthenticated() || !isTeacher()) {
+        throw new Error("You must be logged in as a teacher to edit books");
+      }
+      
+      const res = await fetch(`${BACKEND}/books/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          id: editedBook.id,
           title: editedBook.title.trim(),
           author: editedBook.author.trim(),
           isbn: editedBook.isbn.trim(),
-          description: editedBook.description.trim(),
-          image: editedBook.image?.trim() || "",
-        }),
-        next: { revalidate: 3600 }
+          description: editedBook.description?.trim() || '',
+          image: editedBook.image?.trim() || ''
+        })
       });
-
+      
       if (res.status === 401) {
         throw new Error("Your session has expired. Please log in again.");
       }
-
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.message || "Failed to update book");
-
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update book");
+      }
+      
       Swal.fire({
         icon: 'success',
         title: 'Success',
-        text: 'Book updated successfully!',
-        timer: 1500,
-        timerProgressBar: true
+        text: 'Book updated successfully',
+        confirmButtonColor: 'var(--color-button-primary)'
+      }).then(() => {
+        router.push(`/book/${id}`);
       });
-      
-      router.push(`/book/${id}`, { state: { successMessage: "Book updated successfully!" } });
     } catch (error) {
-      console.error("Save error:", error);
+      console.error("Update error:", error);
+      
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.message
+        text: error.message,
+        confirmButtonColor: 'var(--color-button-primary)'
       });
       
       if (error.message.includes("session has expired")) {

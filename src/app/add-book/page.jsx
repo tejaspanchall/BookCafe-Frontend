@@ -28,20 +28,24 @@ export default function AddBook() {
         throw new Error('Only teachers can add books');
       }
 
-      const requiredFields = ['title', 'image', 'description', 'isbn', 'author'];
+      const requiredFields = ['title', 'isbn', 'author'];
       for (const field of requiredFields) {
         if (!book[field] || !book[field].trim()) {
           throw new Error(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
         }
       }
 
-      try {
-        new URL(book.image);
-      } catch {
-        throw new Error('Please enter a valid image URL');
+      // Image URL validation is optional since image is nullable in the backend
+      if (book.image) {
+        try {
+          new URL(book.image);
+        } catch {
+          throw new Error('Please enter a valid image URL');
+        }
       }
       
-      const res = await fetch(`${BACKEND}/books/add.php`, {
+      // Updated endpoint to match Laravel API
+      const res = await fetch(`${BACKEND}/books/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +58,6 @@ export default function AddBook() {
           isbn: book.isbn.trim(),
           author: book.author.trim(),
         }),
-        next: { revalidate: 3600 }
       });
 
       if (!res.ok) {
@@ -62,7 +65,7 @@ export default function AddBook() {
         throw new Error(data.error || 'Failed to add book');
       }
 
-      await res.json();
+      const data = await res.json();
       
       Swal.fire({
         title: 'Success!',

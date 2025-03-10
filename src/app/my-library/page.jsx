@@ -45,13 +45,12 @@ export default function MyLibrary() {
           return;
         }
         
-        const response = await fetch(`${BACKEND}/books/get-library.php`, {
+        const response = await fetch(`${BACKEND}/books/get-library`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Accept": "application/json"
-          },
-          next: { revalidate: 3600 }
+          }
         });
 
         const data = await response.json();
@@ -64,7 +63,7 @@ export default function MyLibrary() {
           throw new Error(data.message);
         }
 
-        const books = data.data || [];
+        const books = data.status === 'success' ? data.books : [];
         setAllBooks(books);
         updateDisplayedBooks(books, 1);
       } catch (error) {

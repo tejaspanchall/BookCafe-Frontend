@@ -23,7 +23,7 @@ export default function BookCatalog() {
     if (!imagePath)
       return "https://via.placeholder.com/200x300?text=Book+Cover";
     if (imagePath.startsWith("http")) return imagePath;
-    return `http://localhost${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+    return `${BACKEND}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
   };
 
   const applyFilter = (books) => {
@@ -44,9 +44,11 @@ export default function BookCatalog() {
   const searchBooks = async () => {
     setIsLoading(true);
     try {
-      let url = `${BACKEND}/books/search.php`;
+      let url;
       if (search) {
-        url += `?q=${encodeURIComponent(search)}`;
+        url = `${BACKEND}/books/search?query=${encodeURIComponent(search)}`;
+      } else {
+        url = `${BACKEND}/books/get-books`;
       }
       
       console.log("Fetching from URL:", url);
@@ -55,8 +57,7 @@ export default function BookCatalog() {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
-        },
-        next: { revalidate: 3600 }
+        }
       });
       
       if (!res.ok) {
@@ -68,7 +69,7 @@ export default function BookCatalog() {
       const data = await res.json();
       console.log("API Response:", data);
       
-      const books = Array.isArray(data) ? data : [];
+      const books = data.status === 'success' ? data.books : [];
       const filteredBooks = applyFilter(books);
       setAllBooks(filteredBooks);
 

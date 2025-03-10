@@ -21,10 +21,8 @@ export default function BookDetail() {
   const fetchBook = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${BACKEND}/books/get-books.php?id=${id}`, {
-        credentials: "include",
-        headers: { "Accept": "application/json" },
-        next: { revalidate: 3600 }
+      const res = await fetch(`${BACKEND}/books/get-books?id=${id}`, {
+        headers: { "Accept": "application/json" }
       });
 
       if (!res.ok) {
@@ -32,20 +30,21 @@ export default function BookDetail() {
         throw new Error(errorData.error || "Failed to fetch book");
       }
 
-      const text = await res.text();
-      let data;
+      const data = await res.json();
 
-      try {
-        data = text.trim() ? JSON.parse(text) : null;
-      } catch (e) {
-        throw new Error("Invalid response format from server");
-      }
-
-      if (!data) {
+      if (!data || data.status !== 'success') {
         throw new Error("No data received from server");
       }
 
-      setBook(data);
+      const foundBook = Array.isArray(data.books) 
+        ? data.books.find(b => parseInt(b.id) === parseInt(id))
+        : null;
+        
+      if (!foundBook) {
+        throw new Error("Book not found");
+      }
+
+      setBook(foundBook);
     } catch (error) {
       console.error("Fetch error:", error);
       setError(error.message);
@@ -61,14 +60,12 @@ export default function BookDetail() {
     }
 
     try {
-      const res = await fetch(`${BACKEND}/books/get-library.php`, {
+      const res = await fetch(`${BACKEND}/books/my-library`, {
         method: "GET",
-        credentials: "include",
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
-        },
-        next: { revalidate: 3600 }
+        }
       });
 
       if (res.status === 401) {
@@ -82,8 +79,8 @@ export default function BookDetail() {
 
       const response = await res.json();
 
-      if (response.status === "success" && Array.isArray(response.data)) {
-        const hasBook = response.data.some((book) => parseInt(book.id) === parseInt(id));
+      if (response.status === "success" && Array.isArray(response.books)) {
+        const hasBook = response.books.some((book) => parseInt(book.id) === parseInt(id));
         setInLibrary(hasBook);
       } else {
         setInLibrary(false);
@@ -118,171 +115,150 @@ export default function BookDetail() {
   }, [location]);
 
   const handleAddToLibrary = async () => {
-    try {
-      if (!isAuthenticated() || !token) {
-        throw new Error("You must be logged in to add books to your library");
-      }
+    if (!isAuthenticated() || !token) {
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please log in to add books to your library',
+        icon: 'warning',
+        confirmButtonColor: 'var(--color-button-primary)',
+        confirmButtonText: 'Log In'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/login');
+        }
+      });
+      return;
+    }
 
-      const res = await fetch(`${BACKEND}/books/my-library.php`, {
-        method: "POST",
-        credentials: "include",
+    try {
+      const res = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          id: book.id,
-          isbn: book.isbn || "N/A",
-          title: book.title || "",
-          author: book.author || "",
-          image: book.image || "",
-          description: book.description || "",
-        }),
-        next: { revalidate: 3600 }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
 
-      const responseData = await res.json();
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(responseData.message || "Failed to add book to library");
+        throw new Error(data.error || 'Failed to add book to library');
       }
 
       setInLibrary(true);
       Swal.fire({
+        title: 'Success!',
+        text: 'Book added to your library',
         icon: 'success',
-        title: 'Success',
-        text: responseData.message || "Book added to your library successfully!",
-        timer: 3000,
-        timerProgressBar: true
+        confirmButtonColor: 'var(--color-button-primary)'
       });
-      setError(null);
-
-      fetchLibraryStatus();
     } catch (error) {
-      console.error("Add to library error:", error);
+      console.error('Add to library error:', error);
       Swal.fire({
-        icon: 'error',
         title: 'Error',
-        text: error.message
+        text: error.message || 'Failed to add book to library',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
       });
     }
   };
 
   const handleRemoveFromLibrary = async () => {
-    try {
-      if (!isAuthenticated() || !token) {
-        throw new Error("Authentication required");
-      }
+    if (!isAuthenticated() || !token) {
+      router.push('/login');
+      return;
+    }
 
-      const res = await fetch(`${BACKEND}/books/remove-from-library.php`, {
-        method: "POST",
-        credentials: "include",
+    try {
+      const res = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id: book.id }),
-        next: { revalidate: 3600 }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to remove book from library");
+        throw new Error(data.error || 'Failed to remove book from library');
       }
 
       setInLibrary(false);
       Swal.fire({
+        title: 'Success!',
+        text: 'Book removed from your library',
         icon: 'success',
-        title: 'Success',
-        text: "Book removed from your library",
-        timer: 3000,
-        timerProgressBar: true
+        confirmButtonColor: 'var(--color-button-primary)'
       });
-      setError(null);
     } catch (error) {
+      console.error('Remove from library error:', error);
       Swal.fire({
-        icon: 'error',
         title: 'Error',
-        text: error.message
+        text: error.message || 'Failed to remove book from library',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
       });
     }
   };
 
   const handleDelete = async () => {
+    if (!isAuthenticated() || !isTeacher() || !token) {
+      Swal.fire({
+        title: 'Unauthorized',
+        text: 'Only teachers can delete books',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+      return;
+    }
+
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: "You won't be able to revert this!",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      confirmButtonColor: 'var(--color-button-primary)',
+      cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, delete it!'
     });
 
-    if (!result.isConfirmed) {
-      return;
-    }
-
-    try {
+    if (result.isConfirmed) {
       setIsDeleting(true);
+      try {
+        const res = await fetch(`${BACKEND}/books/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-      if (!isAuthenticated() || !isTeacher()) {
-        throw new Error("You must be logged in as a teacher to delete books");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to delete book');
+        }
+
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Book has been deleted.',
+          icon: 'success',
+          confirmButtonColor: 'var(--color-button-primary)'
+        }).then(() => {
+          router.push('/catalog');
+        });
+      } catch (error) {
+        console.error('Delete error:', error);
+        Swal.fire({
+          title: 'Error',
+          text: error.message || 'Failed to delete book',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+      } finally {
+        setIsDeleting(false);
       }
-
-      const res = await fetch(`${BACKEND}/books/delete-book.php`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id: book.id }),
-        next: { revalidate: 3600 }
-      });
-
-      if (res.status === 401) {
-        throw new Error("Your session has expired. Please log in again.");
-      } else if (res.status === 403) {
-        throw new Error("You don't have permission to delete books.");
-      }
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || errorData.message || "Failed to delete book");
-      }
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Deleted!',
-        text: 'Book deleted successfully',
-        timer: 1500,
-        timerProgressBar: true
-      });
-      
-      setTimeout(() => {
-        router.refresh();
-        router.push("/catalog");
-      }, 1500);
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message
-      });
-      
-      if (error.message.includes("session has expired")) {
-        setTimeout(() => {
-          logout();
-          router.refresh();
-          router.push("/login");
-        }, 2000);
-      }
-    } finally {
-      setIsDeleting(false);
     }
   };
 
