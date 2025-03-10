@@ -45,7 +45,7 @@ export default function Register() {
     }
   
     try {
-      const res = await fetch(`${BACKEND}/auth/register.php`, {
+      const res = await fetch(`${BACKEND}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -56,7 +56,6 @@ export default function Register() {
           password: form.password,
           role: form.role
         }),
-        next: { revalidate: 3600 }
       });
   
       const data = await res.json();
@@ -93,7 +92,7 @@ export default function Register() {
     <AuthForm 
       onSubmit={handleSubmit} 
       title="Register"
-      footerLink={{ to: '/login', text: 'Already have an account? Login' }}
+      footerLink={{ href: '/login', text: 'Already have an account? Login' }}
     >
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -180,4 +179,4 @@ export default function Register() {
       </button>
     </AuthForm>
   );
-}   
+}

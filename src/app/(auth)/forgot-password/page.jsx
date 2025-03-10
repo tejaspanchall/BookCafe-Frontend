@@ -13,18 +13,17 @@ export default function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${BACKEND}/auth/forgot-password.php`, {
+      const res = await fetch(`${BACKEND}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
-        next: { revalidate: 3600 }
       });
       
       const data = await res.json();
       if (res.ok) {
         Swal.fire({
           title: 'Success!',
-          text: 'Reset instructions sent to your email',
+          text: data.message || 'Reset instructions sent to your email',
           icon: 'success',
           confirmButtonColor: 'var(--color-button-primary)'
         });

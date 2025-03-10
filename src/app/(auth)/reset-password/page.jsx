@@ -46,21 +46,20 @@ function ResetPasswordForm() {
     }
 
     try {
-      const res = await fetch(`${BACKEND}/auth/reset-password.php`, {
+      const res = await fetch(`${BACKEND}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
           password: formData.password
         }),
-        next: { revalidate: 3600 }
       });
       
       const data = await res.json();
       if (res.ok) {
         Swal.fire({
           title: 'Success!',
-          text: 'Password reset successful',
+          text: data.message || 'Password reset successful',
           icon: 'success',
           confirmButtonColor: 'var(--color-button-primary)'
         }).then(() => {

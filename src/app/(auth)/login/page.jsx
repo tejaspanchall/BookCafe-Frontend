@@ -25,12 +25,11 @@ export default function Login() {
     }
 
     try {
-      const res = await fetch(`${BACKEND}/auth/login.php`, {
+      const res = await fetch(`${BACKEND}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(form),
-        next: { revalidate: 3600 }
       });
 
       const data = await res.json();
