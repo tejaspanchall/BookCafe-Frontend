@@ -349,10 +349,10 @@ export default function BookDetail() {
               <>
                 {inLibrary ? (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50"
+                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50 hover:bg-red-600"
                     onClick={handleRemoveFromLibrary}
                     disabled={isRemovingFromLibrary}
-                    style={{ backgroundColor: "green", color: "var(--color-bg-primary)" }}
+                    style={{ backgroundColor: "#dc2626", color: "white" }}
                   >
                     {isRemovingFromLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
@@ -362,10 +362,10 @@ export default function BookDetail() {
                   </button>
                 ) : (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50"
+                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50 hover:bg-emerald-600"
                     onClick={handleAddToLibrary}
                     disabled={isAddingToLibrary}
-                    style={{ backgroundColor: "green", color: "var(--color-bg-primary)" }}
+                    style={{ backgroundColor: "#059669", color: "white" }}
                   >
                     {isAddingToLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
@@ -380,26 +380,26 @@ export default function BookDetail() {
             {isLoggedIn && userRole === 'teacher' && (
               <>
                 <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200"
+                  className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-blue-600"
                   onClick={() => router.push(`/book/${book.id}/edit`)}
-                  style={{ backgroundColor: "yellow", color: "var(--color-text-primary)" }}
+                  style={{ backgroundColor: "#2563eb", color: "white" }}
                 >
                   Edit Book
                 </button>
                 <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50"
+                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50 hover:bg-rose-600"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  style={{ backgroundColor: "red", color: "var(--color-bg-primary)" }}
+                  style={{ backgroundColor: "#e11d48", color: "white" }}
                 >
                   {isDeleting ? "Deleting..." : "Delete Book"}
                 </button>
               </>
             )}
             <button
-              className="px-4 py-2 font-medium rounded-lg transition duration-200"
+              className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-gray-600"
               onClick={() => router.back()}
-              style={{ backgroundColor: "var(--color-text-secondary)", color: "var(--color-bg-primary)", borderColor: "var(--color-bg-primary)" }}
+              style={{ backgroundColor: "#4b5563", color: "white" }}
             >
               Back to Catalog
             </button>
