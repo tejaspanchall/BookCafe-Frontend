@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function EditBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -360,14 +361,18 @@ export default function EditBook() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-2 font-medium rounded-lg transition duration-200"
+              className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center"
               style={{ 
                 backgroundColor: "var(--color-button-primary)", 
                 color: "var(--color-bg-primary)",
                 opacity: isSaving ? "0.7" : "1"
               }}
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? (
+                <LoadingSpinner size="w-5 h-5" />
+              ) : (
+                'Save Changes'
+              )}
             </button>
             
             <button

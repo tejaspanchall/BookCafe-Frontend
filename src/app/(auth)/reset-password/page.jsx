@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 function ResetPasswordForm() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -14,6 +15,7 @@ function ResetPasswordForm() {
     confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const token = searchParams.get('token');
 
   useEffect(() => {
@@ -45,6 +47,7 @@ function ResetPasswordForm() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const res = await fetch(`${BACKEND}/auth/reset-password`, {
         method: 'POST',
@@ -81,6 +84,8 @@ function ResetPasswordForm() {
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -129,9 +134,14 @@ function ResetPasswordForm() {
       
       <button 
         type="submit"
-        className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+        className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isLoading}
       >
-        Reset Password
+        {isLoading ? (
+          <LoadingSpinner size="w-5 h-5" />
+        ) : (
+          'Reset Password'
+        )}
       </button>
     </AuthForm>
   );

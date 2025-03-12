@@ -45,7 +45,6 @@ export default function Navbar() {
     window.dispatchEvent(new Event('loginStateChange'));
 
     router.refresh();
-    
     setTimeout(() => router.push('/login'), 50);
   };
 

@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function Login() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +26,7 @@ export default function Login() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const res = await fetch(`${BACKEND}/auth/login`, {
         method: 'POST',
@@ -57,6 +60,8 @@ export default function Login() {
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,8 +102,16 @@ export default function Login() {
         </div>
       </div>
       
-      <button type="submit" className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]">
-        Login
+      <button 
+        type="submit" 
+        className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <LoadingSpinner size="w-5 h-5" />
+        ) : (
+          'Login'
+        )}
       </button>
     </AuthForm>
   );

@@ -1,10 +1,15 @@
 'use client';
 import React from "react";
 
-const BookCard = ({ book, onClick, getImageUrl }) => {
+const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) => {
+  const handleRemove = (e) => {
+    e.stopPropagation();
+    onRemove(book.id);
+  };
+
   return (
     <div
-      className="h-full border-0 overflow-hidden rounded shadow-md cursor-pointer transition duration-300 hover:shadow-lg"
+      className="h-full border-0 overflow-hidden rounded shadow-md cursor-pointer transition duration-300 hover:shadow-lg relative"
       style={{ backgroundColor: 'var(--color-bg-secondary)' }}
       onClick={onClick}
     >
@@ -24,6 +29,20 @@ const BookCard = ({ book, onClick, getImageUrl }) => {
         >
           {book.author}
         </div>
+        {showRemoveButton && (
+          <button
+            onClick={handleRemove}
+            className="absolute top-0 left-0 m-2 w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-200 text-xl font-bold"
+            style={{ 
+              backgroundColor: '#ff0000',
+              color: 'white'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#cc0000'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ff0000'}
+          >
+            ×
+          </button>
+        )}
       </div>
       <div className="p-3">
         <h5 

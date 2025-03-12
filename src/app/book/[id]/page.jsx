@@ -4,19 +4,46 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function BookDetail() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const { id } = useParams();
   const router = useRouter();
-  const { token, user, isAuthenticated, isTeacher, logout, authState } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const [book, setBook] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [inLibrary, setInLibrary] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  const { isAuthenticated: isAuth, isTeacher: isTeach } = authState;
+  const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
+  const [isRemovingFromLibrary, setIsRemovingFromLibrary] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        setIsLoggedIn(true);
+        setUserRole(user.role);
+      } else {
+        setIsLoggedIn(false);
+        setUserRole(null);
+      }
+    };
+
+    checkAuth();
+
+    window.addEventListener('storage', checkAuth);
+    window.addEventListener('loginStateChange', checkAuth);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('loginStateChange', checkAuth);
+    };
+  }, []);
 
   const fetchBook = async () => {
     try {
@@ -54,7 +81,7 @@ export default function BookDetail() {
   };
 
   const fetchLibraryStatus = async () => {
-    if (!isAuthenticated() || !token) {
+    if (!isLoggedIn || !token) {
       setInLibrary(false);
       return;
     }
@@ -96,10 +123,10 @@ export default function BookDetail() {
   }, [id]);
 
   useEffect(() => {
-    if (book && isAuth) {
+    if (book && isLoggedIn) {
       fetchLibraryStatus();
     }
-  }, [book, id, token, isAuth]);
+  }, [book, id, token, isLoggedIn]);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -115,7 +142,7 @@ export default function BookDetail() {
   }, [location]);
 
   const handleAddToLibrary = async () => {
-    if (!isAuthenticated() || !token) {
+    if (!isLoggedIn || !token) {
       Swal.fire({
         title: 'Authentication Required',
         text: 'Please log in to add books to your library',
@@ -130,6 +157,7 @@ export default function BookDetail() {
       return;
     }
 
+    setIsAddingToLibrary(true);
     try {
       const res = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
         method: 'POST',
@@ -160,15 +188,18 @@ export default function BookDetail() {
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
+    } finally {
+      setIsAddingToLibrary(false);
     }
   };
 
   const handleRemoveFromLibrary = async () => {
-    if (!isAuthenticated() || !token) {
+    if (!isLoggedIn || !token) {
       router.push('/login');
       return;
     }
 
+    setIsRemovingFromLibrary(true);
     try {
       const res = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
         method: 'DELETE',
@@ -199,11 +230,13 @@ export default function BookDetail() {
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
+    } finally {
+      setIsRemovingFromLibrary(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!isAuthenticated() || !isTeacher() || !token) {
+    if (!isLoggedIn || userRole !== 'teacher' || !token) {
       Swal.fire({
         title: 'Unauthorized',
         text: 'Only teachers can delete books',
@@ -312,29 +345,39 @@ export default function BookDetail() {
             <p>{book.description}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {isAuth && (
+            {isLoggedIn && (
               <>
                 {inLibrary ? (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200"
+                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50"
                     onClick={handleRemoveFromLibrary}
+                    disabled={isRemovingFromLibrary}
                     style={{ backgroundColor: "green", color: "var(--color-bg-primary)" }}
                   >
-                    Remove from Library
+                    {isRemovingFromLibrary ? (
+                      <LoadingSpinner size="w-5 h-5" />
+                    ) : (
+                      'Remove from Library'
+                    )}
                   </button>
                 ) : (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200"
+                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50"
                     onClick={handleAddToLibrary}
+                    disabled={isAddingToLibrary}
                     style={{ backgroundColor: "green", color: "var(--color-bg-primary)" }}
                   >
-                    Add to Library
+                    {isAddingToLibrary ? (
+                      <LoadingSpinner size="w-5 h-5" />
+                    ) : (
+                      'Add to Library'
+                    )}
                   </button>
                 )}
               </>
             )}
 
-            {isAuth && isTeach && (
+            {isLoggedIn && userRole === 'teacher' && (
               <>
                 <button
                   className="px-4 py-2 font-medium rounded-lg transition duration-200"
@@ -353,14 +396,14 @@ export default function BookDetail() {
                 </button>
               </>
             )}
-      <button
-      className="px-4 py-2 font-medium rounded-lg transition duration-200"
-        onClick={() => router.back()}
-        style={{ backgroundColor: "var(--color-text-secondary)", color: "var(--color-bg-primary)", borderColor: "var(--color-bg-primary)" }}
-      >
-        Back to Catalog
-      </button>
-      </div>
+            <button
+              className="px-4 py-2 font-medium rounded-lg transition duration-200"
+              onClick={() => router.back()}
+              style={{ backgroundColor: "var(--color-text-secondary)", color: "var(--color-bg-primary)", borderColor: "var(--color-bg-primary)" }}
+            >
+              Back to Catalog
+            </button>
+          </div>
         </div>
       </div>
     </div>

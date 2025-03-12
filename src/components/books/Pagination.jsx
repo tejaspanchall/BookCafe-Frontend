@@ -7,13 +7,14 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   return (
     <nav className="flex justify-center mt-4">
       <ul className="flex list-none">
-        <li className={`${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <li>
           <button
             className="px-3 py-2 border rounded-l transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ 
               backgroundColor: 'var(--color-bg-secondary)',
               color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)'
+              borderColor: 'var(--color-border)',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--color-button-hover)', e.currentTarget.style.color = 'var(--color-bg-primary)')}
             onMouseOut={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)', e.currentTarget.style.color = 'var(--color-text-primary)')}
@@ -32,7 +33,8 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
                 backgroundColor: currentPage === page ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
                 color: currentPage === page ? 'var(--color-bg-primary)' : 'var(--color-text-primary)',
                 borderColor: 'var(--color-border)',
-                fontWeight: currentPage === page ? 'bold' : 'normal'
+                fontWeight: currentPage === page ? 'bold' : 'normal',
+                cursor: 'pointer'
               }}
               onMouseOver={(e) => currentPage !== page && (e.currentTarget.style.backgroundColor = 'var(--color-button-hover)', e.currentTarget.style.color = 'var(--color-bg-primary)')}
               onMouseOut={(e) => currentPage !== page && (e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)', e.currentTarget.style.color = 'var(--color-text-primary)')}
@@ -43,13 +45,14 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
           </li>
         ))}
         
-        <li className={`${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <li>
           <button
             className="px-3 py-2 border rounded-r transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ 
               backgroundColor: 'var(--color-bg-secondary)',
               color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)'
+              borderColor: 'var(--color-border)',
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
             }}
             onMouseOver={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--color-button-hover)', e.currentTarget.style.color = 'var(--color-bg-primary)')}
             onMouseOut={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = 'var(--color-bg-secondary)', e.currentTarget.style.color = 'var(--color-text-primary)')}

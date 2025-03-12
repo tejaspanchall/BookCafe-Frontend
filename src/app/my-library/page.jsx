@@ -34,6 +34,52 @@ export default function MyLibrary() {
     setTotalPages(Math.ceil(books.length / BOOKS_PER_PAGE));
   };
 
+  const handleRemoveFromLibrary = async (bookId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        router.refresh();
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(`${BACKEND}/books/${bookId}/remove-from-library`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to remove book from library');
+      }
+
+      // Remove the book from the state
+      const updatedBooks = allBooks.filter(book => book.id !== bookId);
+      setAllBooks(updatedBooks);
+      updateDisplayedBooks(updatedBooks, currentPage);
+
+      Swal.fire({
+        title: 'Success',
+        text: 'Book removed from your library',
+        icon: 'success',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    } catch (error) {
+      console.error("Remove error:", error);
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'Failed to remove book from library',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchMyLibrary = async () => {
       try {
@@ -45,7 +91,7 @@ export default function MyLibrary() {
           return;
         }
         
-        const response = await fetch(`${BACKEND}/books/get-library`, {
+        const response = await fetch(`${BACKEND}/books/my-library`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -202,6 +248,8 @@ export default function MyLibrary() {
                   book={book}
                   onClick={() => router.push(`/book/${book.id}`)}
                   getImageUrl={getImageUrl}
+                  showRemoveButton={true}
+                  onRemove={handleRemoveFromLibrary}
                 />
               </div>
             ))}
