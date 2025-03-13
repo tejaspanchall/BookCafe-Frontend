@@ -318,15 +318,63 @@ export default function BookDetail() {
       </div>
     );
 
+  // Add logging for book data
+  console.log('BookDetail - Book data:', {
+    bookId: book.id,
+    imagePath: book.image,
+    constructedImageUrl: book.image ? `${BACKEND}/storage/${book.image}` : "https://via.placeholder.com/200x300?text=Book+Cover"
+  });
+
+  const getImageUrl = (imagePath) => {
+    console.log('BookDetail - Processing image path:', {
+      originalPath: imagePath,
+      backendUrl: BACKEND
+    });
+
+    if (!imagePath) {
+      console.log('BookDetail - No image path, using placeholder');
+      return "https://via.placeholder.com/200x300?text=Book+Cover";
+    }
+
+    // If it's already a full URL (starts with http:// or https://)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      console.log('BookDetail - Using direct URL:', imagePath);
+      return imagePath;
+    }
+
+    // Remove /api/ from BACKEND URL if it exists
+    const baseUrl = BACKEND.replace('/api', '');
+
+    // For local storage paths, ensure we don't duplicate the 'books' directory
+    const imageName = imagePath.replace(/^books\//, '');
+    const finalUrl = `${baseUrl}/storage/books/${imageName}`;
+    console.log('BookDetail - Constructed storage URL:', {
+      baseUrl,
+      imagePath,
+      imageName,
+      finalUrl
+    });
+    return finalUrl;
+  };
+
   return (
     <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
       <div className="flex flex-col md:flex-row gap-8">
         <div className="md:w-1/3 lg:w-1/4">
           <img
-            src={book.image || "https://via.placeholder.com/200x300?text=Book+Cover"}
+            src={getImageUrl(book.image)}
             alt={book.title}
             className="w-full rounded-lg shadow-md"
             style={{ maxHeight: "100%", maxWidth: "300px", objectFit: "cover" }}
+            onError={(e) => {
+              console.error('BookDetail - Image load error:', {
+                bookId: book.id,
+                imagePath: book.image,
+                constructedUrl: getImageUrl(book.image),
+                error: e.message
+              });
+              e.target.src = "https://via.placeholder.com/200x300?text=Book+Cover";
+            }}
           />
         </div>
         <div className="md:w-2/3 lg:w-3/4">
@@ -349,10 +397,10 @@ export default function BookDetail() {
               <>
                 {inLibrary ? (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50"
+                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50 hover:bg-red-600"
                     onClick={handleRemoveFromLibrary}
                     disabled={isRemovingFromLibrary}
-                    style={{ backgroundColor: "green", color: "var(--color-bg-primary)" }}
+                    style={{ backgroundColor: "#dc2626", color: "white" }}
                   >
                     {isRemovingFromLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
@@ -362,10 +410,10 @@ export default function BookDetail() {
                   </button>
                 ) : (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50"
+                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50 hover:bg-emerald-600"
                     onClick={handleAddToLibrary}
                     disabled={isAddingToLibrary}
-                    style={{ backgroundColor: "green", color: "var(--color-bg-primary)" }}
+                    style={{ backgroundColor: "#059669", color: "white" }}
                   >
                     {isAddingToLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
@@ -380,26 +428,26 @@ export default function BookDetail() {
             {isLoggedIn && userRole === 'teacher' && (
               <>
                 <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200"
+                  className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-blue-600"
                   onClick={() => router.push(`/book/${book.id}/edit`)}
-                  style={{ backgroundColor: "yellow", color: "var(--color-text-primary)" }}
+                  style={{ backgroundColor: "#2563eb", color: "white" }}
                 >
                   Edit Book
                 </button>
                 <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50"
+                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50 hover:bg-rose-600"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  style={{ backgroundColor: "red", color: "var(--color-bg-primary)" }}
+                  style={{ backgroundColor: "#e11d48", color: "white" }}
                 >
                   {isDeleting ? "Deleting..." : "Delete Book"}
                 </button>
               </>
             )}
             <button
-              className="px-4 py-2 font-medium rounded-lg transition duration-200"
+              className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-gray-600"
               onClick={() => router.back()}
-              style={{ backgroundColor: "var(--color-text-secondary)", color: "var(--color-bg-primary)", borderColor: "var(--color-bg-primary)" }}
+              style={{ backgroundColor: "#4b5563", color: "white" }}
             >
               Back to Catalog
             </button>

@@ -17,12 +17,13 @@ export default function EditBook() {
     author: "",
     isbn: "",
     description: "",
-    image: ""
+    image: null
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated() || !isTeacher()) {
@@ -69,7 +70,52 @@ export default function EditBook() {
         }
 
         setBook(foundBook);
-        setEditedBook({ ...foundBook });
+        setEditedBook({ 
+          ...foundBook,
+          image: null // Reset image to null since we'll handle it as a file
+        });
+
+        const getImageUrl = (imagePath) => {
+          console.log('EditBook - Processing image path:', {
+            originalPath: imagePath,
+            backendUrl: BACKEND
+          });
+
+          if (!imagePath) {
+            console.log('EditBook - No image path, using placeholder');
+            return null;
+          }
+
+          // If it's already a full URL (starts with http:// or https://)
+          if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            console.log('EditBook - Using direct URL:', imagePath);
+            return imagePath;
+          }
+
+          // Remove /api/ from BACKEND URL if it exists
+          const baseUrl = BACKEND.replace('/api', '');
+
+          // For local storage paths, ensure we don't duplicate the 'books' directory
+          const imageName = imagePath.replace(/^books\//, '');
+          const finalUrl = `${baseUrl}/storage/books/${imageName}`;
+          console.log('EditBook - Constructed storage URL:', {
+            baseUrl,
+            imagePath,
+            imageName,
+            finalUrl
+          });
+          return finalUrl;
+        };
+
+        // Set the preview URL to the current image if it exists
+        if (foundBook.image) {
+          const previewPath = getImageUrl(foundBook.image);
+          console.log('EditBook - Setting preview URL:', {
+            originalImage: foundBook.image,
+            constructedUrl: previewPath
+          });
+          setPreviewUrl(previewPath);
+        }
       } catch (error) {
         console.error("Fetch error:", error);
         setError(error.message);
@@ -106,21 +152,54 @@ export default function EditBook() {
         errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
       }
     });
-  
-    if (editedBook.image && !isValidURL(editedBook.image)) {
-      errors.image = "Please enter a valid URL";
-    }
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
-  const isValidURL = (string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log('EditBook - New image selected:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      });
+
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        console.warn('EditBook - Image too large:', {
+          fileSize: file.size,
+          maxSize: 2 * 1024 * 1024
+        });
+        Swal.fire({
+          title: 'Error!',
+          text: 'Image size should not exceed 2MB',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+        e.target.value = '';
+        return;
+      }
+
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/jpg'].includes(file.type)) {
+        console.warn('EditBook - Invalid image type:', {
+          fileType: file.type,
+          allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/jpg']
+        });
+        Swal.fire({
+          title: 'Error!',
+          text: 'Please upload a valid image file (JPEG, PNG, GIF)',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+        e.target.value = '';
+        return;
+      }
+
+      setEditedBook({ ...editedBook, image: file });
+      const previewUrl = URL.createObjectURL(file);
+      console.log('EditBook - Preview URL created:', previewUrl);
+      setPreviewUrl(previewUrl);
     }
   };
 
@@ -150,19 +229,22 @@ export default function EditBook() {
         throw new Error("You must be logged in as a teacher to edit books");
       }
       
+      const formData = new FormData();
+      formData.append('title', editedBook.title.trim());
+      formData.append('author', editedBook.author.trim());
+      formData.append('isbn', editedBook.isbn.trim());
+      formData.append('description', editedBook.description?.trim() || '');
+      if (editedBook.image) {
+        formData.append('image', editedBook.image);
+      }
+
       const res = await fetch(`${BACKEND}/books/${id}`, {
-        method: 'PUT',
+        method: 'POST', // Changed to POST since we're using FormData
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-HTTP-Method-Override': 'PUT' // Add this to handle PUT with FormData
         },
-        body: JSON.stringify({
-          title: editedBook.title.trim(),
-          author: editedBook.author.trim(),
-          isbn: editedBook.isbn.trim(),
-          description: editedBook.description?.trim() || '',
-          image: editedBook.image?.trim() || ''
-        })
+        body: formData
       });
       
       if (res.status === 401) {
@@ -208,7 +290,7 @@ export default function EditBook() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-12" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        Loading...
+        <LoadingSpinner />
       </div>
     );
   }
@@ -216,13 +298,14 @@ export default function EditBook() {
   if (error) {
     return (
       <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        <div className="mt-4">
+        <div className="text-center">
+          <p className="text-xl mb-4">{error}</p>
           <button
-            onClick={() => router.push(-1)}
+            onClick={() => router.push('/catalog')}
             className="px-4 py-2 font-medium rounded-lg transition duration-200"
-            style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)", borderWidth: "1px", color: "var(--color-text-primary)" }}
+            style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}
           >
-            Go Back
+            Back to Catalog
           </button>
         </div>
       </div>
@@ -232,14 +315,14 @@ export default function EditBook() {
   if (!book) {
     return (
       <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        Book not found
-        <div className="mt-4">
+        <div className="text-center">
+          <p className="text-xl mb-4">Book not found</p>
           <button
-            onClick={() => router.push(-1)}
+            onClick={() => router.push('/catalog')}
             className="px-4 py-2 font-medium rounded-lg transition duration-200"
-            style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)", borderWidth: "1px", color: "var(--color-text-primary)" }}
+            style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}
           >
-            Go Back
+            Back to Catalog
           </button>
         </div>
       </div>
@@ -247,145 +330,141 @@ export default function EditBook() {
   }
 
   return (
-    <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-      <div className="max-w-2xl mx-auto space-y-4">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--color-text-primary)" }}>Edit Book</h1>
-        
-        <form onSubmit={handleSaveEdit} className="space-y-4">
-          <div>
-            <label htmlFor="title" className="block mb-1" style={{ color: "var(--color-text-secondary)" }}>Title*</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              className="w-full p-3 border rounded-lg"
-              style={{ 
-                backgroundColor: "var(--color-bg-primary)", 
-                color: "var(--color-text-primary)",
-                borderColor: validationErrors.title ? "red" : "var(--color-border)"
-              }}
-              value={editedBook.title || ""}
-              onChange={handleInputChange}
-              placeholder="Book Title"
-            />
-            {validationErrors.title && (
-              <p className="text-sm mt-1" style={{ color: "red" }}>{validationErrors.title}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="author" className="block mb-1" style={{ color: "var(--color-text-secondary)" }}>Author*</label>
-            <input
-              type="text"
-              id="author"
-              name="author"
-              className="w-full p-3 border rounded-lg"
-              style={{ 
-                backgroundColor: "var(--color-bg-primary)", 
-                color: "var(--color-text-primary)",
-                borderColor: validationErrors.author ? "red" : "var(--color-border)"
-              }}
-              value={editedBook.author || ""}
-              onChange={handleInputChange}
-              placeholder="Author"
-            />
-            {validationErrors.author && (
-              <p className="text-sm mt-1" style={{ color: "red" }}>{validationErrors.author}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="isbn" className="block mb-1" style={{ color: "var(--color-text-secondary)" }}>ISBN*</label>
-            <input
-              type="text"
-              id="isbn"
-              name="isbn"
-              className="w-full p-3 border rounded-lg"
-              style={{ 
-                backgroundColor: "var(--color-bg-primary)", 
-                color: "var(--color-text-primary)",
-                borderColor: validationErrors.isbn ? "red" : "var(--color-border)"
-              }}
-              value={editedBook.isbn || ""}
-              onChange={handleInputChange}
-              placeholder="ISBN"
-            />
-            {validationErrors.isbn && (
-              <p className="text-sm mt-1" style={{ color: "red" }}>{validationErrors.isbn}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="image" className="block mb-1" style={{ color: "var(--color-text-secondary)" }}>Image URL</label>
-            <input
-              type="url"
-              id="image"
-              name="image"
-              className="w-full p-3 border rounded-lg"
-              style={{ 
-                backgroundColor: "var(--color-bg-primary)", 
-                color: "var(--color-text-primary)",
-                borderColor: validationErrors.image ? "red" : "var(--color-border)"
-              }}
-              value={editedBook.image || ""}
-              onChange={handleInputChange}
-              placeholder="Image URL"
-            />
-            {validationErrors.image && (
-              <p className="text-sm mt-1" style={{ color: "red" }}>{validationErrors.image}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="description" className="block mb-1" style={{ color: "var(--color-text-secondary)" }}>Description*</label>
-            <textarea
-              id="description"
-              name="description"
-              className="w-full p-3 border rounded-lg"
-              style={{ 
-                backgroundColor: "var(--color-bg-primary)", 
-                color: "var(--color-text-primary)",
-                borderColor: validationErrors.description ? "red" : "var(--color-border)"
-              }}
-              value={editedBook.description || ""}
-              onChange={handleInputChange}
-              placeholder="Book Description"
-              rows="4"
-            />
-            {validationErrors.description && (
-              <p className="text-sm mt-1" style={{ color: "red" }}>{validationErrors.description}</p>
-            )}
-          </div>
+    <div className="container mx-auto py-12 px-4 max-w-2xl" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
+      <h1 className="text-3xl font-bold mb-8 text-center">Edit Book</h1>
+      
+      <form onSubmit={handleSaveEdit} className="space-y-6">
+        <div>
+          <label className="block mb-2">Title</label>
+          <input
+            type="text"
+            name="title"
+            value={editedBook.title}
+            onChange={handleInputChange}
+            className="w-full p-2 rounded border focus:outline-none"
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: validationErrors.title ? "red" : "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
+          {validationErrors.title && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.title}</p>
+          )}
+        </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center"
-              style={{ 
-                backgroundColor: "var(--color-button-primary)", 
-                color: "var(--color-bg-primary)",
-                opacity: isSaving ? "0.7" : "1"
-              }}
-            >
-              {isSaving ? (
-                <LoadingSpinner size="w-5 h-5" />
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => router.push(-1)}
-              className="px-4 py-2 font-medium rounded-lg transition duration-200"
-              style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)", borderWidth: "1px", color: "var(--color-text-primary)" }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
+        <div>
+          <label className="block mb-2">Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full p-2 rounded border focus:outline-none"
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: validationErrors.image ? "red" : "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
+          {validationErrors.image && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.image}</p>
+          )}
+          {previewUrl && (
+            <div className="mt-2">
+              <img 
+                src={previewUrl} 
+                alt="Preview" 
+                className="max-w-full h-auto max-h-48 rounded"
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block mb-2">Description</label>
+          <textarea
+            name="description"
+            value={editedBook.description}
+            onChange={handleInputChange}
+            rows="4"
+            className="w-full p-2 rounded border focus:outline-none"
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: validationErrors.description ? "red" : "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
+          {validationErrors.description && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block mb-2">ISBN</label>
+          <input
+            type="text"
+            name="isbn"
+            value={editedBook.isbn}
+            onChange={handleInputChange}
+            className="w-full p-2 rounded border focus:outline-none"
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: validationErrors.isbn ? "red" : "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
+          {validationErrors.isbn && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.isbn}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block mb-2">Author</label>
+          <input
+            type="text"
+            name="author"
+            value={editedBook.author}
+            onChange={handleInputChange}
+            className="w-full p-2 rounded border focus:outline-none"
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: validationErrors.author ? "red" : "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
+          {validationErrors.author && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.author}</p>
+          )}
+        </div>
+
+        <div className="flex justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex-1 py-2 px-4 rounded transition duration-200"
+            style={{ 
+              backgroundColor: "var(--color-bg-primary)",
+              borderColor: "var(--color-border)",
+              borderWidth: "1px",
+              color: "var(--color-text-primary)"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex-1 py-2 px-4 rounded transition duration-200 disabled:opacity-50"
+            style={{ 
+              backgroundColor: "var(--color-button-primary)",
+              color: "var(--color-bg-primary)"
+            }}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
