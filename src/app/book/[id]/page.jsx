@@ -5,6 +5,8 @@ import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { PlusCircle, DashCircle, PencilSquare, Trash, ArrowLeft } from 'react-bootstrap-icons';
+import Link from 'next/link';
 
 export default function BookDetail() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -363,7 +365,6 @@ export default function BookDetail() {
         <div className="md:w-1/3 lg:w-1/4">
           <img
             src={getImageUrl(book.image)}
-            alt={book.title}
             className="w-full rounded-lg shadow-md"
             style={{ maxHeight: "100%", maxWidth: "300px", objectFit: "cover" }}
             onError={(e) => {
@@ -405,7 +406,7 @@ export default function BookDetail() {
                     {isRemovingFromLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
                     ) : (
-                      'Remove from Library'
+                      <><DashCircle className="mr-2" />Remove from Library</>
                     )}
                   </button>
                 ) : (
@@ -418,7 +419,7 @@ export default function BookDetail() {
                     {isAddingToLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
                     ) : (
-                      'Add to Library'
+                      <><PlusCircle className="mr-2" />Add to Library</>
                     )}
                   </button>
                 )}
@@ -428,28 +429,32 @@ export default function BookDetail() {
             {isLoggedIn && userRole === 'teacher' && (
               <>
                 <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-blue-600"
+                  className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-blue-600 flex items-center"
                   onClick={() => router.push(`/book/${book.id}/edit`)}
                   style={{ backgroundColor: "#2563eb", color: "white" }}
                 >
-                  Edit Book
+                  <PencilSquare className="mr-2" />Edit Book
                 </button>
                 <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50 hover:bg-rose-600"
+                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50 hover:bg-rose-600 flex items-center"
                   onClick={handleDelete}
                   disabled={isDeleting}
                   style={{ backgroundColor: "#e11d48", color: "white" }}
                 >
-                  {isDeleting ? "Deleting..." : "Delete Book"}
+                  {isDeleting ? (
+                    <LoadingSpinner size="w-5 h-5" />
+                  ) : (
+                    <><Trash className="mr-2" />Delete Book</>
+                  )}
                 </button>
               </>
             )}
             <button
-              className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-gray-600"
-              onClick={() => router.back()}
+              className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-gray-600 flex items-center"
+              onClick={() => router.push('/catalog')}
               style={{ backgroundColor: "#4b5563", color: "white" }}
             >
-              Back to Catalog
+              <ArrowLeft className="mr-2" />Back to Catalog
             </button>
           </div>
         </div>
