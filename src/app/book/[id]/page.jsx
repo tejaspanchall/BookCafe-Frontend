@@ -318,15 +318,63 @@ export default function BookDetail() {
       </div>
     );
 
+  // Add logging for book data
+  console.log('BookDetail - Book data:', {
+    bookId: book.id,
+    imagePath: book.image,
+    constructedImageUrl: book.image ? `${BACKEND}/storage/${book.image}` : "https://via.placeholder.com/200x300?text=Book+Cover"
+  });
+
+  const getImageUrl = (imagePath) => {
+    console.log('BookDetail - Processing image path:', {
+      originalPath: imagePath,
+      backendUrl: BACKEND
+    });
+
+    if (!imagePath) {
+      console.log('BookDetail - No image path, using placeholder');
+      return "https://via.placeholder.com/200x300?text=Book+Cover";
+    }
+
+    // If it's already a full URL (starts with http:// or https://)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      console.log('BookDetail - Using direct URL:', imagePath);
+      return imagePath;
+    }
+
+    // Remove /api/ from BACKEND URL if it exists
+    const baseUrl = BACKEND.replace('/api', '');
+
+    // For local storage paths, ensure we don't duplicate the 'books' directory
+    const imageName = imagePath.replace(/^books\//, '');
+    const finalUrl = `${baseUrl}/storage/books/${imageName}`;
+    console.log('BookDetail - Constructed storage URL:', {
+      baseUrl,
+      imagePath,
+      imageName,
+      finalUrl
+    });
+    return finalUrl;
+  };
+
   return (
     <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
       <div className="flex flex-col md:flex-row gap-8">
         <div className="md:w-1/3 lg:w-1/4">
           <img
-            src={book.image || "https://via.placeholder.com/200x300?text=Book+Cover"}
+            src={getImageUrl(book.image)}
             alt={book.title}
             className="w-full rounded-lg shadow-md"
             style={{ maxHeight: "100%", maxWidth: "300px", objectFit: "cover" }}
+            onError={(e) => {
+              console.error('BookDetail - Image load error:', {
+                bookId: book.id,
+                imagePath: book.image,
+                constructedUrl: getImageUrl(book.image),
+                error: e.message
+              });
+              e.target.src = "https://via.placeholder.com/200x300?text=Book+Cover";
+            }}
           />
         </div>
         <div className="md:w-2/3 lg:w-3/4">

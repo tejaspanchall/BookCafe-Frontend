@@ -12,12 +12,43 @@ export default function AddBook() {
   const { token, isTeacher } = useContext(AuthContext);
   const [book, setBook] = useState({
     title: '',
-    image: '',
+    image: null,
     description: '',
     isbn: '',
     author: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        Swal.fire({
+          title: 'Error!',
+          text: 'Image size should not exceed 2MB',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+        e.target.value = '';
+        return;
+      }
+
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/jpg'].includes(file.type)) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Please upload a valid image file (JPEG, PNG, GIF)',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+        e.target.value = '';
+        return;
+      }
+
+      setBook({ ...book, image: file });
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,29 +66,21 @@ export default function AddBook() {
         }
       }
 
-      // Image URL validation is optional since image is nullable in the backend
+      const formData = new FormData();
+      formData.append('title', book.title.trim());
+      formData.append('description', book.description.trim());
+      formData.append('isbn', book.isbn.trim());
+      formData.append('author', book.author.trim());
       if (book.image) {
-        try {
-          new URL(book.image);
-        } catch {
-          throw new Error('Please enter a valid image URL');
-        }
+        formData.append('image', book.image);
       }
       
-      // Updated endpoint to match Laravel API
       const res = await fetch(`${BACKEND}/books/add`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          title: book.title.trim(),
-          image: book.image.trim(),
-          description: book.description.trim(),
-          isbn: book.isbn.trim(),
-          author: book.author.trim(),
-        }),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -111,18 +134,26 @@ export default function AddBook() {
       </div>
       <div className="mb-3">
         <input
-          type="url"
+          type="file"
+          accept="image/*"
           className="w-full p-2 bg-white rounded border focus:outline-none"
           style={{ 
             color: 'var(--color-text-primary)',
             borderColor: 'var(--color-border)',
             borderWidth: '1px',
           }}
-          placeholder="Image URL"
-          value={book.image}
-          onChange={(e) => setBook({ ...book, image: e.target.value })}
-          required
+          onChange={handleImageChange}
         />
+        {previewUrl && (
+          <div className="mt-2">
+            <img 
+              src={previewUrl} 
+              alt="Preview" 
+              className="max-w-full h-auto max-h-48 rounded"
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+        )}
       </div>
       <div className="mb-3">
         <textarea
