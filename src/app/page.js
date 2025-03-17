@@ -79,7 +79,7 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-[rgba(255,255,255,0.1)] p-6 rounded-lg">
-              <p className="italic mb-4">"BookCafe has transformed how I access educational materials. The interface is intuitive and the collection is impressive."</p>
+              <p className="italic mb-4">&quot;BookCafe has transformed how I access educational materials. The interface is intuitive and the collection is impressive.&quot;</p>
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-[var(--color-bg-primary)]"></div>
                 <div className="ml-4">
@@ -90,7 +90,7 @@ export default function Home() {
             </div>
             
             <div className="bg-[rgba(255,255,255,0.1)] p-6 rounded-lg">
-              <p className="italic mb-4">"As an educator, I find BookCafe to be an invaluable resource for both myself and my students. The digital access makes learning accessible to everyone."</p>
+              <p className="italic mb-4">&quot;As an educator, I find BookCafe to be an invaluable resource for both myself and my students. The digital access makes learning accessible to everyone.&quot;</p>
               <div className="flex items-center">
                 <div className="w-10 h-10 rounded-full bg-[var(--color-bg-primary)]"></div>
                 <div className="ml-4">

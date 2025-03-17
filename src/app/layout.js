@@ -6,8 +6,9 @@ import Navbar from '@/components/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'BookCafe',
-  description: 'Educational platform for students and teachers',
+  title: 'BookCafe | Your Digital Educational Library',
+  description: 'BookCafe is an educational platform for students and teachers to discover, read, and learn with our extensive collection of digital books.',
+  keywords: 'books, education, digital library, learning, reading, students, teachers',
 };
 
 export default function RootLayout({ children }) {
