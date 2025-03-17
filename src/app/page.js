@@ -24,15 +24,64 @@ export default function Home() {
           </div>
           <div className="md:w-1/2 flex justify-center">
             <div className="relative w-72 h-72 md:w-80 md:h-80">
-              <div className="absolute transform rotate-6 bg-[var(--color-bg-primary)] rounded-lg shadow-xl p-4 w-56 h-72 md:w-64 md:h-80 z-10">
-                <div className="h-40 md:h-48 bg-[var(--color-bg-secondary)] rounded mb-4"></div>
-                <div className="h-3 md:h-4 bg-[var(--color-text-light)] rounded w-3/4 mb-2"></div>
-                <div className="h-3 md:h-4 bg-[var(--color-text-light)] rounded w-1/2"></div>
+              {/* Front book */}
+              <div className="absolute transform rotate-6 w-56 h-72 md:w-64 md:h-80 z-20">
+                {/* Book spine */}
+                <div className="absolute left-0 top-0 w-6 h-full bg-blue-800 rounded-l-md shadow-inner flex items-center justify-center">
+                  <div className="transform rotate-90 text-white text-xs whitespace-nowrap font-semibold">RANDOM BOOK NAME</div>
+                </div>
+                {/* Book cover */}
+                <div className="absolute left-6 top-0 right-0 bottom-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-r-md shadow-md p-4">
+                  <div className="h-2/3 flex items-center justify-center">
+                    <JournalBookmark className="text-white text-5xl" />
+                  </div>
+                  <div className="h-1/3">
+                    <div className="h-3 bg-white bg-opacity-70 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-white bg-opacity-70 rounded w-1/2"></div>
+                  </div>
+                </div>
+                {/* Book pages */}
+                <div className="absolute left-6 top-0 bottom-0 w-1 bg-white"></div>
               </div>
-              <div className="absolute transform -rotate-6 bg-[var(--color-bg-primary)] rounded-lg shadow-xl p-4 w-56 h-72 md:w-64 md:h-80">
-                <div className="h-40 md:h-48 bg-[var(--color-bg-secondary)] rounded mb-4"></div>
-                <div className="h-3 md:h-4 bg-[var(--color-text-light)] rounded w-3/4 mb-2"></div>
-                <div className="h-3 md:h-4 bg-[var(--color-text-light)] rounded w-1/2"></div>
+              
+              {/* Middle book */}
+              <div className="absolute transform -rotate-6 w-56 h-72 md:w-64 md:h-80 z-10">
+                {/* Book spine */}
+                <div className="absolute left-0 top-0 w-6 h-full bg-amber-800 rounded-l-md shadow-inner flex items-center justify-center">
+                  <div className="transform rotate-90 text-white text-xs whitespace-nowrap font-semibold">CLASSIC FICTION</div>
+                </div>
+                {/* Book cover */}
+                <div className="absolute left-6 top-0 right-0 bottom-0 bg-gradient-to-br from-amber-400 to-red-500 rounded-r-md shadow-md p-4">
+                  <div className="h-2/3 flex items-center justify-center">
+                    <Book className="text-white text-5xl" />
+                  </div>
+                  <div className="h-1/3">
+                    <div className="h-3 bg-white bg-opacity-70 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-white bg-opacity-70 rounded w-1/2"></div>
+                  </div>
+                </div>
+                {/* Book pages */}
+                <div className="absolute left-6 top-0 bottom-0 w-1 bg-white"></div>
+              </div>
+              
+              {/* Back book */}
+              <div className="absolute transform rotate-[-15deg] w-56 h-72 md:w-64 md:h-80 -z-10 left-4">
+                {/* Book spine */}
+                <div className="absolute left-0 top-0 w-6 h-full bg-green-800 rounded-l-md shadow-inner flex items-center justify-center">
+                  <div className="transform rotate-90 text-white text-xs whitespace-nowrap font-semibold">SCIENCE & NATURE</div>
+                </div>
+                {/* Book cover */}
+                <div className="absolute left-6 top-0 right-0 bottom-0 bg-gradient-to-tr from-green-500 to-teal-400 rounded-r-md shadow-md p-4">
+                  <div className="h-2/3 flex items-center justify-center">
+                    <JournalBookmark className="text-white text-5xl" />
+                  </div>
+                  <div className="h-1/3">
+                    <div className="h-3 bg-white bg-opacity-70 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-white bg-opacity-70 rounded w-1/2"></div>
+                  </div>
+                </div>
+                {/* Book pages */}
+                <div className="absolute left-6 top-0 bottom-0 w-1 bg-white"></div>
               </div>
             </div>
           </div>
