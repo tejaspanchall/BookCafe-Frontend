@@ -7,7 +7,6 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
     onRemove(book.id);
   };
 
-  // Add logging for image URL construction
   const imageUrl = getImageUrl(book.image);
   console.log('BookCard - Book details:', {
     bookId: book.id,
@@ -17,7 +16,7 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
 
   return (
     <div
-      className="h-full border-0 overflow-hidden rounded shadow-md cursor-pointer transition duration-300 hover:shadow-lg relative"
+      className="h-full border-0 overflow-hidden rounded shadow-md cursor-pointer transition duration-300 hover:shadow-lg relative max-w-[220px] mx-0"
       style={{ backgroundColor: 'var(--color-bg-secondary)' }}
       onClick={onClick}
     >
@@ -25,7 +24,7 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
         <img
           src={imageUrl}
           alt={book.title}
-          className="w-full h-64 object-cover"
+          className="w-full aspect-[2/3] object-cover"
           loading="lazy"
           onError={(e) => {
             console.error('BookCard - Image load error:', {
@@ -37,7 +36,7 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
           }}
         />
         <div 
-          className="absolute top-0 right-0 m-2 px-2 py-1 rounded text-sm font-medium"
+          className="absolute top-0 right-0 m-2 px-2 py-0.5 rounded text-xs font-medium"
           style={{ 
             backgroundColor: 'var(--color-secondary)',
             color: 'var(--color-bg-primary)'
@@ -48,7 +47,7 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
         {showRemoveButton && (
           <button
             onClick={handleRemove}
-            className="absolute top-0 left-0 m-2 w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-200 text-xl font-bold"
+            className="absolute top-0 left-0 m-2 w-7 h-7 flex items-center justify-center rounded-full transition-colors duration-200 text-lg font-bold"
             style={{ 
               backgroundColor: '#ff0000',
               color: 'white'
@@ -60,13 +59,21 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
           </button>
         )}
       </div>
-      <div className="p-3">
+      <div className="p-2">
         <h5 
-          className="font-bold"
+          className="font-bold text-lg line-clamp-2 mb-1"
           style={{ color: 'var(--color-primary)' }}
         >
           {book.title}
         </h5>
+        <div className="flex justify-between items-center mt-1">
+          <span className="text-xs truncate max-w-[60%]" style={{ color: 'var(--color-text-secondary)' }}>
+            {book.category}
+          </span>
+          <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded-full" style={{ color: 'var(--color-text-secondary)' }}>
+            {book.level}
+          </span>
+        </div>
       </div>
     </div>
   );

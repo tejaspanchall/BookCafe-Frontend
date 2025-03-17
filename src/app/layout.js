@@ -13,6 +13,12 @@ export const metadata = {
   keywords: 'books, education, digital library, learning, reading, students, teachers',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
