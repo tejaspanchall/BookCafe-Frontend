@@ -1,7 +1,12 @@
 @import "tailwindcss";
 @tailwind utilities;
 
+/* Import Geist font variables */
 :root {
+  /* Font variables */
+  --font-geist-sans: 'Geist Sans', sans-serif;
+  --font-geist-mono: 'Geist Mono', monospace;
+  
   /* Primary colors */
   --color-primary: #000000;
   --color-secondary: #333333;
