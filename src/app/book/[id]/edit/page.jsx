@@ -5,6 +5,7 @@ import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { EditBookSkeleton } from '@/components/skeleton';
 
 export default function EditBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -288,49 +289,30 @@ export default function EditBook() {
   };
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-12" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        <LoadingSpinner />
-      </div>
-    );
+    return <EditBookSkeleton />;
   }
   
   if (error) {
     return (
-      <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        <div className="text-center">
-          <p className="text-xl mb-4">{error}</p>
-          <button
-            onClick={() => router.push('/catalog')}
-            className="px-4 py-2 font-medium rounded-lg transition duration-200"
-            style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}
-          >
-            Back to Catalog
-          </button>
-        </div>
+      <div className="max-w-2xl mx-auto p-6 bg-[var(--color-bg-primary)] rounded-lg shadow-md text-center">
+        <h1 className="text-2xl font-bold text-[var(--color-danger)]">Error</h1>
+        <p className="text-[var(--color-text-primary)]">{error}</p>
+        <button 
+          onClick={() => router.push('/catalog')}
+          className="mt-4 px-4 py-2 bg-[var(--color-button-primary)] text-white rounded-md"
+        >
+          Back to Catalog
+        </button>
       </div>
     );
   }
   
   if (!book) {
-    return (
-      <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        <div className="text-center">
-          <p className="text-xl mb-4">Book not found</p>
-          <button
-            onClick={() => router.push('/catalog')}
-            className="px-4 py-2 font-medium rounded-lg transition duration-200"
-            style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}
-          >
-            Back to Catalog
-          </button>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 max-w-2xl" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
+    <div className="max-w-2xl mx-auto p-6 bg-[var(--color-bg-primary)] rounded-lg shadow-md">
       <h1 className="text-3xl font-bold mb-8 text-center">Edit Book</h1>
       
       <form onSubmit={handleSaveEdit} className="space-y-6">

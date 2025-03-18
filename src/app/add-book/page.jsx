@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
 import { AuthContext } from '@/components/context/AuthContext';
+import { AddBookSkeleton } from '@/components/skeleton';
 
 export default function AddBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -112,107 +113,115 @@ export default function AddBook() {
   };
 
   return (
-    <AuthForm
-      onSubmit={handleSubmit}
-      title="Add New Book"
-      footerLink={{ to: '/catalog', text: 'Back to Catalog' }}
-    >
-      <div className="mb-3">
-        <input
-          type="text"
-          className="w-full p-2 bg-white rounded border focus:outline-none"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            borderColor: 'var(--color-border)',
-            borderWidth: '1px',
-          }}
-          placeholder="Title"
-          value={book.title}
-          onChange={(e) => setBook({ ...book, title: e.target.value })}
-          required
-        />
-      </div>
-      <div className="mb-3">
-        <input
-          type="file"
-          accept="image/*"
-          className="w-full p-2 bg-white rounded border focus:outline-none"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            borderColor: 'var(--color-border)',
-            borderWidth: '1px',
-          }}
-          onChange={handleImageChange}
-        />
-        {previewUrl && (
-          <div className="mt-2">
-            <img 
-              src={previewUrl} 
-              alt="Preview" 
-              className="max-w-full h-auto max-h-48 rounded"
-              style={{ objectFit: 'contain' }}
-            />
-          </div>
-        )}
-      </div>
-      <div className="mb-3">
-        <textarea
-          className="w-full p-2 bg-white rounded border focus:outline-none"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            borderColor: 'var(--color-border)',
-            borderWidth: '1px',
-          }}
-          placeholder="Description"
-          value={book.description}
-          onChange={(e) => setBook({ ...book, description: e.target.value })}
-          required
-          rows="4"
-        />
-      </div>
-      <div className="mb-3">
-        <input
-          type="text"
-          className="w-full p-2 bg-white rounded border focus:outline-none"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            borderColor: 'var(--color-border)',
-            borderWidth: '1px',
-          }}
-          placeholder="ISBN"
-          value={book.isbn}
-          onChange={(e) => setBook({ ...book, isbn: e.target.value })}
-          required
-        />
-      </div>
-      <div className="mb-3">
-        <input
-          type="text"
-          className="w-full p-2 bg-white rounded border focus:outline-none"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            borderColor: 'var(--color-border)',
-            borderWidth: '1px',
-          }}
-          placeholder="Author"
-          value={book.author}
-          onChange={(e) => setBook({ ...book, author: e.target.value })}
-          required
-        />
-      </div>
-      <button 
-        type="submit" 
-        className="w-full py-2 rounded transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ 
-          backgroundColor: isLoading ? 'var(--color-text-light)' : 'var(--color-button-primary)',
-          color: 'var(--color-bg-primary)', 
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
-        disabled={isLoading}
-      >
-        {isLoading ? 'Adding Book...' : 'Add Book'}
-      </button>
-    </AuthForm>
+    <>
+      {isLoading ? (
+        <AddBookSkeleton />
+      ) : (
+        <div className="max-w-2xl mx-auto p-6 bg-[var(--color-bg-primary)] rounded-lg shadow-md">
+          <AuthForm
+            onSubmit={handleSubmit}
+            title="Add New Book"
+            footerLink={{ to: '/catalog', text: 'Back to Catalog' }}
+          >
+            <div className="mb-3">
+              <input
+                type="text"
+                className="w-full p-2 bg-white rounded border focus:outline-none"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: '1px',
+                }}
+                placeholder="Title"
+                value={book.title}
+                onChange={(e) => setBook({ ...book, title: e.target.value })}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                type="file"
+                accept="image/*"
+                className="w-full p-2 bg-white rounded border focus:outline-none"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: '1px',
+                }}
+                onChange={handleImageChange}
+              />
+              {previewUrl && (
+                <div className="mt-2">
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    className="max-w-full h-auto max-h-48 rounded"
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="mb-3">
+              <textarea
+                className="w-full p-2 bg-white rounded border focus:outline-none"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: '1px',
+                }}
+                placeholder="Description"
+                value={book.description}
+                onChange={(e) => setBook({ ...book, description: e.target.value })}
+                required
+                rows="4"
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                type="text"
+                className="w-full p-2 bg-white rounded border focus:outline-none"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: '1px',
+                }}
+                placeholder="ISBN"
+                value={book.isbn}
+                onChange={(e) => setBook({ ...book, isbn: e.target.value })}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                type="text"
+                className="w-full p-2 bg-white rounded border focus:outline-none"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: '1px',
+                }}
+                placeholder="Author"
+                value={book.author}
+                onChange={(e) => setBook({ ...book, author: e.target.value })}
+                required
+              />
+            </div>
+            <button 
+              type="submit" 
+              className="w-full py-2 rounded transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                backgroundColor: isLoading ? 'var(--color-text-light)' : 'var(--color-button-primary)',
+                color: 'var(--color-bg-primary)', 
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Adding Book...' : 'Add Book'}
+            </button>
+          </AuthForm>
+        </div>
+      )}
+    </>
   );
 }

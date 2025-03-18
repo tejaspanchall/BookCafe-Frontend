@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import BookCard from '@/components/books/BookCard';
 import Pagination from '@/components/books/Pagination';
+import { CardSkeleton } from '@/components/skeleton';
 
 export default function MyLibrary() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -172,17 +173,13 @@ export default function MyLibrary() {
   if (loading) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        <div className="flex justify-center items-center min-h-[200px]">
-          <div 
-            className="w-12 h-12 border-4 rounded-full animate-spin"
-            style={{ 
-              borderColor: 'var(--color-border)',
-              borderTopColor: 'var(--color-primary)'
-            }}
-          >
-            <span className="sr-only">Loading...</span>
-          </div>
-        </div>
+        <h2 
+          className="text-2xl font-bold mb-4"
+          style={{ color: 'var(--color-text-primary)' }}
+        >
+          My Library
+        </h2>
+        <CardSkeleton count={allBooks.length > 0 ? allBooks.length : 6} />
       </div>
     );
   }

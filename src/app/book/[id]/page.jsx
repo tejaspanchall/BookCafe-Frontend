@@ -5,6 +5,7 @@ import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { BookSkeleton } from '@/components/skeleton';
 import { PlusCircle, DashCircle, PencilSquare, Trash, ArrowLeft } from 'react-bootstrap-icons';
 import Link from 'next/link';
 
@@ -298,11 +299,7 @@ export default function BookDetail() {
   };
 
   if (isLoading)
-    return (
-      <div className="container mx-auto py-12" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        Loading...
-      </div>
-    );
+    return <BookSkeleton />;
     
   if (error)
     return (

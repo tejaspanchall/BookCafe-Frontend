@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import BookCard from '@/components/books/BookCard';
 import Pagination from '@/components/books/Pagination';
 import { Search } from 'react-bootstrap-icons';
+import { CardSkeleton } from '@/components/skeleton';
 
 export default function BookCatalog() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -291,10 +292,7 @@ export default function BookCatalog() {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-t-transparent" style={{ borderColor: "var(--color-accent)" }}></div>
-          <span className="sr-only">Loading...</span>
-        </div>
+        <CardSkeleton count={allBooks.length > 0 ? allBooks.length : 12} />
       ) : displayedBooks.length === 0 ? (
         <div className="text-center mt-8">
           <p style={{ color: "var(--color-text-secondary)" }}>No books found</p>

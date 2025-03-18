@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { FormSkeleton, AuthSkeleton } from '@/components/skeleton';
 
 export default function Login() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -66,53 +67,54 @@ export default function Login() {
   };
 
   return (
-    <AuthForm 
-      onSubmit={handleSubmit} 
-      title="Login" 
-      footerLink={{ href: '/forgot-password', text: 'Forgot Password?' }}
-    >
-      <div className="mb-4">
-        <input
-          type="email"
-          className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
-          placeholder="Email"
-          value={form.email}
-          onChange={e => setForm({...form, email: e.target.value})}
-          required
-        />
-      </div>
+    <>
+      {isLoading ? (
+        <AuthSkeleton />
+      ) : (
+        <AuthForm 
+          onSubmit={handleSubmit} 
+          title="Login" 
+          footerLink={{ href: '/forgot-password', text: 'Forgot Password?' }}
+        >
+          <div className="mb-4">
+            <input
+              type="email"
+              className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+              placeholder="Email"
+              value={form.email}
+              onChange={e => setForm({...form, email: e.target.value})}
+              required
+            />
+          </div>
 
-      <div className="mb-6">
-        <div className="relative">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
-            placeholder="Password"
-            value={form.password}
-            onChange={e => setForm({...form, password: e.target.value})}
-            required
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 px-3 py-2 text-sm text-[var(--color-text-light)] hover:text-[var(--color-text-primary)]"
-            onClick={() => setShowPassword(!showPassword)}
+          <div className="mb-6">
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
+                placeholder="Password"
+                value={form.password}
+                onChange={e => setForm({...form, password: e.target.value})}
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 px-3 py-2 text-sm text-[var(--color-text-light)] hover:text-[var(--color-text-primary)]"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+          
+          <button 
+            type="submit" 
+            className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] flex items-center justify-center"
           >
-            {showPassword ? 'Hide' : 'Show'}
+            Login
           </button>
-        </div>
-      </div>
-      
-      <button 
-        type="submit" 
-        className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <LoadingSpinner size="w-5 h-5" />
-        ) : (
-          'Login'
-        )}
-      </button>
-    </AuthForm>
+        </AuthForm>
+      )}
+    </>
   );
 }
