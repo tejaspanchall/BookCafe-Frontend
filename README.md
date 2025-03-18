@@ -1,4 +1,4 @@
-# Next.js Bookstore Frontend
+# BookCafe Frontend
 
 A modern, responsive bookstore frontend built with Next.js and Tailwind CSS.
 
