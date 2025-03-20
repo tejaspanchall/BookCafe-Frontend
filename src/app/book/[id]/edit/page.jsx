@@ -11,7 +11,7 @@ export default function EditBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const { id } = useParams();
   const router = useRouter();
-  const { token, isAuthenticated, isTeacher, logout } = useContext(AuthContext);
+  const { token, user, authState, logout } = useContext(AuthContext);
   const [book, setBook] = useState(null);
   const [editedBook, setEditedBook] = useState({
     title: "",
@@ -27,11 +27,24 @@ export default function EditBook() {
   const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated() || !isTeacher()) {
+    const currentToken = token || localStorage.getItem('token');
+    const currentUser = user || (() => {
+      try {
+        const stored = localStorage.getItem('user');
+        return stored ? JSON.parse(stored) : null;
+      } catch (e) {
+        return null;
+      }
+    })();
+
+    if (!currentToken || !currentUser || currentUser.role !== 'teacher') {
       Swal.fire({
         icon: 'error',
         title: 'Access Denied',
-        text: 'You must be logged in as a teacher to edit books'
+        text: 'You must be logged in as a teacher to edit books',
+        confirmButtonColor: 'var(--color-button-primary)'
+      }).then(() => {
+        router.push('/login');
       });
       setIsLoading(false);
       return;
@@ -43,7 +56,7 @@ export default function EditBook() {
         const res = await fetch(`${BACKEND}/books/get-books?id=${id}`, {
           headers: { 
             "Accept": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Authorization": `Bearer ${currentToken}`
           }
         });
 
@@ -142,7 +155,7 @@ export default function EditBook() {
     };
 
     fetchBook();
-  }, [id, token, isAuthenticated, isTeacher, logout, router, BACKEND]);
+  }, [id, token, user, router, BACKEND]);
 
   const validateForm = () => {
     const errors = {};
@@ -222,14 +235,32 @@ export default function EditBook() {
       return;
     }
     
+    const currentToken = token || localStorage.getItem('token');
+    const currentUser = user || (() => {
+      try {
+        const stored = localStorage.getItem('user');
+        return stored ? JSON.parse(stored) : null;
+      } catch (e) {
+        return null;
+      }
+    })();
+
+    if (!currentToken || !currentUser || currentUser.role !== 'teacher') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'You must be logged in as a teacher to edit books',
+        confirmButtonColor: 'var(--color-button-primary)'
+      }).then(() => {
+        router.push('/login');
+      });
+      return;
+    }
+    
     setValidationErrors({});
     setIsSaving(true);
     
     try {
-      if (!isAuthenticated() || !isTeacher()) {
-        throw new Error("You must be logged in as a teacher to edit books");
-      }
-      
       const formData = new FormData();
       formData.append('title', editedBook.title.trim());
       formData.append('author', editedBook.author.trim());
@@ -240,10 +271,10 @@ export default function EditBook() {
       }
 
       const res = await fetch(`${BACKEND}/books/${id}`, {
-        method: 'POST', // Changed to POST since we're using FormData
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-HTTP-Method-Override': 'PUT' // Add this to handle PUT with FormData
+          'Authorization': `Bearer ${currentToken}`,
+          'X-HTTP-Method-Override': 'PUT'
         },
         body: formData
       });

@@ -26,14 +26,20 @@ export default function BookDetail() {
 
   useEffect(() => {
     const checkAuth = () => {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
+      if (token && user) {
         setIsLoggedIn(true);
         setUserRole(user.role);
       } else {
-        setIsLoggedIn(false);
-        setUserRole(null);
+        const userData = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
+        if (userData && storedToken) {
+          const parsedUser = JSON.parse(userData);
+          setIsLoggedIn(true);
+          setUserRole(parsedUser.role);
+        } else {
+          setIsLoggedIn(false);
+          setUserRole(null);
+        }
       }
     };
 
@@ -46,7 +52,7 @@ export default function BookDetail() {
       window.removeEventListener('storage', checkAuth);
       window.removeEventListener('loginStateChange', checkAuth);
     };
-  }, []);
+  }, [token, user]);
 
   const fetchBook = async () => {
     try {
@@ -145,7 +151,8 @@ export default function BookDetail() {
   }, [location]);
 
   const handleAddToLibrary = async () => {
-    if (!isLoggedIn || !token) {
+    const currentToken = token || localStorage.getItem('token');
+    if (!isLoggedIn || !currentToken) {
       Swal.fire({
         title: 'Authentication Required',
         text: 'Please log in to add books to your library',
@@ -166,7 +173,7 @@ export default function BookDetail() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${currentToken}`
         }
       });
 
