@@ -7,6 +7,16 @@ import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { EditBookSkeleton } from '@/components/skeleton';
 
+const getStorageValue = (key) => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.error(`Error accessing localStorage for key ${key}:`, e);
+    return null;
+  }
+};
+
 export default function EditBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const { id } = useParams();
@@ -27,10 +37,12 @@ export default function EditBook() {
   const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
-    const currentToken = token || localStorage.getItem('token');
+    if (typeof window === 'undefined') return;
+
+    const currentToken = token || getStorageValue('token');
     const currentUser = user || (() => {
       try {
-        const stored = localStorage.getItem('user');
+        const stored = getStorageValue('user');
         return stored ? JSON.parse(stored) : null;
       } catch (e) {
         return null;
@@ -235,10 +247,10 @@ export default function EditBook() {
       return;
     }
     
-    const currentToken = token || localStorage.getItem('token');
+    const currentToken = token || getStorageValue('token');
     const currentUser = user || (() => {
       try {
-        const stored = localStorage.getItem('user');
+        const stored = getStorageValue('user');
         return stored ? JSON.parse(stored) : null;
       } catch (e) {
         return null;

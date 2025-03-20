@@ -4,6 +4,34 @@ import { useRouter } from 'next/navigation';
 
 export const AuthContext = createContext(null);
 
+const getStorageValue = (key) => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.error(`Error accessing localStorage for key ${key}:`, e);
+    return null;
+  }
+};
+
+const setStorageValue = (key, value) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.error(`Error setting localStorage for key ${key}:`, e);
+  }
+};
+
+const removeStorageValue = (key) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.error(`Error removing localStorage for key ${key}:`, e);
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const router = useRouter();
@@ -13,8 +41,8 @@ export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({ isAuthenticated: false, isTeacher: false });
 
   const updateAuthState = useCallback(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    const storedToken = getStorageValue('token');
+    const storedUser = getStorageValue('user');
     let parsedUser = null;
 
     try {
@@ -36,12 +64,16 @@ export const AuthProvider = ({ children }) => {
   }, [token, user]);
 
   useEffect(() => {
-    updateAuthState();
+    if (typeof window !== 'undefined') {
+      updateAuthState();
+    }
   }, [token, user, updateAuthState]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+    if (typeof window === 'undefined') return;
+
+    const storedUser = getStorageValue('user');
+    const storedToken = getStorageValue('token');
     
     if (storedUser && storedToken) {
       try {
@@ -50,8 +82,8 @@ export const AuthProvider = ({ children }) => {
         setToken(storedToken);
       } catch (e) {
         console.error('Failed to parse stored user during initialization:', e);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        removeStorageValue('user');
+        removeStorageValue('token');
       }
     }
     
@@ -69,8 +101,8 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Login failed');
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      setStorageValue('token', data.token);
+      setStorageValue('user', JSON.stringify(data.user));
       setToken(data.token);
       setUser(data.user);
       updateAuthState();
@@ -82,8 +114,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    removeStorageValue('token');
+    removeStorageValue('user');
     setToken(null);
     setUser(null);
     setAuthState({ isAuthenticated: false, isTeacher: false });
@@ -92,10 +124,12 @@ export const AuthProvider = ({ children }) => {
   }, [router]);
 
   const isAuthenticated = useCallback(() => {
-    const currentToken = token || localStorage.getItem('token');
+    if (typeof window === 'undefined') return false;
+    
+    const currentToken = token || getStorageValue('token');
     const currentUser = user || (() => {
       try {
-        const stored = localStorage.getItem('user');
+        const stored = getStorageValue('user');
         return stored ? JSON.parse(stored) : null;
       } catch (e) {
         return null;
@@ -105,9 +139,11 @@ export const AuthProvider = ({ children }) => {
   }, [token, user]);
 
   const isTeacher = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+
     const currentUser = user || (() => {
       try {
-        const stored = localStorage.getItem('user');
+        const stored = getStorageValue('user');
         return stored ? JSON.parse(stored) : null;
       } catch (e) {
         return null;
@@ -117,15 +153,15 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const value = {
-    token: token || localStorage.getItem('token'),
-    user: user || (() => {
+    token: typeof window !== 'undefined' ? (token || getStorageValue('token')) : null,
+    user: typeof window !== 'undefined' ? (user || (() => {
       try {
-        const stored = localStorage.getItem('user');
+        const stored = getStorageValue('user');
         return stored ? JSON.parse(stored) : null;
       } catch (e) {
         return null;
       }
-    })(),
+    })()) : null,
     login,
     logout,
     isAuthenticated,
