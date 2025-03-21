@@ -61,18 +61,34 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
       </div>
       <div className="p-2">
         <h5 
-          className="font-bold text-lg line-clamp-2 mb-1"
+          className="font-bold text-lg line-clamp-2 mb-2"
           style={{ color: 'var(--color-primary)' }}
         >
           {book.title}
         </h5>
-        <div className="flex justify-between items-center mt-1">
-          <span className="text-xs truncate max-w-[60%]" style={{ color: 'var(--color-text-secondary)' }}>
-            {book.category}
-          </span>
-          <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded-full" style={{ color: 'var(--color-text-secondary)' }}>
-            {book.level}
-          </span>
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-center">
+            <span 
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{ 
+                backgroundColor: 'var(--color-bg-primary)',
+                color: 'var(--color-text-secondary)'
+              }}
+            >
+              {book.category || 'Uncategorized'}
+            </span>
+            {book.price !== null && (
+              <span 
+                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{ 
+                  backgroundColor: 'var(--color-secondary)',
+                  color: 'var(--color-bg-primary)'
+                }}
+              >
+                ₹{parseFloat(book.price).toFixed(2)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

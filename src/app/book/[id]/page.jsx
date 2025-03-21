@@ -342,16 +342,13 @@ export default function BookDetail() {
       return "https://via.placeholder.com/200x300?text=Book+Cover";
     }
 
-    // If it's already a full URL (starts with http:// or https://)
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       console.log('BookDetail - Using direct URL:', imagePath);
       return imagePath;
     }
 
-    // Remove /api/ from BACKEND URL if it exists
     const baseUrl = BACKEND.replace('/api', '');
 
-    // For local storage paths, ensure we don't duplicate the 'books' directory
     const imageName = imagePath.replace(/^books\//, '');
     const finalUrl = `${baseUrl}/storage/books/${imageName}`;
     console.log('BookDetail - Constructed storage URL:', {
@@ -393,10 +390,27 @@ export default function BookDetail() {
             <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}>
               ISBN: {book.isbn}
             </span>
+            <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
+              Category: {book.category}
+            </span>
           </div>
-          <div className="mb-6 max-h-40 overflow-y-auto pr-2" style={{ color: "var(--color-text-secondary)" }}>
-            <p>{book.description}</p>
+
+          <div className="mb-6">
+            <p className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+              Description
+            </p>
+            <p style={{ color: 'var(--color-text-secondary)' }}>{book.description}</p>
           </div>
+
+          {book.price !== null && (
+            <div className="mb-4">
+              <p className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                Price
+              </p>
+              <p style={{ color: 'var(--color-text-secondary)' }}>₹{book.price}</p>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-3">
             {isLoggedIn && (
               <>

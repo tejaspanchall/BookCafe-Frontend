@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
 import { AuthContext } from '@/components/context/AuthContext';
 import { AddBookSkeleton } from '@/components/skeleton';
+import CategorySelect from '@/components/books/CategorySelect';
 
 export default function AddBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -17,6 +18,8 @@ export default function AddBook() {
     description: '',
     isbn: '',
     author: '',
+    category: '',
+    price: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -67,11 +70,19 @@ export default function AddBook() {
         }
       }
 
+      if (book.price && isNaN(parseFloat(book.price))) {
+        throw new Error('Price must be a valid number');
+      }
+
       const formData = new FormData();
       formData.append('title', book.title.trim());
       formData.append('description', book.description.trim());
       formData.append('isbn', book.isbn.trim());
       formData.append('author', book.author.trim());
+      formData.append('category', book.category.trim());
+      if (book.price) {
+        formData.append('price', parseFloat(book.price));
+      }
       if (book.image) {
         formData.append('image', book.image);
       }
@@ -204,6 +215,33 @@ export default function AddBook() {
                 value={book.author}
                 onChange={(e) => setBook({ ...book, author: e.target.value })}
                 required
+              />
+            </div>
+            <div className="mb-3">
+              <CategorySelect
+                value={book.category}
+                onChange={(value) => setBook({ ...book, category: value })}
+                style={{ 
+                  backgroundColor: "var(--color-bg-secondary)",
+                  borderColor: "var(--color-border)",
+                  color: "var(--color-text-primary)"
+                }}
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                className="w-full p-2 bg-white rounded border focus:outline-none"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: '1px',
+                }}
+                placeholder="Price (₹)"
+                value={book.price}
+                onChange={(e) => setBook({ ...book, price: e.target.value })}
               />
             </div>
             <button 

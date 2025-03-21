@@ -6,6 +6,7 @@ import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { EditBookSkeleton } from '@/components/skeleton';
+import CategorySelect from '@/components/books/CategorySelect';
 
 const getStorageValue = (key) => {
   if (typeof window === 'undefined') return null;
@@ -28,7 +29,9 @@ export default function EditBook() {
     author: "",
     isbn: "",
     description: "",
-    image: null
+    image: null,
+    category: "",
+    price: ""
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -178,6 +181,10 @@ export default function EditBook() {
         errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
       }
     });
+
+    if (editedBook.price && isNaN(parseFloat(editedBook.price))) {
+      errors.price = 'Price must be a valid number';
+    }
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -278,6 +285,10 @@ export default function EditBook() {
       formData.append('author', editedBook.author.trim());
       formData.append('isbn', editedBook.isbn.trim());
       formData.append('description', editedBook.description?.trim() || '');
+      formData.append('category', editedBook.category?.trim() || '');
+      if (editedBook.price) {
+        formData.append('price', parseFloat(editedBook.price));
+      }
       if (editedBook.image) {
         formData.append('image', editedBook.image);
       }
@@ -307,7 +318,8 @@ export default function EditBook() {
         text: 'Book updated successfully',
         confirmButtonColor: 'var(--color-button-primary)'
       }).then(() => {
-        router.push(`/book/${id}`);
+        // Force a hard refresh of the page to clear any cached data
+        window.location.href = `/book/${id}`;
       });
     } catch (error) {
       console.error("Update error:", error);
@@ -461,6 +473,37 @@ export default function EditBook() {
           {validationErrors.author && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.author}</p>
           )}
+        </div>
+
+        <div>
+          <label className="block mb-2">Category</label>
+          <CategorySelect
+            value={editedBook.category}
+            onChange={(value) => handleInputChange({ target: { name: 'category', value } })}
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2">Price (₹)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            name="price"
+            value={editedBook.price}
+            onChange={handleInputChange}
+            className="w-full p-2 rounded border"
+            style={{ 
+              backgroundColor: "var(--color-bg-secondary)",
+              borderColor: "var(--color-border)",
+              color: "var(--color-text-primary)"
+            }}
+          />
         </div>
 
         <div className="flex justify-between gap-4">
