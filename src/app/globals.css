@@ -94,3 +94,13 @@ label[for] {
     column-gap: 0.75rem;
   }
 }
+
+/* Custom utility class to hide scrollbars but keep scrolling ability */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* Internet Explorer and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

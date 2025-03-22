@@ -2,10 +2,224 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { JournalBookmark, Book, People, Laptop } from 'react-bootstrap-icons';
+import { useState, useEffect } from 'react';
+import { JournalBookmark, Book, People, Laptop, ChevronRight, ChevronLeft } from 'react-bootstrap-icons';
+import BookCard from '@/components/books/BookCard';
+import { CardSkeleton } from '@/components/skeleton';
+import CategoryHighlight from '@/components/books/CategoryHighlight';
 
 export default function Home() {
   const router = useRouter();
+  const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
+  const [popularBooks, setPopularBooks] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [categoryIndex, setCategoryIndex] = useState(0);
+  const [noBooks, setNoBooks] = useState(false);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  
+  // Categories to display
+  const categories = ['Fiction', 'Non-Fiction', 'Science', 'Technology', 'Educational', 'Mystery', 'Biography'];
+  
+  // Helper function to get categories that have books
+  const getAvailableCategories = () => {
+    return categories.filter(cat => popularBooks[cat]?.length > 0);
+  };
+  
+  const getImageUrl = (imagePath) => {
+    try {
+      // If no image path provided, return placeholder
+      if (!imagePath) {
+        return "https://via.placeholder.com/200x300?text=Book+Cover";
+      }
+
+      // If it's already a full URL
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+      }
+
+      // Make sure we have a backend URL
+      if (!BACKEND) {
+        return "https://via.placeholder.com/200x300?text=Error+Loading+Image";
+      }
+
+      // Remove /api/ from BACKEND URL if it exists
+      const baseUrl = BACKEND.replace('/api', '');
+
+      // For local storage paths, ensure we don't duplicate the 'books' directory
+      const imageName = imagePath.replace(/^books\//, '');
+      return `${baseUrl}/storage/books/${imageName}`;
+    } catch (error) {
+      console.error("Error generating image URL:", error);
+      return "https://via.placeholder.com/200x300?text=Error+Loading+Image";
+    }
+  };
+
+  useEffect(() => {
+    const fetchPopularBooks = async () => {
+      setIsLoading(true);
+      try {
+        // Validate backend URL
+        if (!BACKEND) {
+          console.error("Backend URL is not defined. Check your .env file");
+          setNoBooks(true);
+          return;
+        }
+
+        const results = {};
+        // Fetch all books at once
+        const url = `${BACKEND}/books/get-books`;
+        console.log("Fetching books from:", url);
+        
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch books: ${res.status} ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        if (data.status === 'success') {
+          const allBooks = data.books || [];
+          console.log("Total books fetched:", allBooks.length);
+          
+          if (allBooks.length === 0) {
+            setNoBooks(true);
+            return;
+          }
+          
+          let totalBooksFound = 0;
+          
+          // Process each category
+          for (const category of categories) {
+            // Case-insensitive filtering with more flexible matching
+            const categoryBooks = allBooks
+              .filter(book => {
+                if (!book.category) return false;
+                
+                const bookCategory = book.category.toLowerCase();
+                const searchCategory = category.toLowerCase();
+                
+                // Try different matching strategies
+                return (
+                  bookCategory === searchCategory ||
+                  bookCategory.includes(searchCategory) ||
+                  searchCategory.includes(bookCategory) ||
+                  // Handle plurals (e.g., "Science" matches "Sciences")
+                  (bookCategory.endsWith('s') && searchCategory === bookCategory.slice(0, -1)) ||
+                  (searchCategory.endsWith('s') && bookCategory === searchCategory.slice(0, -1))
+                );
+              })
+              // Sort by popularity metrics instead of just ID
+              // This prioritizes books with ratings or views if available, then falls back to newest (ID)
+              .sort((a, b) => {
+                // First sort by rating if available
+                if (a.rating !== undefined && b.rating !== undefined) {
+                  return b.rating - a.rating;
+                }
+                // Then by view count if available
+                if (a.views !== undefined && b.views !== undefined) {
+                  return b.views - a.views;
+                }
+                // Finally sort by newest (ID)
+                return b.id - a.id;
+              })
+              .slice(0, 6);
+            
+            console.log(`Books in ${category} category:`, categoryBooks.length);
+            results[category] = categoryBooks;
+            totalBooksFound += categoryBooks.length;
+          }
+          
+          // If no books found in any category
+          setNoBooks(totalBooksFound === 0);
+        } else {
+          console.error("API returned error:", data);
+          setNoBooks(true);
+        }
+        
+        setPopularBooks(results);
+        
+        // Initialize categories 
+        initializeCategories(results);
+
+      } catch (error) {
+        console.error("Error fetching popular books:", error);
+        setNoBooks(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Helper function to initialize categories after fetching data
+    const initializeCategories = (booksData) => {
+      // Get only categories that have books
+      const availableCategories = categories.filter(cat => booksData[cat]?.length > 0);
+      
+      if (availableCategories.length > 0) {
+        // Set active category to the first one that has books
+        const firstCategoryWithBooks = availableCategories[0];
+        setActiveCategory(firstCategoryWithBooks);
+        // Also set category index to match
+        setCategoryIndex(categories.indexOf(firstCategoryWithBooks));
+      } else {
+        // If no categories have books, set noBooks to true
+        setNoBooks(true);
+      }
+    };
+    
+    fetchPopularBooks();
+  }, []);
+  
+  const handleNextCategory = () => {
+    // Get only categories that have books
+    const availableCategories = getAvailableCategories();
+    if (availableCategories.length === 0) return;
+    
+    // Find current index in available categories
+    const currentIndex = availableCategories.indexOf(activeCategory);
+    // Get next index, wrapping around if needed
+    const nextIndex = (currentIndex + 1) % availableCategories.length;
+    // Get the actual category at that index
+    const nextCategory = availableCategories[nextIndex];
+    
+    // Use the handleCategoryChange to update the active category
+    handleCategoryChange(nextCategory, categories.indexOf(nextCategory));
+  };
+  
+  const handlePrevCategory = () => {
+    // Get only categories that have books
+    const availableCategories = getAvailableCategories();
+    if (availableCategories.length === 0) return;
+    
+    // Find current index in available categories
+    const currentIndex = availableCategories.indexOf(activeCategory);
+    // Get previous index, wrapping around if needed
+    const prevIndex = (currentIndex - 1 + availableCategories.length) % availableCategories.length;
+    // Get the actual category at that index
+    const prevCategory = availableCategories[prevIndex];
+    
+    // Use the handleCategoryChange to update the active category
+    handleCategoryChange(prevCategory, categories.indexOf(prevCategory));
+  };
+  
+  const handleCategoryChange = (category, index) => {
+    setCategoryLoading(true);
+    setActiveCategory(category);
+    setCategoryIndex(index);
+    // Use setTimeout to create a small delay for transition effect
+    setTimeout(() => {
+      setCategoryLoading(false);
+    }, 300);
+  };
+  
+  const handleBookClick = (bookId) => {
+    router.push(`/book/${bookId}`);
+  };
 
   return (
     <main className="min-h-screen">
@@ -118,6 +332,146 @@ export default function Home() {
               <p className="text-[var(--color-text-secondary)]">Read anywhere, anytime with our digital platform optimized for all devices.</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Popular Books Section */}
+      <section className="py-12 md:py-16 bg-[var(--color-bg-primary)]">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center mb-8 md:mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+              Popular Books
+            </h2>
+            <button
+              onClick={() => router.push('/catalog')}
+              className="text-[var(--color-primary)] hover:underline font-medium flex items-center"
+            >
+              View All <ChevronRight className="ml-1" />
+            </button>
+          </div>
+
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center overflow-x-auto pb-2 max-w-[80%] md:max-w-none hide-scrollbar">
+              {getAvailableCategories().map((category, index) => (
+                <button
+                  key={category}
+                  onClick={() => handleCategoryChange(category, categories.indexOf(category))}
+                  className={`mr-2 px-4 py-2 rounded-full text-sm md:text-base transition-colors duration-200 whitespace-nowrap ${
+                    activeCategory === category
+                      ? 'bg-[var(--color-secondary)] text-white'
+                      : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+            
+            {getAvailableCategories().length > 1 && (
+              <div className="flex space-x-2 ml-2">
+                <button
+                  onClick={handlePrevCategory}
+                  className="p-2 rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]"
+                >
+                  <ChevronLeft />
+                </button>
+                <button
+                  onClick={handleNextCategory}
+                  className="p-2 rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]"
+                >
+                  <ChevronRight />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {isLoading ? (
+            <CardSkeleton count={6} />
+          ) : noBooks ? (
+            <div className="text-center py-10 bg-[var(--color-bg-secondary)] rounded-lg">
+              <h3 className="text-[var(--color-text-primary)] text-xl font-medium mb-2">No Books Found</h3>
+              <p className="text-[var(--color-text-secondary)] mb-6">We couldn't find any books in our catalog. Would you like to add some?</p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  onClick={() => router.push('/catalog')}
+                  className="px-4 py-2 bg-[var(--color-bg-primary)] text-[var(--color-primary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-border)] transition-colors"
+                >
+                  Browse Catalog
+                </button>
+                <button
+                  onClick={() => router.push('/add-book')}
+                  className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                >
+                  Add New Book
+                </button>
+              </div>
+            </div>
+          ) : categoryLoading ? (
+            <CardSkeleton count={6} />
+          ) : popularBooks[activeCategory]?.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {popularBooks[activeCategory].map((book) => (
+                <div key={book.id} className="flex justify-center">
+                  <BookCard
+                    book={book}
+                    onClick={() => handleBookClick(book.id)}
+                    getImageUrl={getImageUrl}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <div className="text-center py-8 bg-[var(--color-bg-secondary)] rounded-lg mb-8">
+                <p className="text-[var(--color-text-secondary)] mb-4">No books found in the "{activeCategory}" category</p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <button
+                    onClick={() => {
+                      // Get available categories
+                      const availableCategories = getAvailableCategories();
+                      if (availableCategories.length > 0) {
+                        // Get the first available category
+                        const firstAvailableCategory = availableCategories[0];
+                        handleCategoryChange(firstAvailableCategory, categories.indexOf(firstAvailableCategory));
+                      }
+                    }}
+                    className="px-4 py-2 bg-[var(--color-bg-primary)] text-[var(--color-primary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-border)] transition-colors"
+                  >
+                    Show Available Books
+                  </button>
+                  <button
+                    onClick={() => router.push('/add-book')}
+                    className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                  >
+                    Add Book in {activeCategory}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Recommendations from other categories */}
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">
+                  Explore other categories
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {getAvailableCategories()
+                    .filter(cat => cat !== activeCategory)
+                    .slice(0, 3)
+                    .map(category => (
+                      <CategoryHighlight 
+                        key={category}
+                        title={category}
+                        books={popularBooks[category]}
+                        onBookClick={handleBookClick}
+                        getImageUrl={getImageUrl}
+                        onAddBook={() => router.push('/add-book')}
+                      />
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
