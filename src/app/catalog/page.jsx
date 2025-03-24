@@ -40,7 +40,7 @@ export default function BookCatalog() {
 
     // If it's a data URL, use it directly
     if (imagePath.startsWith('data:')) {
-      console.log('Catalog - Using data URL');
+      console.log('Catalog - Using data URL'); 
       return imagePath;
     }
 

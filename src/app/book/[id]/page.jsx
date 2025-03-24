@@ -350,7 +350,7 @@ export default function BookDetail() {
     const baseUrl = BACKEND.replace('/api', '');
 
     const imageName = imagePath.replace(/^books\//, '');
-    const finalUrl = `${baseUrl}/storage/books/${imageName}`;
+    const finalUrl = `${baseUrl}/storage/books/${encodeURIComponent(imageName)}`;
     console.log('BookDetail - Constructed storage URL:', {
       baseUrl,
       imagePath,
