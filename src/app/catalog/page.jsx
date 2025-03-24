@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BookCard from '@/components/books/BookCard';
 import Pagination from '@/components/books/Pagination';
-import { Search } from 'react-bootstrap-icons';
+import { Search, Funnel, Check, ArrowUp, ArrowDown, XCircle } from 'react-bootstrap-icons';
 import { CardSkeleton } from '@/components/skeleton';
 
 export default function BookCatalog() {
@@ -18,7 +18,11 @@ export default function BookCatalog() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState("recent");
   const [isLoading, setIsLoading] = useState(false);
-  const BOOKS_PER_PAGE = 18;
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const BOOKS_PER_PAGE = 18; // 6 books per row * 3 rows = 18 books per page
 
   const getImageUrl = (imagePath) => {
     console.log('Catalog - Constructing image URL:', {
@@ -63,17 +67,37 @@ export default function BookCatalog() {
   };
 
   const applyFilter = (books) => {
+    // First filter by selected categories
+    let filteredBooks = books;
+    
+    if (selectedCategories.length > 0) {
+      filteredBooks = filteredBooks.filter(book => 
+        selectedCategories.includes(book.category || 'Uncategorized')
+      );
+    }
+    
+    // Then filter by price range
+    filteredBooks = filteredBooks.filter(book => {
+      const price = parseFloat(book.price || 0);
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+    
+    // Finally apply sorting
     switch (filter) {
       case "asc":
-        return [...books].sort((a, b) => a.title.localeCompare(b.title));
+        return [...filteredBooks].sort((a, b) => a.title.localeCompare(b.title));
       case "desc":
-        return [...books].sort((a, b) => b.title.localeCompare(a.title));
+        return [...filteredBooks].sort((a, b) => b.title.localeCompare(a.title));
       case "recent":
-        return [...books].sort((a, b) => b.id - a.id);
+        return [...filteredBooks].sort((a, b) => b.id - a.id);
       case "last":
-        return [...books].sort((a, b) => a.id - b.id);
+        return [...filteredBooks].sort((a, b) => a.id - b.id);
+      case "price_low_high":
+        return [...filteredBooks].sort((a, b) => parseFloat(a.price || 0) - parseFloat(b.price || 0));
+      case "price_high_low":
+        return [...filteredBooks].sort((a, b) => parseFloat(b.price || 0) - parseFloat(a.price || 0));
       default:
-        return books;
+        return filteredBooks;
     }
   };
 
@@ -106,8 +130,13 @@ export default function BookCatalog() {
       console.log("API Response:", data);
       
       const books = data.status === 'success' ? data.books : [];
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(books.map(book => book.category || 'Uncategorized'))];
+      setCategories(uniqueCategories);
+      
       const filteredBooks = applyFilter(books);
-      setAllBooks(filteredBooks);
+      setAllBooks(books);
 
       const total = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
       setTotalPages(total || 1);
@@ -144,15 +173,199 @@ export default function BookCatalog() {
   }, []);
 
   useEffect(() => {
-    const filteredBooks = applyFilter(allBooks);
-    updateDisplayedBooks(filteredBooks, 1);
-    setTotalPages(Math.ceil(filteredBooks.length / BOOKS_PER_PAGE) || 1);
-  }, [filter]);
+    if (allBooks.length) {
+      const filteredBooks = applyFilter(allBooks);
+      updateDisplayedBooks(filteredBooks, 1);
+      setTotalPages(Math.ceil(filteredBooks.length / BOOKS_PER_PAGE) || 1);
+    }
+  }, [filter, selectedCategories, priceRange]);
 
   const handleBookClick = (bookId) => {
     router.refresh();
     router.push(`/book/${bookId}`);
   };
+
+  const handleCategoryToggle = (category) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(category)) {
+        return prev.filter(cat => cat !== category);
+      } else {
+        return [...prev, category];
+      }
+    });
+  };
+
+  const handlePriceRangeChange = (index, value) => {
+    setPriceRange(prev => {
+      const newRange = [...prev];
+      newRange[index] = value;
+      return newRange;
+    });
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setPriceRange([0, 5000]);
+    setFilter("recent");
+  };
+
+  const FilterSidebar = () => (
+    <div 
+      className={`bg-white p-4 rounded-lg shadow-md ${isMobileFilterOpen ? 'block' : 'hidden'} md:block`}
+      style={{ backgroundColor: "var(--color-bg-secondary)", color: "var(--color-text-primary)" }}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold">Filters</h3>
+        <button 
+          onClick={clearFilters}
+          className="text-sm flex items-center gap-1 hover:underline"
+          style={{ color: "var(--color-secondary)" }}
+        >
+          <XCircle size={14} /> Clear all
+        </button>
+      </div>
+      
+      {/* Sort Options */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-2">Sort By</h4>
+        <div className="space-y-2">
+          <button 
+            onClick={() => setFilter("recent")}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'recent' ? 'font-semibold' : ''}`}
+            style={{ 
+              backgroundColor: filter === 'recent' ? "var(--color-border)" : "transparent",
+            }}
+          >
+            {filter === 'recent' && <Check size={14} />} Recently Added
+          </button>
+          <button 
+            onClick={() => setFilter("last")}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'last' ? 'font-semibold' : ''}`}
+            style={{ 
+              backgroundColor: filter === 'last' ? "var(--color-border)" : "transparent",
+            }}
+          >
+            {filter === 'last' && <Check size={14} />} Last Added
+          </button>
+          <button 
+            onClick={() => setFilter("asc")}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'asc' ? 'font-semibold' : ''}`}
+            style={{ 
+              backgroundColor: filter === 'asc' ? "var(--color-border)" : "transparent",
+            }}
+          >
+            {filter === 'asc' && <Check size={14} />} Title (A-Z)
+          </button>
+          <button 
+            onClick={() => setFilter("desc")}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'desc' ? 'font-semibold' : ''}`}
+            style={{ 
+              backgroundColor: filter === 'desc' ? "var(--color-border)" : "transparent",
+            }}
+          >
+            {filter === 'desc' && <Check size={14} />} Title (Z-A)
+          </button>
+          <button 
+            onClick={() => setFilter("price_low_high")}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
+            style={{ 
+              backgroundColor: filter === 'price_low_high' ? "var(--color-border)" : "transparent",
+            }}
+          >
+            {filter === 'price_low_high' && <Check size={14} />} Price <ArrowUp size={14} />
+          </button>
+          <button 
+            onClick={() => setFilter("price_high_low")}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
+            style={{ 
+              backgroundColor: filter === 'price_high_low' ? "var(--color-border)" : "transparent",
+            }}
+          >
+            {filter === 'price_high_low' && <Check size={14} />} Price <ArrowDown size={14} />
+          </button>
+        </div>
+      </div>
+      
+      {/* Price Range */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-2">Price Range</h4>
+        <div className="mb-2 text-sm flex justify-between">
+          <span>₹{priceRange[0]}</span>
+          <span>₹{priceRange[1]}</span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="range"
+            min="0"
+            max="5000"
+            step="100"
+            value={priceRange[0]}
+            onChange={(e) => handlePriceRangeChange(0, Number(e.target.value))}
+            className="w-full"
+          />
+          <input
+            type="range"
+            min="0"
+            max="5000"
+            step="100"
+            value={priceRange[1]}
+            onChange={(e) => handlePriceRangeChange(1, Number(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="mt-2 flex gap-2">
+          <input
+            type="number"
+            min="0"
+            max={priceRange[1]}
+            value={priceRange[0]}
+            onChange={(e) => handlePriceRangeChange(0, Number(e.target.value))}
+            className="w-1/2 px-2 py-1 text-xs rounded border"
+            style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)" }}
+          />
+          <input
+            type="number"
+            min={priceRange[0]}
+            max="5000"
+            value={priceRange[1]}
+            onChange={(e) => handlePriceRangeChange(1, Number(e.target.value))}
+            className="w-1/2 px-2 py-1 text-xs rounded border"
+            style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)" }}
+          />
+        </div>
+      </div>
+      
+      {/* Categories */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-2">Category</h4>
+        <div className="max-h-60 overflow-y-auto space-y-1 pr-2">
+          {categories.map(category => (
+            <label key={category} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-opacity-20 px-2 py-1 rounded">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(category)}
+                onChange={() => handleCategoryToggle(category)}
+                className="text-blue-600 rounded"
+              />
+              {category}
+            </label>
+          ))}
+        </div>
+      </div>
+      
+      {/* Apply Filters Button (Mobile Only) */}
+      <button 
+        className="w-full md:hidden py-2 px-4 rounded font-medium mt-4"
+        style={{ 
+          backgroundColor: "var(--color-button-primary)", 
+          color: "var(--color-bg-primary)"
+        }}
+        onClick={() => setIsMobileFilterOpen(false)}
+      >
+        Apply Filters
+      </button>
+    </div>
+  );
 
   return (
     <div className="container mx-auto py-8 md:py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
@@ -195,94 +408,17 @@ export default function BookCatalog() {
                 {isLoading ? "Searching..." : "Search"}
               </button>
 
-              <div className="relative inline-block flex-1 md:flex-none">
-                <button
-                  className="w-full md:w-auto px-6 py-3 font-medium rounded-lg transition duration-200"
-                  type="button"
-                  id="filterDropdown"
-                  aria-expanded="false"
-                  onClick={() => {
-                    const dropdown = document.getElementById('filterDropdownMenu');
-                    dropdown.classList.toggle('hidden');
-                  }}
-                  style={{ 
-                    backgroundColor: "var(--color-secondary)",
-                    color: "var(--color-bg-primary)"
-                  }}
-                >
-                  Filter
-                </button>
-                <ul 
-                  id="filterDropdownMenu"
-                  className="hidden absolute right-0 z-10 mt-1 w-40 rounded-lg shadow-lg py-1"
-                  style={{ backgroundColor: "var(--color-bg-secondary)" }}
-                >
-                  <li>
-                    <a
-                      className="block px-4 py-2 cursor-pointer hover:bg-gray-100"
-                      style={{ 
-                        color: "var(--color-text-primary)",
-                        "&:hover": { backgroundColor: "var(--color-border)" }
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilter("asc");
-                        document.getElementById('filterDropdownMenu').classList.add('hidden');
-                      }}
-                    >
-                      A-Z
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className="block px-4 py-2 cursor-pointer hover:bg-gray-100"
-                      style={{ 
-                        color: "var(--color-text-primary)",
-                        "&:hover": { backgroundColor: "var(--color-border)" }
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilter("desc");
-                        document.getElementById('filterDropdownMenu').classList.add('hidden');
-                      }}
-                    >
-                      Z-A
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className="block px-4 py-2 cursor-pointer hover:bg-gray-100"
-                      style={{ 
-                        color: "var(--color-text-primary)",
-                        "&:hover": { backgroundColor: "var(--color-border)" }
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilter("recent");
-                        document.getElementById('filterDropdownMenu').classList.add('hidden');
-                      }}
-                    >
-                      Recently Added
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      className="block px-4 py-2 cursor-pointer hover:bg-gray-100"
-                      style={{ 
-                        color: "var(--color-text-primary)",
-                        "&:hover": { backgroundColor: "var(--color-border)" }
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilter("last");
-                        document.getElementById('filterDropdownMenu').classList.add('hidden');
-                      }}
-                    >
-                      Last Added
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              {/* Mobile Filter Button */}
+              <button 
+                className="md:hidden flex-1 md:flex-none px-6 py-3 font-medium rounded-lg transition duration-200"
+                onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+                style={{ 
+                  backgroundColor: "var(--color-secondary)",
+                  color: "var(--color-bg-primary)"
+                }}
+              >
+                <Funnel className="inline-block mr-2" /> Filter
+              </button>
             </div>
           </div>
         </div>
@@ -300,37 +436,48 @@ export default function BookCatalog() {
         </div>
       )}
 
-      {isLoading ? (
-        <CardSkeleton count={allBooks.length > 0 ? allBooks.length : 12} />
-      ) : displayedBooks.length === 0 ? (
-        <div className="text-center mt-8">
-          <p style={{ color: "var(--color-text-secondary)" }}>No books found</p>
+      {/* Main Content with sidebar */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Filter Sidebar */}
+        <div className="md:w-1/4 lg:w-1/5">
+          <FilterSidebar />
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {displayedBooks.map((book) => (
-              <div key={book.id}>
-                <BookCard
-                  book={book}
-                  onClick={() => handleBookClick(book.id)}
-                  getImageUrl={getImageUrl}
-                />
-              </div>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="mt-8 md:mt-12">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(page) => updateDisplayedBooks(allBooks, page)}
-              />
+        
+        {/* Book Grid */}
+        <div className="md:w-3/4 lg:w-4/5">
+          {isLoading ? (
+            <CardSkeleton count={allBooks.length > 0 ? allBooks.length : 12} />
+          ) : displayedBooks.length === 0 ? (
+            <div className="text-center mt-8">
+              <p style={{ color: "var(--color-text-secondary)" }}>No books found</p>
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {displayedBooks.map((book) => (
+                  <div key={book.id}>
+                    <BookCard
+                      book={book}
+                      onClick={() => handleBookClick(book.id)}
+                      getImageUrl={getImageUrl}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-8 md:mt-12">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => updateDisplayedBooks(allBooks, page)}
+                  />
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
