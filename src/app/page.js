@@ -18,8 +18,23 @@ export default function Home() {
   const [noBooks, setNoBooks] = useState(false);
   const [categoryLoading, setCategoryLoading] = useState(false);
   
-  // Categories to display
-  const categories = ['Fiction', 'Non-Fiction', 'Science', 'Technology', 'Educational', 'Mystery', 'Biography'];
+  // Categories to display - updated to match PREDEFINED_CATEGORIES in CategorySelect
+  const categories = [
+    'Fiction',
+    'Non-Fiction',
+    'Science Fiction',
+    'Mystery',
+    'Romance',
+    'Fantasy',
+    'Biography',
+    'History',
+    'Science',
+    'Technology',
+    'Business',
+    'Self-Help',
+    'Children\'s Books',
+    'Educational'
+  ];
   
   // Helper function to get categories that have books
   const getAvailableCategories = () => {
@@ -390,7 +405,7 @@ export default function Home() {
           ) : noBooks ? (
             <div className="text-center py-10 bg-[var(--color-bg-secondary)] rounded-lg">
               <h3 className="text-[var(--color-text-primary)] text-xl font-medium mb-2">No Books Found</h3>
-              <p className="text-[var(--color-text-secondary)] mb-6">We couldn't find any books in our catalog. Would you like to add some?</p>
+              <p className="text-[var(--color-text-secondary)] mb-6">We couldn&apos;t find any books in our catalog. Would you like to add some?</p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <button
                   onClick={() => router.push('/catalog')}
@@ -423,7 +438,7 @@ export default function Home() {
           ) : (
             <div>
               <div className="text-center py-8 bg-[var(--color-bg-secondary)] rounded-lg mb-8">
-                <p className="text-[var(--color-text-secondary)] mb-4">No books found in the "{activeCategory}" category</p>
+                <p className="text-[var(--color-text-secondary)] mb-4">No books found in the &quot;{activeCategory}&quot; category</p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button
                     onClick={() => {
