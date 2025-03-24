@@ -31,7 +31,10 @@ export default function Login() {
     try {
       const res = await fetch(`${BACKEND}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         credentials: 'include',
         body: JSON.stringify(form),
       });

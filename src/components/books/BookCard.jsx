@@ -14,6 +14,9 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
     constructedImageUrl: imageUrl
   });
 
+  // Define an inline base64 fallback image
+  const fallbackImageUrl = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+
   return (
     <div
       className="h-full border-0 overflow-hidden rounded shadow-md cursor-pointer transition duration-300 hover:shadow-lg relative max-w-[220px] mx-0"
@@ -30,9 +33,10 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
             console.error('BookCard - Image load error:', {
               bookId: book.id,
               imageUrl: imageUrl,
-              error: e.message
+              error: e.message,
+              attemptedUrl: e.target.src
             });
-            e.target.src = "https://via.placeholder.com/200x300?text=Book+Cover";
+            e.target.src = fallbackImageUrl;
           }}
         />
         <div 

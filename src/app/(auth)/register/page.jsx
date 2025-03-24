@@ -51,7 +51,10 @@ export default function Register() {
     try {
       const res = await fetch(`${BACKEND}/auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         credentials: 'include',
         body: JSON.stringify({
           firstname: form.firstname,
@@ -77,7 +80,8 @@ export default function Register() {
       } else {
         Swal.fire({
           title: 'Error!',
-          text: data.error || 'Registration failed',
+          text: data.message || data.error || 
+                (data.errors ? Object.values(data.errors).flat().join('\n') : 'Registration failed'),
           icon: 'error',
           confirmButtonColor: 'var(--color-button-primary)'
         });

@@ -29,7 +29,7 @@ export default function BookCatalog() {
     // If no image path provided, return placeholder
     if (!imagePath) {
       console.log('Catalog - No image path provided, using placeholder');
-      return "https://via.placeholder.com/200x300?text=Book+Cover";
+      return "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
     }
 
     // If it's already a full URL (starts with http:// or https://)
@@ -38,18 +38,27 @@ export default function BookCatalog() {
       return imagePath;
     }
 
-    // Remove /api/ from BACKEND URL if it exists
+    // If it's a data URL, use it directly
+    if (imagePath.startsWith('data:')) {
+      console.log('Catalog - Using data URL');
+      return imagePath;
+    }
+
+    // Get the base URL without /api
     const baseUrl = BACKEND.replace('/api', '');
 
     // For local storage paths, ensure we don't duplicate the 'books' directory
     const imageName = imagePath.replace(/^books\//, '');
-    const finalUrl = `${baseUrl}/storage/books/${imageName}`;
+    const finalUrl = `${baseUrl}/storage/books/${encodeURIComponent(imageName)}`;
+    
     console.log('Catalog - Constructed storage URL:', {
       baseUrl,
       imagePath,
       imageName,
-      finalUrl
+      finalUrl,
+      fullPath: `${baseUrl}/storage/books/${encodeURIComponent(imageName)}`
     });
+    
     return finalUrl;
   };
 
