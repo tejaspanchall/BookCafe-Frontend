@@ -30,7 +30,7 @@ export default function EditBook() {
     isbn: "",
     description: "",
     image: null,
-    category: "",
+    categories: [],
     price: ""
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -101,6 +101,7 @@ export default function EditBook() {
         setBook(foundBook);
         setEditedBook({ 
           ...foundBook,
+          categories: foundBook.categories ? foundBook.categories.map(cat => cat.name) : [],
           image: null // Reset image to null since we'll handle it as a file
         });
 
@@ -285,7 +286,11 @@ export default function EditBook() {
       formData.append('author', editedBook.author.trim());
       formData.append('isbn', editedBook.isbn.trim());
       formData.append('description', editedBook.description?.trim() || '');
-      formData.append('category', editedBook.category?.trim() || '');
+      if (editedBook.categories && editedBook.categories.length > 0) {
+        editedBook.categories.forEach((category, index) => {
+          formData.append(`categories[${index}]`, category.trim());
+        });
+      }
       if (editedBook.price) {
         formData.append('price', parseFloat(editedBook.price));
       }
@@ -476,10 +481,10 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Category</label>
+          <label className="block mb-2">Categories</label>
           <CategorySelect
-            value={editedBook.category}
-            onChange={(value) => handleInputChange({ target: { name: 'category', value } })}
+            value={editedBook.categories}
+            onChange={(value) => setEditedBook({ ...editedBook, categories: value })}
             style={{ 
               backgroundColor: "var(--color-bg-secondary)",
               borderColor: "var(--color-border)",

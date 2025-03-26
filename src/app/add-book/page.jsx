@@ -18,7 +18,7 @@ export default function AddBook() {
     description: '',
     isbn: '',
     author: '',
-    category: '',
+    categories: [],
     price: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +79,11 @@ export default function AddBook() {
       formData.append('description', book.description.trim());
       formData.append('isbn', book.isbn.trim());
       formData.append('author', book.author.trim());
-      formData.append('category', book.category.trim());
+      if (book.categories.length > 0) {
+        book.categories.forEach((category, index) => {
+          formData.append(`categories[${index}]`, category.trim());
+        });
+      }
       if (book.price) {
         formData.append('price', parseFloat(book.price));
       }
@@ -219,8 +223,8 @@ export default function AddBook() {
             </div>
             <div className="mb-3">
               <CategorySelect
-                value={book.category}
-                onChange={(value) => setBook({ ...book, category: value })}
+                value={book.categories}
+                onChange={(value) => setBook({ ...book, categories: value })}
                 style={{ 
                   backgroundColor: "var(--color-bg-secondary)",
                   borderColor: "var(--color-border)",

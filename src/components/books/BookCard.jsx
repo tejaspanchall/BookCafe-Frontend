@@ -71,16 +71,13 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
           {book.title}
         </h5>
         <div className="flex flex-col gap-1">
+          <div className="text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            {book.categories && book.categories.length > 0 
+              ? book.categories.map(cat => cat.name).join(', ')
+              : 'Uncategorized'
+            }
+          </div>
           <div className="flex justify-between items-center">
-            <span 
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ 
-                backgroundColor: 'var(--color-bg-primary)',
-                color: 'var(--color-text-secondary)'
-              }}
-            >
-              {book.category || 'Uncategorized'}
-            </span>
             {book.price !== null && (
               <span 
                 className="text-xs font-semibold px-2 py-0.5 rounded-full"

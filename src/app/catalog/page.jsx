@@ -71,9 +71,17 @@ export default function BookCatalog() {
     let filteredBooks = books;
     
     if (selectedCategories.length > 0) {
-      filteredBooks = filteredBooks.filter(book => 
-        selectedCategories.includes(book.category || 'Uncategorized')
-      );
+      filteredBooks = filteredBooks.filter(book => {
+        // If book has no categories, check if 'Uncategorized' is selected
+        if (!book.categories || book.categories.length === 0) {
+          return selectedCategories.includes('Uncategorized');
+        }
+        
+        // Check if any of the book's categories match any of the selected categories
+        return book.categories.some(cat => 
+          selectedCategories.includes(cat.name)
+        );
+      });
     }
     
     // Then filter by price range
@@ -132,7 +140,13 @@ export default function BookCatalog() {
       const books = data.status === 'success' ? data.books : [];
       
       // Extract unique categories
-      const uniqueCategories = [...new Set(books.map(book => book.category || 'Uncategorized'))];
+      const uniqueCategories = [...new Set(
+        books.flatMap(book => 
+          book.categories && book.categories.length > 0 
+            ? book.categories.map(cat => cat.name) 
+            : ['Uncategorized']
+        )
+      )].sort();
       setCategories(uniqueCategories);
       
       const filteredBooks = applyFilter(books);

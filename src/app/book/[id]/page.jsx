@@ -390,9 +390,15 @@ export default function BookDetail() {
             <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}>
               ISBN: {book.isbn}
             </span>
-            <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
-              Category: {book.category}
-            </span>
+            {book.categories && book.categories.length > 0 ? (
+              <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
+                Categories: {book.categories.map(cat => cat.name).join(', ')}
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
+                No Categories
+              </span>
+            )}
           </div>
 
           <div className="mb-6">

@@ -111,26 +111,28 @@ export default function Home() {
           
           // Process each category
           for (const category of categories) {
-            // Case-insensitive filtering with more flexible matching
+            // Filter books that have the current category
             const categoryBooks = allBooks
               .filter(book => {
-                if (!book.category) return false;
+                if (!book.categories || book.categories.length === 0) return false;
                 
-                const bookCategory = book.category.toLowerCase();
-                const searchCategory = category.toLowerCase();
-                
-                // Try different matching strategies
-                return (
-                  bookCategory === searchCategory ||
-                  bookCategory.includes(searchCategory) ||
-                  searchCategory.includes(bookCategory) ||
-                  // Handle plurals (e.g., "Science" matches "Sciences")
-                  (bookCategory.endsWith('s') && searchCategory === bookCategory.slice(0, -1)) ||
-                  (searchCategory.endsWith('s') && bookCategory === searchCategory.slice(0, -1))
-                );
+                // Check if any of the book's categories match the current category
+                return book.categories.some(cat => {
+                  const bookCategory = cat.name.toLowerCase();
+                  const searchCategory = category.toLowerCase();
+                  
+                  // Try different matching strategies
+                  return (
+                    bookCategory === searchCategory ||
+                    bookCategory.includes(searchCategory) ||
+                    searchCategory.includes(bookCategory) ||
+                    // Handle plurals (e.g., "Science" matches "Sciences")
+                    (bookCategory.endsWith('s') && searchCategory === bookCategory.slice(0, -1)) ||
+                    (searchCategory.endsWith('s') && bookCategory === searchCategory.slice(0, -1))
+                  );
+                });
               })
               // Sort by popularity metrics instead of just ID
-              // This prioritizes books with ratings or views if available, then falls back to newest (ID)
               .sort((a, b) => {
                 // First sort by rating if available
                 if (a.rating !== undefined && b.rating !== undefined) {
