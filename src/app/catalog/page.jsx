@@ -1,11 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import BookCard from '@/components/books/BookCard';
-import Pagination from '@/components/books/Pagination';
 import { Search, Funnel, Check, ArrowUp, ArrowDown, XCircle } from 'react-bootstrap-icons';
 import { CardSkeleton } from '@/components/skeleton';
+
+// Add custom styles for the scrollbar
+const scrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 20px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-secondary);
+  }
+`;
 
 export default function BookCatalog() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -14,15 +33,28 @@ export default function BookCatalog() {
   const [displayedBooks, setDisplayedBooks] = useState([]);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [filter, setFilter] = useState("recent");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [filter, setFilter] = useState("recent");
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const BOOKS_PER_PAGE = 18; // 6 books per row * 3 rows = 18 books per page
+  
+  const observer = useRef();
+  const lastBookElementRef = useCallback(node => {
+    if (isLoading || isLoadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreBooks();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoading, isLoadingMore, hasMore]);
 
   const getImageUrl = (imagePath) => {
     console.log('Catalog - Constructing image URL:', {
@@ -111,6 +143,7 @@ export default function BookCatalog() {
 
   const searchBooks = async () => {
     setIsLoading(true);
+    setPageNumber(1);
     try {
       let url;
       if (search) {
@@ -152,27 +185,48 @@ export default function BookCatalog() {
       const filteredBooks = applyFilter(books);
       setAllBooks(books);
 
-      const total = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
-      setTotalPages(total || 1);
-
-      updateDisplayedBooks(filteredBooks, 1);
+      // Set displayed books to first page
+      const booksToDisplay = filteredBooks.slice(0, BOOKS_PER_PAGE);
+      setDisplayedBooks(booksToDisplay);
+      
+      // Determine if there are more books to load
+      setHasMore(filteredBooks.length > BOOKS_PER_PAGE);
+      
       setMessage("");
     } catch (error) {
       console.error("Fetch error details:", error);
       setMessage(`Search failed: ${error.message}`);
       setAllBooks([]);
       setDisplayedBooks([]);
-      setTotalPages(1);
+      setHasMore(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateDisplayedBooks = (books, page) => {
-    const startIndex = (page - 1) * BOOKS_PER_PAGE;
+  const loadMoreBooks = () => {
+    if (!hasMore || isLoadingMore) return;
+    
+    setIsLoadingMore(true);
+    
+    // Calculate next page
+    const nextPage = pageNumber + 1;
+    const startIndex = (nextPage - 1) * BOOKS_PER_PAGE;
     const endIndex = startIndex + BOOKS_PER_PAGE;
-    setDisplayedBooks(books.slice(startIndex, endIndex));
-    setCurrentPage(page);
+    
+    // Get filtered books
+    const filteredBooks = applyFilter(allBooks);
+    
+    // Get next batch of books
+    const nextBatch = filteredBooks.slice(startIndex, endIndex);
+    
+    // Update state after a small delay to avoid UI freezes
+    setTimeout(() => {
+      setDisplayedBooks(prev => [...prev, ...nextBatch]);
+      setPageNumber(nextPage);
+      setHasMore(endIndex < filteredBooks.length);
+      setIsLoadingMore(false);
+    }, 500);
   };
 
   useEffect(() => {
@@ -188,9 +242,11 @@ export default function BookCatalog() {
 
   useEffect(() => {
     if (allBooks.length) {
+      setPageNumber(1);
       const filteredBooks = applyFilter(allBooks);
-      updateDisplayedBooks(filteredBooks, 1);
-      setTotalPages(Math.ceil(filteredBooks.length / BOOKS_PER_PAGE) || 1);
+      const booksToDisplay = filteredBooks.slice(0, BOOKS_PER_PAGE);
+      setDisplayedBooks(booksToDisplay);
+      setHasMore(filteredBooks.length > BOOKS_PER_PAGE);
     }
   }, [filter, selectedCategories, priceRange]);
 
@@ -209,12 +265,8 @@ export default function BookCatalog() {
     });
   };
 
-  const handlePriceRangeChange = (index, value) => {
-    setPriceRange(prev => {
-      const newRange = [...prev];
-      newRange[index] = value;
-      return newRange;
-    });
+  const handlePriceRangeChange = (value) => {
+    setPriceRange([0, value]);
   };
 
   const clearFilters = () => {
@@ -225,15 +277,23 @@ export default function BookCatalog() {
 
   const FilterSidebar = () => (
     <div 
-      className={`bg-white p-4 rounded-lg shadow-md ${isMobileFilterOpen ? 'block' : 'hidden'} md:block`}
-      style={{ backgroundColor: "var(--color-bg-secondary)", color: "var(--color-text-primary)" }}
+      className={`bg-white p-4 rounded-lg shadow-md ${isMobileFilterOpen ? 'block' : 'hidden'} md:block md:sticky md:top-4`}
+      style={{ 
+        backgroundColor: "var(--color-bg-secondary)", 
+        color: "var(--color-text-primary)",
+        maxHeight: "calc(100vh - 2rem)",
+        overflowY: "auto"
+      }}
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 sticky top-0 pt-1 pb-2 bg-inherit z-10">
         <h3 className="text-lg font-bold">Filters</h3>
         <button 
           onClick={clearFilters}
-          className="text-sm flex items-center gap-1 hover:underline"
-          style={{ color: "var(--color-secondary)" }}
+          className="text-sm flex items-center gap-1 hover:underline transition-colors duration-200 px-2 py-1 rounded-md"
+          style={{ 
+            color: "var(--color-secondary)",
+            backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
+          }}
         >
           <XCircle size={14} /> Clear all
         </button>
@@ -241,11 +301,11 @@ export default function BookCatalog() {
       
       {/* Sort Options */}
       <div className="mb-6">
-        <h4 className="font-semibold mb-2">Sort By</h4>
-        <div className="space-y-2">
+        <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Sort By</h4>
+        <div className="space-y-1.5">
           <button 
             onClick={() => setFilter("recent")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'recent' ? 'font-semibold' : ''}`}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'recent' ? 'font-semibold' : ''}`}
             style={{ 
               backgroundColor: filter === 'recent' ? "var(--color-border)" : "transparent",
             }}
@@ -254,7 +314,7 @@ export default function BookCatalog() {
           </button>
           <button 
             onClick={() => setFilter("last")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'last' ? 'font-semibold' : ''}`}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'last' ? 'font-semibold' : ''}`}
             style={{ 
               backgroundColor: filter === 'last' ? "var(--color-border)" : "transparent",
             }}
@@ -263,7 +323,7 @@ export default function BookCatalog() {
           </button>
           <button 
             onClick={() => setFilter("asc")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'asc' ? 'font-semibold' : ''}`}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'asc' ? 'font-semibold' : ''}`}
             style={{ 
               backgroundColor: filter === 'asc' ? "var(--color-border)" : "transparent",
             }}
@@ -272,7 +332,7 @@ export default function BookCatalog() {
           </button>
           <button 
             onClick={() => setFilter("desc")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'desc' ? 'font-semibold' : ''}`}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'desc' ? 'font-semibold' : ''}`}
             style={{ 
               backgroundColor: filter === 'desc' ? "var(--color-border)" : "transparent",
             }}
@@ -281,7 +341,7 @@ export default function BookCatalog() {
           </button>
           <button 
             onClick={() => setFilter("price_low_high")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
             style={{ 
               backgroundColor: filter === 'price_low_high' ? "var(--color-border)" : "transparent",
             }}
@@ -290,7 +350,7 @@ export default function BookCatalog() {
           </button>
           <button 
             onClick={() => setFilter("price_high_low")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1 rounded ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
+            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
             style={{ 
               backgroundColor: filter === 'price_high_low' ? "var(--color-border)" : "transparent",
             }}
@@ -302,66 +362,65 @@ export default function BookCatalog() {
       
       {/* Price Range */}
       <div className="mb-6">
-        <h4 className="font-semibold mb-2">Price Range</h4>
+        <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Price Range</h4>
         <div className="mb-2 text-sm flex justify-between">
-          <span>₹{priceRange[0]}</span>
-          <span>₹{priceRange[1]}</span>
+          <span>₹0</span>
+          <span className="px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.1)" }}>₹{priceRange[1]}</span>
         </div>
-        <div className="flex gap-2">
-          <input
-            type="range"
-            min="0"
-            max="5000"
-            step="100"
-            value={priceRange[0]}
-            onChange={(e) => handlePriceRangeChange(0, Number(e.target.value))}
-            className="w-full"
-          />
+        <div className="px-1 mb-2">
           <input
             type="range"
             min="0"
             max="5000"
             step="100"
             value={priceRange[1]}
-            onChange={(e) => handlePriceRangeChange(1, Number(e.target.value))}
-            className="w-full"
+            onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
+            className="w-full accent-current"
+            style={{ accentColor: "var(--color-primary)" }}
           />
         </div>
-        <div className="mt-2 flex gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs">Max price:</span>
           <input
             type="number"
             min="0"
-            max={priceRange[1]}
-            value={priceRange[0]}
-            onChange={(e) => handlePriceRangeChange(0, Number(e.target.value))}
-            className="w-1/2 px-2 py-1 text-xs rounded border"
-            style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)" }}
-          />
-          <input
-            type="number"
-            min={priceRange[0]}
             max="5000"
             value={priceRange[1]}
-            onChange={(e) => handlePriceRangeChange(1, Number(e.target.value))}
-            className="w-1/2 px-2 py-1 text-xs rounded border"
-            style={{ backgroundColor: "var(--color-bg-primary)", borderColor: "var(--color-border)" }}
+            onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
+            className="flex-1 px-2 py-1.5 text-xs rounded border focus:outline-none focus:ring-1"
+            style={{ 
+              backgroundColor: "var(--color-bg-primary)", 
+              borderColor: "var(--color-border)",
+              "--tw-ring-color": "var(--color-focus-ring)" 
+            }}
           />
         </div>
       </div>
       
       {/* Categories */}
       <div className="mb-6">
-        <h4 className="font-semibold mb-2">Category</h4>
-        <div className="max-h-60 overflow-y-auto space-y-1 pr-2">
+        <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Categories</h4>
+        <div className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
           {categories.map(category => (
-            <label key={category} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-opacity-20 px-2 py-1 rounded">
+            <label 
+              key={category} 
+              className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1.5 rounded transition-colors duration-200 hover:bg-opacity-50"
+              style={{ 
+                backgroundColor: selectedCategories.includes(category) 
+                  ? "rgba(var(--color-primary-rgb), 0.1)" 
+                  : "transparent" 
+              }}
+            >
               <input
                 type="checkbox"
                 checked={selectedCategories.includes(category)}
                 onChange={() => handleCategoryToggle(category)}
                 className="text-blue-600 rounded"
+                style={{ accentColor: "var(--color-primary)" }}
               />
-              {category}
+              <span className={selectedCategories.includes(category) ? "font-medium" : ""}>
+                {category}
+              </span>
             </label>
           ))}
         </div>
@@ -369,7 +428,7 @@ export default function BookCatalog() {
       
       {/* Apply Filters Button (Mobile Only) */}
       <button 
-        className="w-full md:hidden py-2 px-4 rounded font-medium mt-4"
+        className="w-full md:hidden py-2 px-4 rounded font-medium mt-4 transition-colors duration-200"
         style={{ 
           backgroundColor: "var(--color-button-primary)", 
           color: "var(--color-bg-primary)"
@@ -383,6 +442,17 @@ export default function BookCatalog() {
 
   return (
     <div className="container mx-auto py-8 md:py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
+      {/* Add custom scrollbar styles and color variables */}
+      <style jsx global>{`
+        ${scrollbarStyles}
+        
+        :root {
+          --color-primary-rgb: 59, 130, 246;    /* Blue shade - adjust to match your primary color */
+          --color-secondary-rgb: 107, 114, 128; /* Gray shade - adjust to match your secondary color */
+          --color-bg-secondary-rgb: 243, 244, 246; /* Light gray shade for backgrounds */
+        }
+      `}</style>
+      
       <div className="mb-8 md:mb-12">
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col md:flex-row gap-3">
@@ -460,16 +530,20 @@ export default function BookCatalog() {
         {/* Book Grid */}
         <div className="md:w-3/4 lg:w-4/5">
           {isLoading ? (
-            <CardSkeleton count={allBooks.length > 0 ? allBooks.length : 12} />
+            <CardSkeleton count={12} />
           ) : displayedBooks.length === 0 ? (
             <div className="text-center mt-8">
               <p style={{ color: "var(--color-text-secondary)" }}>No books found</p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {displayedBooks.map((book) => (
-                  <div key={book.id}>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 px-1">
+                {displayedBooks.map((book, index) => (
+                  <div 
+                    key={book.id} 
+                    ref={index === displayedBooks.length - 1 ? lastBookElementRef : null}
+                    className="transform transition-transform duration-300 hover:-translate-y-1"
+                  >
                     <BookCard
                       book={book}
                       onClick={() => handleBookClick(book.id)}
@@ -479,13 +553,25 @@ export default function BookCatalog() {
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="mt-8 md:mt-12">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => updateDisplayedBooks(allBooks, page)}
-                  />
+              {isLoadingMore && (
+                <div className="mt-8 flex justify-center">
+                  <div className="flex space-x-2">
+                    <div className="h-2 w-2 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)" }}></div>
+                    <div className="h-2 w-2 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.2s' }}></div>
+                    <div className="h-2 w-2 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.4s' }}></div>
+                  </div>
+                </div>
+              )}
+              
+              {!hasMore && displayedBooks.length > 0 && (
+                <div className="mt-8 text-center">
+                  <p className="py-3 px-6 rounded-lg inline-block text-sm"
+                     style={{ 
+                       backgroundColor: "rgba(var(--color-bg-secondary-rgb), 0.3)",
+                       color: "var(--color-text-secondary)" 
+                     }}>
+                    You've reached the end of the catalog
+                  </p>
                 </div>
               )}
             </>
