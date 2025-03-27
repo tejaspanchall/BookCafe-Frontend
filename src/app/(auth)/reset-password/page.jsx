@@ -4,7 +4,9 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import FormInput from '@/components/auth/FormInput';
+import FormButton from '@/components/auth/FormButton';
+import { FiLock } from 'react-icons/fi';
 
 function ResetPasswordForm() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -16,6 +18,7 @@ function ResetPasswordForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const token = searchParams.get('token');
 
   useEffect(() => {
@@ -23,6 +26,43 @@ function ResetPasswordForm() {
       router.push('/login');
     }
   }, [token, router]);
+
+  useEffect(() => {
+    // Simple password strength calculation
+    const password = formData.password;
+    if (!password) {
+      setPasswordStrength(0);
+      return;
+    }
+    
+    let strength = 0;
+    // Length check
+    if (password.length >= 8) strength += 1;
+    // Contains number
+    if (/\d/.test(password)) strength += 1;
+    // Contains special character
+    if (/[!@#$%^&*]/.test(password)) strength += 1;
+    // Contains uppercase
+    if (/[A-Z]/.test(password)) strength += 1;
+    
+    setPasswordStrength(strength);
+  }, [formData.password]);
+
+  const getStrengthLabel = () => {
+    if (passwordStrength === 0) return '';
+    if (passwordStrength === 1) return 'Weak';
+    if (passwordStrength === 2) return 'Fair';
+    if (passwordStrength === 3) return 'Good';
+    return 'Strong';
+  };
+
+  const getStrengthColor = () => {
+    if (passwordStrength === 0) return 'bg-[var(--color-border)]';
+    if (passwordStrength === 1) return 'bg-red-500';
+    if (passwordStrength === 2) return 'bg-yellow-500';
+    if (passwordStrength === 3) return 'bg-blue-500';
+    return 'bg-green-500';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,67 +133,81 @@ function ResetPasswordForm() {
     <AuthForm 
       onSubmit={handleSubmit} 
       title="Reset Password"
+      subtitle="Create a new password for your account"
       footerLink={{ href: '/login', text: 'Back to Login' }}
     >
-      <div className="mb-6">
-        <div className="relative">
-          <input 
+      <div className="space-y-4">
+        <div>
+          <FormInput 
             type={showPassword ? 'text' : 'password'}
-            className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] mb-3"
             placeholder="New Password"
             value={formData.password}
             onChange={e => setFormData({...formData, password: e.target.value})}
             required
+            icon={<FiLock className="text-[var(--color-text-secondary)]" />}
+            showPasswordToggle
+            showPassword={showPassword}
+            onTogglePassword={() => setShowPassword(!showPassword)}
           />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 px-3 py-2 text-sm text-[var(--color-text-light)] hover:text-[var(--color-text-primary)]"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
+          
+          {formData.password && (
+            <div className="mt-2">
+              <div className="flex justify-between items-center mb-1">
+                <div className="flex space-x-1">
+                  {[...Array(4)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className={`h-1 w-6 rounded-sm ${i < passwordStrength ? getStrengthColor() : 'bg-[var(--color-border)]'}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-[var(--color-text-secondary)]">{getStrengthLabel()}</span>
+              </div>
+              <div className="text-xs text-[var(--color-text-secondary)]">
+                Use at least 8 characters with letters, numbers and symbols for a strong password
+              </div>
+            </div>
+          )}
         </div>
-        <div className="relative">
-          <input 
-            type={showPassword ? 'text' : 'password'}
-            className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
-            required
-          />
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 px-3 py-2 text-sm text-[var(--color-text-light)] hover:text-[var(--color-text-primary)]"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
-        </div>
+        
+        <FormInput 
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Confirm Password"
+          value={formData.confirmPassword}
+          onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
+          required
+          icon={<FiLock className="text-[var(--color-text-secondary)]" />}
+          showPasswordToggle
+          showPassword={showPassword}
+          onTogglePassword={() => setShowPassword(!showPassword)}
+        />
       </div>
       
-      <button 
-        type="submit"
-        className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <LoadingSpinner size="w-5 h-5" />
-        ) : (
-          'Reset Password'
-        )}
-      </button>
+      <div className="mt-6">
+        <FormButton 
+          type="submit"
+          isLoading={isLoading}
+        >
+          Reset Password
+        </FormButton>
+      </div>
     </AuthForm>
   );
 }
 
-function LoadingFallback() {
-  return <div className="text-center py-8">Loading...</div>;
-}
-
 export default function ResetPassword() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen bg-[var(--color-bg-primary)]">
+        <div className="animate-pulse space-y-4 bg-[var(--color-bg-card)] p-8 rounded-xl shadow-lg w-full max-w-md">
+          <div className="h-8 bg-[var(--color-border)] rounded w-1/2 mx-auto"></div>
+          <div className="h-4 bg-[var(--color-border)] rounded w-3/4 mx-auto"></div>
+          <div className="h-10 bg-[var(--color-border)] rounded"></div>
+          <div className="h-10 bg-[var(--color-border)] rounded"></div>
+          <div className="h-10 bg-[var(--color-border)] rounded"></div>
+        </div>
+      </div>
+    }>
       <ResetPasswordForm />
     </Suspense>
   );

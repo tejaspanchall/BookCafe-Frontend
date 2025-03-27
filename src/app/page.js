@@ -1,9 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { JournalBookmark, Book, People, Laptop, ChevronRight, ChevronLeft } from 'react-bootstrap-icons';
+import { JournalBookmark, Book, People, Laptop, ChevronRight, ChevronLeft, Search, ArrowRight, Stack, BookmarkStar, ArrowDownCircle } from 'react-bootstrap-icons';
 import BookCard from '@/components/books/BookCard';
 import { CardSkeleton } from '@/components/skeleton';
 import CategoryHighlight from '@/components/books/CategoryHighlight';
@@ -18,7 +17,7 @@ export default function Home() {
   const [noBooks, setNoBooks] = useState(false);
   const [categoryLoading, setCategoryLoading] = useState(false);
   
-  // Categories to display - updated to match PREDEFINED_CATEGORIES in CategorySelect
+  // Categories to display
   const categories = [
     'Fiction',
     'Non-Fiction',
@@ -238,195 +237,213 @@ export default function Home() {
     router.push(`/book/${bookId}`);
   };
 
+  // Creative patterns for background
+  const renderPattern = (type, count) => {
+    return [...Array(count)].map((_, i) => {
+      const size = Math.random() * 20 + 5;
+      const opacity = Math.random() * 0.15 + 0.05;
+      const delay = Math.random() * 5;
+      const duration = Math.random() * 20 + 20;
+      const posX = Math.random() * 100;
+      const posY = Math.random() * 100;
+      
+      const styles = {
+        left: `${posX}%`,
+        top: `${posY}%`,
+        opacity: opacity,
+        animation: `float ${duration}s ease-in-out ${delay}s infinite alternate`
+      };
+      
+      if (type === 'circle') {
+        return (
+          <div 
+            key={`circle-${i}`} 
+            className="absolute rounded-full bg-black"
+            style={{
+              ...styles,
+              width: `${size}px`,
+              height: `${size}px`,
+            }}
+          />
+        );
+      } else if (type === 'square') {
+        return (
+          <div 
+            key={`square-${i}`} 
+            className="absolute bg-black"
+            style={{
+              ...styles,
+              width: `${size}px`,
+              height: `${size}px`,
+              transform: `rotate(${Math.random() * 45}deg)`
+            }}
+          />
+        );
+      } else if (type === 'line') {
+        const width = Math.random() * 100 + 50;
+        const height = 1;
+        return (
+          <div 
+            key={`line-${i}`} 
+            className="absolute bg-black"
+            style={{
+              ...styles,
+              width: `${width}px`,
+              height: `${height}px`,
+              transform: `rotate(${Math.random() * 180}deg)`
+            }}
+          />
+        );
+      }
+      return null;
+    });
+  };
+
   return (
-    <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-[var(--color-secondary)] text-white py-12 md:py-20">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
-          <div className="md:w-1/2 mb-10 md:mb-0">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 md:mb-6">Welcome to BookCafe</h1>
-            <p className="text-lg md:text-xl mb-6 md:mb-8">Your digital library for educational resources. Discover, read, and learn with our extensive collection of books.</p>
-            <button
-              onClick={() => router.push('/catalog')}
-              className="w-full md:w-auto px-6 md:px-8 py-3 md:py-4 bg-[var(--color-bg-primary)] text-[var(--color-primary)] rounded-lg font-bold text-lg hover:bg-[var(--color-bg-secondary)] transition-colors shadow-lg"
-            >
-              Explore Our Catalog
-            </button>
-          </div>
-          <div className="md:w-1/2 flex justify-center">
-            <div className="relative w-72 h-72 md:w-80 md:h-80">
-              {/* Front book */}
-              <div className="absolute transform rotate-6 w-56 h-72 md:w-64 md:h-80 z-20">
-                {/* Book spine */}
-                <div className="absolute left-0 top-0 w-6 h-full bg-blue-800 rounded-l-md shadow-inner flex items-center justify-center">
-                  <div className="transform rotate-90 text-white text-xs whitespace-nowrap font-semibold">RANDOM BOOK NAME</div>
-                </div>
-                {/* Book cover */}
-                <div className="absolute left-6 top-0 right-0 bottom-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-r-md shadow-md p-4">
-                  <div className="h-2/3 flex items-center justify-center">
-                    <JournalBookmark className="text-white text-5xl" />
-                  </div>
-                  <div className="h-1/3">
-                    <div className="h-3 bg-white bg-opacity-70 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-white bg-opacity-70 rounded w-1/2"></div>
-                  </div>
-                </div>
-                {/* Book pages */}
-                <div className="absolute left-6 top-0 bottom-0 w-1 bg-white"></div>
-              </div>
+    <main className="min-h-screen bg-white text-black">
+      {/* Hero Section - Minimalist Book Aesthetic */}
+      <section className="relative min-h-[60vh] flex items-center overflow-hidden bg-white">
+        {/* Animated patterns - reduced count for better performance */}
+        <div className="absolute inset-0 overflow-hidden">
+          <style jsx global>{`
+            @keyframes float {
+              0% { transform: translateY(0) rotate(0); }
+              100% { transform: translateY(-15px) rotate(3deg); }
+            }
+          `}</style>
+          {renderPattern('circle', 15)}
+          {renderPattern('square', 10)}
+          {renderPattern('line', 12)}
+        </div>
+
+        <div className="container mx-auto px-6 py-8 md:py-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">
+            <div className="lg:col-span-3 space-y-5">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-none">
+                BOOK<span className="inline-block relative">CAFE
+                  <div className="absolute h-1 w-full bg-black bottom-1"></div>
+                </span>
+              </h1>
               
-              {/* Middle book */}
-              <div className="absolute transform -rotate-6 w-56 h-72 md:w-64 md:h-80 z-10">
-                {/* Book spine */}
-                <div className="absolute left-0 top-0 w-6 h-full bg-amber-800 rounded-l-md shadow-inner flex items-center justify-center">
-                  <div className="transform rotate-90 text-white text-xs whitespace-nowrap font-semibold">CLASSIC FICTION</div>
-                </div>
-                {/* Book cover */}
-                <div className="absolute left-6 top-0 right-0 bottom-0 bg-gradient-to-br from-amber-400 to-red-500 rounded-r-md shadow-md p-4">
-                  <div className="h-2/3 flex items-center justify-center">
-                    <Book className="text-white text-5xl" />
-                  </div>
-                  <div className="h-1/3">
-                    <div className="h-3 bg-white bg-opacity-70 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-white bg-opacity-70 rounded w-1/2"></div>
-                  </div>
-                </div>
-                {/* Book pages */}
-                <div className="absolute left-6 top-0 bottom-0 w-1 bg-white"></div>
-              </div>
+              <h2 className="text-lg md:text-xl font-light max-w-md">
+                A minimalist digital library for the modern reader.
+              </h2>
               
-              {/* Back book */}
-              <div className="absolute transform rotate-[-15deg] w-56 h-72 md:w-64 md:h-80 -z-10 left-4">
-                {/* Book spine */}
-                <div className="absolute left-0 top-0 w-6 h-full bg-green-800 rounded-l-md shadow-inner flex items-center justify-center">
-                  <div className="transform rotate-90 text-white text-xs whitespace-nowrap font-semibold">SCIENCE & NATURE</div>
-                </div>
-                {/* Book cover */}
-                <div className="absolute left-6 top-0 right-0 bottom-0 bg-gradient-to-tr from-green-500 to-teal-400 rounded-r-md shadow-md p-4">
-                  <div className="h-2/3 flex items-center justify-center">
-                    <JournalBookmark className="text-white text-5xl" />
+              <div className="pt-3 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => router.push('/catalog')}
+                  className="group flex items-center justify-center gap-2 px-6 py-3 bg-black text-white font-semibold hover:bg-gray-900 transition-all duration-300 rounded-none"
+                >
+                  <span>BROWSE</span>
+                  <ArrowRight className="transition-transform duration-300 group-hover:translate-x-2" />
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const section = document.getElementById('featured-books');
+                    section?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-black border border-black font-semibold hover:bg-gray-100 transition-all duration-300 rounded-none"
+                >
+                  <span>DISCOVER</span>
+                  <ArrowDownCircle />
+                </button>
+              </div>
+            </div>
+            
+            <div className="relative hidden lg:block lg:col-span-2" style={{ marginTop: "-40px" }}>
+              <div className="book-stack">
+                {[...Array(2)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="absolute w-48 h-72 bg-white shadow-2xl"
+                    style={{
+                      transform: `perspective(1000px) rotateY(${-5 * (i+1)}deg) rotateX(${2 * (i+1)}deg) translateZ(${-10 * i}px) translateX(${15 * i}px)`,
+                      zIndex: 3 - i,
+                      border: '1px solid black',
+                    }}
+                  >
+                    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gray-50">
+                      <BookmarkStar className="text-4xl mb-6" />
+                      <div className="w-3/4 h-1 bg-black mb-3"></div>
+                      <div className="w-1/2 h-1 bg-black"></div>
+                    </div>
                   </div>
-                  <div className="h-1/3">
-                    <div className="h-3 bg-white bg-opacity-70 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-white bg-opacity-70 rounded w-1/2"></div>
-                  </div>
-                </div>
-                {/* Book pages */}
-                <div className="absolute left-6 top-0 bottom-0 w-1 bg-white"></div>
+                ))}
               </div>
             </div>
           </div>
         </div>
+        
+        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white via-white to-transparent"></div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 md:py-16 bg-[var(--color-bg-secondary)]">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 text-[var(--color-text-primary)]">Why Choose BookCafe?</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="bg-[var(--color-bg-primary)] p-6 md:p-8 rounded-lg shadow-md text-center">
-              <div className="text-[var(--color-primary)] text-3xl md:text-4xl mb-4 flex justify-center">
-                <Book />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-[var(--color-text-primary)]">Extensive Collection</h3>
-              <p className="text-[var(--color-text-secondary)]">Access thousands of educational books across various subjects and disciplines.</p>
-            </div>
-            
-            <div className="bg-[var(--color-bg-primary)] p-6 md:p-8 rounded-lg shadow-md text-center">
-              <div className="text-[var(--color-primary)] text-3xl md:text-4xl mb-4 flex justify-center">
-                <People />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-[var(--color-text-primary)]">Community Learning</h3>
-              <p className="text-[var(--color-text-secondary)]">Join a community of learners and educators sharing knowledge and resources.</p>
-            </div>
-            
-            <div className="bg-[var(--color-bg-primary)] p-6 md:p-8 rounded-lg shadow-md text-center sm:col-span-2 md:col-span-1 mx-auto sm:mx-0 sm:max-w-none">
-              <div className="text-[var(--color-primary)] text-3xl md:text-4xl mb-4 flex justify-center">
-                <Laptop />
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-[var(--color-text-primary)]">Digital Access</h3>
-              <p className="text-[var(--color-text-secondary)]">Read anywhere, anytime with our digital platform optimized for all devices.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Books Section */}
-      <section className="py-12 md:py-16 bg-[var(--color-bg-primary)]">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-8 md:mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
-              Popular Books
+      {/* Featured Categories - Horizontal Scrolling */}
+      <section id="featured-books" className="pt-12 md:pt-16 pb-8 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="flex justify-between items-end mb-12">
+            <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight">
+              Featured <br className="hidden md:block" />Collections
             </h2>
             <button
               onClick={() => router.push('/catalog')}
-              className="text-[var(--color-primary)] hover:underline font-medium flex items-center"
+              className="text-black font-medium flex items-center gap-2 border-b border-transparent hover:border-black transition-all pb-1"
             >
-              View All <ChevronRight className="ml-1" />
+              All Collections <ChevronRight />
             </button>
           </div>
-
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center overflow-x-auto pb-2 max-w-[80%] md:max-w-none hide-scrollbar">
-              {getAvailableCategories().map((category, index) => (
+          
+          <div className="mb-8 relative">
+            <div className="flex items-center space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+              {getAvailableCategories().map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryChange(category, categories.indexOf(category))}
-                  className={`mr-2 px-4 py-2 rounded-full text-sm md:text-base transition-colors duration-200 whitespace-nowrap ${
+                  className={`whitespace-nowrap px-6 py-2 text-sm md:text-base font-semibold transition-all ${
                     activeCategory === category
-                      ? 'bg-[var(--color-secondary)] text-white'
-                      : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-100 text-black hover:bg-gray-200'
                   }`}
                 >
-                  {category}
+                  {category.toUpperCase()}
                 </button>
               ))}
             </div>
             
             {getAvailableCategories().length > 1 && (
-              <div className="flex space-x-2 ml-2">
-                <button
-                  onClick={handlePrevCategory}
-                  className="p-2 rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]"
-                >
-                  <ChevronLeft />
-                </button>
+              <div className="hidden md:flex absolute -right-2 top-0 bottom-0 items-center">
                 <button
                   onClick={handleNextCategory}
-                  className="p-2 rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]"
+                  className="p-3 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors"
                 >
-                  <ChevronRight />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             )}
           </div>
-
+          
           {isLoading ? (
             <CardSkeleton count={6} />
           ) : noBooks ? (
-            <div className="text-center py-10 bg-[var(--color-bg-secondary)] rounded-lg">
-              <h3 className="text-[var(--color-text-primary)] text-xl font-medium mb-2">No Books Found</h3>
-              <p className="text-[var(--color-text-secondary)] mb-6">We couldn&apos;t find any books in our catalog. Would you like to add some?</p>
+            <div className="text-center py-20 border border-gray-300">
+              <Book className="text-gray-500 text-5xl mx-auto mb-6" />
+              <h3 className="text-2xl font-medium mb-3">No Books Available</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Our collection is currently empty. Would you like to add some titles?
+              </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <button
-                  onClick={() => router.push('/catalog')}
-                  className="px-4 py-2 bg-[var(--color-bg-primary)] text-[var(--color-primary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-border)] transition-colors"
-                >
-                  Browse Catalog
-                </button>
-                <button
                   onClick={() => router.push('/add-book')}
-                  className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                  className="px-8 py-3 bg-black text-white font-medium hover:bg-gray-900 transition-colors"
                 >
-                  Add New Book
+                  Add First Book
                 </button>
               </div>
             </div>
           ) : categoryLoading ? (
             <CardSkeleton count={6} />
           ) : popularBooks[activeCategory]?.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {popularBooks[activeCategory].map((book) => (
                 <div key={book.id} className="flex justify-center">
                   <BookCard
@@ -439,38 +456,36 @@ export default function Home() {
             </div>
           ) : (
             <div>
-              <div className="text-center py-8 bg-[var(--color-bg-secondary)] rounded-lg mb-8">
-                <p className="text-[var(--color-text-secondary)] mb-4">No books found in the &quot;{activeCategory}&quot; category</p>
+              <div className="text-center py-16 border border-gray-300 mb-16">
+                <p className="text-gray-600 mb-6">No books found in "{activeCategory}"</p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button
                     onClick={() => {
-                      // Get available categories
                       const availableCategories = getAvailableCategories();
                       if (availableCategories.length > 0) {
-                        // Get the first available category
                         const firstAvailableCategory = availableCategories[0];
                         handleCategoryChange(firstAvailableCategory, categories.indexOf(firstAvailableCategory));
                       }
                     }}
-                    className="px-4 py-2 bg-[var(--color-bg-primary)] text-[var(--color-primary)] border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-border)] transition-colors"
+                    className="px-6 py-3 bg-gray-100 text-black font-medium hover:bg-gray-200 transition-colors"
                   >
-                    Show Available Books
+                    Browse Available Categories
                   </button>
                   <button
                     onClick={() => router.push('/add-book')}
-                    className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                    className="px-6 py-3 bg-black text-white font-medium hover:bg-gray-900 transition-colors"
                   >
-                    Add Book in {activeCategory}
+                    Add Books to {activeCategory}
                   </button>
                 </div>
               </div>
               
               {/* Recommendations from other categories */}
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">
-                  Explore other categories
+              <div className="mb-16">
+                <h3 className="text-2xl font-bold mb-8 uppercase tracking-tight">
+                  Explore Alternatives
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {getAvailableCategories()
                     .filter(cat => cat !== activeCategory)
                     .slice(0, 3)
@@ -492,37 +507,56 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 md:py-16 bg-[var(--color-secondary)] text-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12">What Our Users Say</h2>
+      {/* Features Section - Aesthetic Grid */}
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl md:text-4xl font-black mb-16 uppercase tracking-tight text-center">
+            The BookCafe Experience
+          </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            <div className="bg-[rgba(255,255,255,0.1)] p-5 md:p-6 rounded-lg">
-              <p className="italic mb-4">&quot;BookCafe has transformed how I access educational materials. The interface is intuitive and the collection is impressive.&quot;</p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-bg-primary)]"></div>
-                <div className="ml-4">
-                  <p className="font-semibold">Sarah Johnson</p>
-                  <p className="text-sm opacity-75">Literature Student</p>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-300">
+            {[
+              {
+                icon: <Stack className="text-3xl" />,
+                title: "Curated Collection",
+                desc: "Carefully selected titles across genres for quality reading experiences."
+              },
+              {
+                icon: <People className="text-3xl" />,
+                title: "Reader Community",
+                desc: "Connect with fellow book enthusiasts and share recommendations."
+              },
+              {
+                icon: <Laptop className="text-3xl" />,
+                title: "Digital First",
+                desc: "Read anywhere with our responsive platform optimized for all devices."
+              },
+              {
+                icon: <JournalBookmark className="text-3xl" />,
+                title: "Personal Library",
+                desc: "Build your own collection of favorites with custom reading lists."
+              }
+            ].map((feature, i) => (
+              <div key={i} className="p-10 md:p-12 bg-white flex flex-col group hover:bg-black hover:text-white transition-colors duration-500">
+                <div className="mb-6">{feature.icon}</div>
+                <h3 className="text-xl font-bold mb-4">{feature.title}</h3>
+                <p className="text-gray-600 group-hover:text-gray-300 transition-colors duration-500">
+                  {feature.desc}
+                </p>
               </div>
-            </div>
-            
-            <div className="bg-[rgba(255,255,255,0.1)] p-5 md:p-6 rounded-lg">
-              <p className="italic mb-4">&quot;As an educator, I find BookCafe to be an invaluable resource for both myself and my students. The digital access makes learning accessible to everyone.&quot;</p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-bg-primary)]"></div>
-                <div className="ml-4">
-                  <p className="font-semibold">Dr. Michael Chen</p>
-                  <p className="text-sm opacity-75">Professor of History</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
-          
-          <div className="mt-8 md:mt-12 text-center">
-            <p className="text-lg md:text-xl max-w-2xl mx-auto">Join our growing community of readers and educators who are discovering the power of digital learning.</p>
+        </div>
+      </section>
+
+      {/* Footer Banner */}
+      <section className="bg-black text-white py-16">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-2xl md:text-3xl font-light max-w-2xl mx-auto mb-6">
+            Redefining the digital reading experience, one page at a time.
+          </p>
+          <div className="inline-flex items-center bg-white text-black px-6 py-3 font-medium">
+            <span>© BOOKCAFE {new Date().getFullYear()}</span>
           </div>
         </div>
       </section>

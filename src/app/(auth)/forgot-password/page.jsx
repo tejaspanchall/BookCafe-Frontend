@@ -4,16 +4,30 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import FormInput from '@/components/auth/FormInput';
+import FormButton from '@/components/auth/FormButton';
+import { FiMail } from 'react-icons/fi';
 
 export default function ForgotPassword() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!email) {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Email is required',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const res = await fetch(`${BACKEND}/auth/forgot-password`, {
@@ -24,15 +38,7 @@ export default function ForgotPassword() {
       
       const data = await res.json();
       if (res.ok) {
-        Swal.fire({
-          title: 'Success!',
-          text: data.message || 'Reset instructions sent to your email',
-          icon: 'success',
-          confirmButtonColor: 'var(--color-button-primary)'
-        });
-
-        router.refresh();
-
+        setIsSubmitted(true);
       } else {
         Swal.fire({
           title: 'Error!',
@@ -53,34 +59,60 @@ export default function ForgotPassword() {
     }
   };
 
+  if (isSubmitted) {
+    return (
+      <AuthForm 
+        title="Check Your Email"
+        subtitle={`We've sent password reset instructions to ${email}`}
+        footerLink={{ href: '/login', text: 'Back to Login' }}
+      >
+        <div className="text-center mb-4">
+          <div className="flex justify-center mb-6">
+            <div className="bg-[var(--color-success-light)] p-4 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[var(--color-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-[var(--color-text-primary)]">
+            Follow the instructions in the email to reset your password. If you don't see the email, check your spam folder.
+          </p>
+        </div>
+        
+        <FormButton 
+          type="button"
+          onClick={() => router.push('/login')}
+        >
+          Return to Login
+        </FormButton>
+      </AuthForm>
+    );
+  }
+
   return (
     <AuthForm 
       onSubmit={handleSubmit} 
       title="Forgot Password"
+      subtitle="Enter your email and we'll send you a link to reset your password"
       footerLink={{ href: '/login', text: 'Back to Login' }}
     >
-      <div className="mb-6">
-        <input 
+      <div className="space-y-6">
+        <FormInput 
           type="email"
-          className="w-full px-4 py-2 border rounded-lg text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
           placeholder="Enter your email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
+          icon={<FiMail className="text-[var(--color-text-secondary)]" />}
         />
-      </div>
       
-      <button 
-        type="submit"
-        className="w-full bg-[var(--color-button-primary)] text-white py-2 rounded-lg hover:bg-[var(--color-button-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <LoadingSpinner size="w-5 h-5" />
-        ) : (
-          'Reset Password'
-        )}
-      </button>
+        <FormButton 
+          type="submit"
+          isLoading={isLoading}
+        >
+          Send Reset Link
+        </FormButton>
+      </div>
     </AuthForm>
   );
 }
