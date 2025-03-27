@@ -21,14 +21,6 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
       }}
       onClick={onClick}
     >
-      {/* Book Ribbon - Top Corner Decoration */}
-      <div className="absolute top-0 right-0 w-16 h-16 z-10">
-        <div 
-          className="absolute transform rotate-45 bg-gradient-to-r from-blue-400 to-blue-600 text-white text-[9px] font-semibold py-1 right-[-40px] top-[16px] w-[140px] text-center shadow-md"
-        >
-          {book.categories && book.categories[0]?.name || "Book"}
-        </div>
-      </div>
 
       {/* Cover Area - 3D Effect with Shadow */}
       <div className="relative overflow-hidden">

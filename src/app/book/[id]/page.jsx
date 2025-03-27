@@ -6,7 +6,7 @@ import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { BookSkeleton } from '@/components/skeleton';
-import { PlusCircle, DashCircle, PencilSquare, Trash, ArrowLeft } from 'react-bootstrap-icons';
+import { PlusCircle, DashCircle, PencilSquare, Trash, ArrowLeft, Book, Person, Tag, CurrencyDollar, InfoCircle, Calendar } from 'react-bootstrap-icons';
 import Link from 'next/link';
 
 export default function BookDetail() {
@@ -157,7 +157,7 @@ export default function BookDetail() {
         title: 'Authentication Required',
         text: 'Please log in to add books to your library',
         icon: 'warning',
-        confirmButtonColor: 'var(--color-button-primary)',
+        confirmButtonColor: '#333',
         confirmButtonText: 'Log In'
       }).then((result) => {
         if (result.isConfirmed) {
@@ -188,7 +188,7 @@ export default function BookDetail() {
         title: 'Success!',
         text: 'Book added to your library',
         icon: 'success',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: '#333'
       });
     } catch (error) {
       console.error('Add to library error:', error);
@@ -196,7 +196,7 @@ export default function BookDetail() {
         title: 'Error',
         text: error.message || 'Failed to add book to library',
         icon: 'error',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: '#333'
       });
     } finally {
       setIsAddingToLibrary(false);
@@ -230,7 +230,7 @@ export default function BookDetail() {
         title: 'Success!',
         text: 'Book removed from your library',
         icon: 'success',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: '#333'
       });
     } catch (error) {
       console.error('Remove from library error:', error);
@@ -238,7 +238,7 @@ export default function BookDetail() {
         title: 'Error',
         text: error.message || 'Failed to remove book from library',
         icon: 'error',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: '#333'
       });
     } finally {
       setIsRemovingFromLibrary(false);
@@ -251,7 +251,7 @@ export default function BookDetail() {
         title: 'Unauthorized',
         text: 'Only teachers can delete books',
         icon: 'error',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: '#333'
       });
       return;
     }
@@ -261,8 +261,8 @@ export default function BookDetail() {
       text: "You won't be able to revert this!",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: 'var(--color-button-primary)',
-      cancelButtonColor: '#d33',
+      confirmButtonColor: '#333',
+      cancelButtonColor: '#999',
       confirmButtonText: 'Yes, delete it!'
     });
 
@@ -287,7 +287,7 @@ export default function BookDetail() {
           title: 'Deleted!',
           text: 'Book has been deleted.',
           icon: 'success',
-          confirmButtonColor: 'var(--color-button-primary)'
+          confirmButtonColor: '#333'
         }).then(() => {
           router.push('/catalog');
         });
@@ -297,7 +297,7 @@ export default function BookDetail() {
           title: 'Error',
           text: error.message || 'Failed to delete book',
           icon: 'error',
-          confirmButtonColor: 'var(--color-button-primary)'
+          confirmButtonColor: '#333'
         });
       } finally {
         setIsDeleting(false);
@@ -305,129 +305,69 @@ export default function BookDetail() {
     }
   };
 
-  if (isLoading)
-    return <BookSkeleton />;
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) {
+      return "https://via.placeholder.com/400x600?text=Book+Cover";
+    }
+
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
+    const baseUrl = BACKEND.replace('/api', '');
+    const imageName = imagePath.replace(/^books\//, '');
+    return `${baseUrl}/storage/books/${encodeURIComponent(imageName)}`;
+  };
+
+  if (isLoading) return <BookSkeleton />;
     
   if (error)
     return (
-      <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        <div className="p-4 rounded-lg" role="alert" style={{ backgroundColor: "rgba(var(--color-accent), 0.2)", color: "var(--color-text-light)" }}>
-          Error: {error}
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+          <div className="p-4 rounded-lg bg-gray-100 border-l-4 border-gray-800" role="alert">
+            <p className="text-gray-800">Error: {error}</p>
+          </div>
         </div>
       </div>
     );
     
   if (!book)
     return (
-      <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-        Book not found
+      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+          <p className="text-gray-800">Book not found</p>
+        </div>
       </div>
     );
 
-  // Add logging for book data
-  console.log('BookDetail - Book data:', {
-    bookId: book.id,
-    imagePath: book.image,
-    constructedImageUrl: book.image ? `${BACKEND}/storage/${book.image}` : "https://via.placeholder.com/200x300?text=Book+Cover"
-  });
-
-  const getImageUrl = (imagePath) => {
-    console.log('BookDetail - Processing image path:', {
-      originalPath: imagePath,
-      backendUrl: BACKEND
-    });
-
-    if (!imagePath) {
-      console.log('BookDetail - No image path, using placeholder');
-      return "https://via.placeholder.com/200x300?text=Book+Cover";
-    }
-
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      console.log('BookDetail - Using direct URL:', imagePath);
-      return imagePath;
-    }
-
-    const baseUrl = BACKEND.replace('/api', '');
-
-    const imageName = imagePath.replace(/^books\//, '');
-    const finalUrl = `${baseUrl}/storage/books/${encodeURIComponent(imageName)}`;
-    console.log('BookDetail - Constructed storage URL:', {
-      baseUrl,
-      imagePath,
-      imageName,
-      finalUrl
-    });
-    return finalUrl;
-  };
-
   return (
-    <div className="container mx-auto py-12 px-4" style={{ backgroundColor: "var(--color-bg-primary)", color: "var(--color-text-primary)" }}>
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="md:w-1/3 lg:w-1/4">
-          <img
-            src={getImageUrl(book.image)}
-            className="w-full rounded-lg shadow-md"
-            style={{ maxHeight: "100%", maxWidth: "300px", objectFit: "cover" }}
-            onError={(e) => {
-              console.error('BookDetail - Image load error:', {
-                bookId: book.id,
-                imagePath: book.image,
-                constructedUrl: getImageUrl(book.image),
-                error: e.message
-              });
-              e.target.src = "https://via.placeholder.com/200x300?text=Book+Cover";
-            }}
-          />
-        </div>
-        <div className="md:w-2/3 lg:w-3/4">
-          <h3 className="text-2xl font-bold mb-3" style={{ color: "var(--color-text-primary)" }}>
-            {book.title}
-          </h3>
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
-              {book.authors && book.authors.length > 0 
-                ? book.authors.map(author => author.name).join(', ')
-                : 'Unknown Author'}
-            </span>
-            <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}>
-              ISBN: {book.isbn}
-            </span>
-            {book.categories && book.categories.length > 0 ? (
-              <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
-                Categories: {book.categories.map(cat => cat.name).join(', ')}
-              </span>
-            ) : (
-              <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
-                No Categories
-              </span>
-            )}
-          </div>
+    <div className="text-gray-800">
 
-          <div className="mb-6">
-            <p className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
-              Description
-            </p>
-            <p style={{ color: 'var(--color-text-secondary)' }}>{book.description}</p>
-          </div>
-
-          {book.price !== null && (
-            <div className="mb-4">
-              <p className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                Price
-              </p>
-              <p style={{ color: 'var(--color-text-secondary)' }}>₹{book.price}</p>
+      {/* Main content section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Left column: Book cover and actions */}
+          <div className="lg:w-1/3 xl:w-1/4 flex flex-col items-center lg:items-start">
+            <div className="w-56 max-w-full aspect-[2/3] rounded-md shadow-md mb-6 border border-gray-200 bg-white p-2">
+              <img
+                src={getImageUrl(book.image)}
+                alt={book.title}
+                className="w-full h-full object-cover rounded-sm"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/400x600?text=Book+Cover";
+                }}
+              />
             </div>
-          )}
 
-          <div className="flex flex-wrap gap-3">
-            {isLoggedIn && (
-              <>
-                {inLibrary ? (
+            {/* Action buttons */}
+            <div className="w-full max-w-xs space-y-3">
+              {isLoggedIn && (
+                inLibrary ? (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50 hover:bg-red-600"
+                    className="w-full py-2.5 px-4 rounded border border-gray-300 bg-white text-gray-700 font-medium flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-60"
                     onClick={handleRemoveFromLibrary}
                     disabled={isRemovingFromLibrary}
-                    style={{ backgroundColor: "#dc2626", color: "white" }}
                   >
                     {isRemovingFromLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
@@ -437,10 +377,9 @@ export default function BookDetail() {
                   </button>
                 ) : (
                   <button
-                    className="px-4 py-2 font-medium rounded-lg transition duration-200 flex items-center justify-center disabled:opacity-50 hover:bg-emerald-600"
+                    className="w-full py-2.5 px-4 rounded bg-gray-900 text-white font-medium flex items-center justify-center hover:bg-black transition-colors disabled:opacity-60"
                     onClick={handleAddToLibrary}
                     disabled={isAddingToLibrary}
-                    style={{ backgroundColor: "#059669", color: "white" }}
                   >
                     {isAddingToLibrary ? (
                       <LoadingSpinner size="w-5 h-5" />
@@ -448,40 +387,131 @@ export default function BookDetail() {
                       <><PlusCircle className="mr-2" />Add to Library</>
                     )}
                   </button>
-                )}
-              </>
-            )}
+                )
+              )}
 
-            {isLoggedIn && userRole === 'teacher' && (
-              <>
-                <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-blue-600 flex items-center"
-                  onClick={() => router.push(`/book/${book.id}/edit`)}
-                  style={{ backgroundColor: "#2563eb", color: "white" }}
-                >
-                  <PencilSquare className="mr-2" />Edit Book
-                </button>
-                <button
-                  className="px-4 py-2 font-medium rounded-lg transition duration-200 disabled:opacity-50 hover:bg-rose-600 flex items-center"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  style={{ backgroundColor: "#e11d48", color: "white" }}
-                >
-                  {isDeleting ? (
-                    <LoadingSpinner size="w-5 h-5" />
-                  ) : (
-                    <><Trash className="mr-2" />Delete Book</>
-                  )}
-                </button>
-              </>
-            )}
-            <button
-              className="px-4 py-2 font-medium rounded-lg transition duration-200 hover:bg-gray-600 flex items-center"
-              onClick={() => router.push('/catalog')}
-              style={{ backgroundColor: "#4b5563", color: "white" }}
-            >
-              <ArrowLeft className="mr-2" />Back to Catalog
-            </button>
+              {isLoggedIn && userRole === 'teacher' && (
+                <>
+                  <button
+                    className="w-full py-2.5 px-4 rounded border border-gray-300 bg-white text-gray-800 font-medium flex items-center justify-center hover:bg-gray-50 transition-colors"
+                    onClick={() => router.push(`/book/${book.id}/edit`)}
+                  >
+                    <PencilSquare className="mr-2" />Edit Book
+                  </button>
+                  <button
+                    className="w-full py-2.5 px-4 rounded border border-gray-300 bg-white text-gray-800 font-medium flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-60"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <LoadingSpinner size="w-5 h-5" />
+                    ) : (
+                      <><Trash className="mr-2" />Delete Book</>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Book metadata card - visible on mobile only */}
+            <div className="mt-8 lg:hidden w-full p-5 bg-white border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold mb-3 pb-2 border-b border-gray-100">Book Details</h3>
+              <ul className="space-y-2.5">
+                <li className="flex items-start">
+                  <Book className="flex-shrink-0 mt-1 mr-3 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">ISBN</p>
+                    <p className="font-medium">{book.isbn || "Not available"}</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <Person className="flex-shrink-0 mt-1 mr-3 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Author</p>
+                    <p className="font-medium">
+                      {book.authors && book.authors.length > 0 
+                        ? book.authors.map(author => author.name).join(', ')
+                        : 'Unknown Author'}
+                    </p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <Tag className="flex-shrink-0 mt-1 mr-3 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Categories</p>
+                    <p className="font-medium">
+                      {book.categories && book.categories.length > 0 
+                        ? book.categories.map(cat => cat.name).join(', ')
+                        : 'None'}
+                    </p>
+                  </div>
+                </li>
+                {book.price !== null && (
+                  <li className="flex items-start">
+                    <CurrencyDollar className="flex-shrink-0 mt-1 mr-3 text-gray-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Price</p>
+                      <p className="font-medium">₹{book.price}</p>
+                    </div>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+
+          {/* Right column: Book details */}
+          <div className="lg:w-2/3 xl:w-3/4">
+            {/* Title and author section */}
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{book.title}</h1>
+            </div>
+
+            {/* Book details grid - visible on desktop only */}
+            <div className="hidden lg:block mb-8 p-5 bg-white border border-gray-200 rounded-lg">
+              <h3 className="text-lg font-semibold mb-3 pb-2 border-b border-gray-100">Book Details</h3>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">ISBN</p>
+                  <p className="font-medium">{book.isbn || "Not available"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Author</p>
+                  <p className="font-medium">
+                    {book.authors && book.authors.length > 0 
+                      ? book.authors.map(author => author.name).join(', ')
+                      : 'Unknown Author'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Categories</p>
+                  <p className="font-medium">
+                    {book.categories && book.categories.length > 0 
+                      ? book.categories.map(cat => cat.name).join(', ')
+                      : 'None'}
+                  </p>
+                </div>
+                {book.price !== null && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Price</p>
+                    <p className="font-medium">₹{book.price}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Book description */}
+            <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
+              <h2 className="text-xl font-semibold flex items-center mb-4 border-b border-gray-100 pb-2">
+                <InfoCircle className="mr-2" /> About this Book
+              </h2>
+              <div className="prose max-w-none text-gray-700 leading-relaxed">
+                {book.description ? (
+                  <p>{book.description}</p>
+                ) : (
+                  <p className="text-gray-500 italic">No description available.</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
