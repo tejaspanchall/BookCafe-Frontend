@@ -457,7 +457,7 @@ export default function Home() {
           ) : (
             <div>
               <div className="text-center py-16 border border-gray-300 mb-16">
-                <p className="text-gray-600 mb-6">No books found in "{activeCategory}"</p>
+                <p className="text-gray-600 mb-6">No books found in &quot;{activeCategory}&quot;</p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button
                     onClick={() => {
