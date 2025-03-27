@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { EditBookSkeleton } from '@/components/skeleton';
 import CategorySelect from '@/components/books/CategorySelect';
+import AuthorInput from '@/components/books/AuthorInput';
 
 const getStorageValue = (key) => {
   if (typeof window === 'undefined') return null;
@@ -26,7 +27,7 @@ export default function EditBook() {
   const [book, setBook] = useState(null);
   const [editedBook, setEditedBook] = useState({
     title: "",
-    author: "",
+    authors: [],
     isbn: "",
     description: "",
     image: null,
@@ -102,6 +103,7 @@ export default function EditBook() {
         setEditedBook({ 
           ...foundBook,
           categories: foundBook.categories ? foundBook.categories.map(cat => cat.name) : [],
+          authors: foundBook.authors ? foundBook.authors.map(auth => auth.name) : [],
           image: null // Reset image to null since we'll handle it as a file
         });
 
@@ -173,15 +175,32 @@ export default function EditBook() {
     fetchBook();
   }, [id, token, user, router, BACKEND]);
 
+  useEffect(() => {
+    // Map author data when book data is loaded
+    if (book && book.authors) {
+      console.log('EditBook - Setting authors:', book.authors);
+      // Extract author names from the authors array
+      const authorNames = book.authors.map(author => author.name);
+      setEditedBook(prev => ({
+        ...prev,
+        authors: authorNames
+      }));
+    }
+  }, [book]);
+
   const validateForm = () => {
     const errors = {};
-    const requiredFields = ['title', 'author', 'isbn', 'description'];
+    const requiredFields = ['title', 'isbn', 'description'];
     
     requiredFields.forEach(field => {
       if (!editedBook[field]?.trim()) {
         errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
       }
     });
+
+    if (editedBook.authors.length === 0) {
+      errors.authors = 'At least one author is required';
+    }
 
     if (editedBook.price && isNaN(parseFloat(editedBook.price))) {
       errors.price = 'Price must be a valid number';
@@ -283,14 +302,21 @@ export default function EditBook() {
     try {
       const formData = new FormData();
       formData.append('title', editedBook.title.trim());
-      formData.append('author', editedBook.author.trim());
       formData.append('isbn', editedBook.isbn.trim());
       formData.append('description', editedBook.description?.trim() || '');
+      
+      if (editedBook.authors && editedBook.authors.length > 0) {
+        editedBook.authors.forEach((author, index) => {
+          formData.append(`authors[${index}]`, author.trim());
+        });
+      }
+      
       if (editedBook.categories && editedBook.categories.length > 0) {
         editedBook.categories.forEach((category, index) => {
           formData.append(`categories[${index}]`, category.trim());
         });
       }
+      
       if (editedBook.price) {
         formData.append('price', parseFloat(editedBook.price));
       }
@@ -462,21 +488,18 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Author</label>
-          <input
-            type="text"
-            name="author"
-            value={editedBook.author}
-            onChange={handleInputChange}
-            className="w-full p-2 rounded border focus:outline-none"
+          <label className="block mb-2">Authors</label>
+          <AuthorInput
+            value={editedBook.authors}
+            onChange={(value) => setEditedBook({ ...editedBook, authors: value })}
             style={{ 
               backgroundColor: "var(--color-bg-secondary)",
-              borderColor: validationErrors.author ? "red" : "var(--color-border)",
+              borderColor: validationErrors.authors ? "red" : "var(--color-border)",
               color: "var(--color-text-primary)"
             }}
           />
-          {validationErrors.author && (
-            <p className="text-red-500 text-sm mt-1">{validationErrors.author}</p>
+          {validationErrors.authors && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.authors}</p>
           )}
         </div>
 

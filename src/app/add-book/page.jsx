@@ -7,6 +7,7 @@ import AuthForm from '@/components/auth/AuthForm';
 import { AuthContext } from '@/components/context/AuthContext';
 import { AddBookSkeleton } from '@/components/skeleton';
 import CategorySelect from '@/components/books/CategorySelect';
+import AuthorInput from '@/components/books/AuthorInput';
 
 export default function AddBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -17,7 +18,7 @@ export default function AddBook() {
     image: null,
     description: '',
     isbn: '',
-    author: '',
+    authors: [],
     categories: [],
     price: ''
   });
@@ -63,11 +64,15 @@ export default function AddBook() {
         throw new Error('Only teachers can add books');
       }
 
-      const requiredFields = ['title', 'isbn', 'author'];
+      const requiredFields = ['title', 'isbn'];
       for (const field of requiredFields) {
         if (!book[field] || !book[field].trim()) {
           throw new Error(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
         }
+      }
+
+      if (book.authors.length === 0) {
+        throw new Error('At least one author is required');
       }
 
       if (book.price && isNaN(parseFloat(book.price))) {
@@ -78,7 +83,11 @@ export default function AddBook() {
       formData.append('title', book.title.trim());
       formData.append('description', book.description.trim());
       formData.append('isbn', book.isbn.trim());
-      formData.append('author', book.author.trim());
+      if (book.authors.length > 0) {
+        book.authors.forEach((author, index) => {
+          formData.append(`authors[${index}]`, author.trim());
+        });
+      }
       if (book.categories.length > 0) {
         book.categories.forEach((category, index) => {
           formData.append(`categories[${index}]`, category.trim());
@@ -207,18 +216,15 @@ export default function AddBook() {
               />
             </div>
             <div className="mb-3">
-              <input
-                type="text"
-                className="w-full p-2 bg-white rounded border focus:outline-none"
+              <label className="block mb-2 text-[var(--color-text-primary)]">Author(s)</label>
+              <AuthorInput
+                value={book.authors}
+                onChange={(value) => setBook({ ...book, authors: value })}
                 style={{ 
-                  color: 'var(--color-text-primary)',
-                  borderColor: 'var(--color-border)',
-                  borderWidth: '1px',
+                  backgroundColor: "var(--color-bg-secondary)",
+                  borderColor: "var(--color-border)",
+                  color: "var(--color-text-primary)"
                 }}
-                placeholder="Author"
-                value={book.author}
-                onChange={(e) => setBook({ ...book, author: e.target.value })}
-                required
               />
             </div>
             <div className="mb-3">

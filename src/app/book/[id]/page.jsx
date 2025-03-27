@@ -385,7 +385,9 @@ export default function BookDetail() {
           </h3>
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-secondary)", color: "var(--color-bg-primary)" }}>
-              {book.author}
+              {book.authors && book.authors.length > 0 
+                ? book.authors.map(author => author.name).join(', ')
+                : 'Unknown Author'}
             </span>
             <span className="px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: "var(--color-button-primary)", color: "var(--color-bg-primary)" }}>
               ISBN: {book.isbn}

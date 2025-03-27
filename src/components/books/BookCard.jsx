@@ -46,7 +46,9 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
             color: 'var(--color-bg-primary)'
           }}
         >
-          {book.author}
+          {book.authors && book.authors.length > 0 
+            ? book.authors.map(author => author.name).join(', ')
+            : 'Unknown Author'}
         </div>
         {showRemoveButton && (
           <button
