@@ -346,10 +346,17 @@ export default function BookDetail() {
 
       {/* Main content section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back to Catalog button */}
+        <div className="mb-6">
+          <Link href="/catalog" className="inline-flex items-center py-2 px-4 rounded border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            <ArrowLeft className="mr-2" /> Back to Catalog
+          </Link>
+        </div>
+        
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Left column: Book cover and actions */}
           <div className="lg:w-1/3 xl:w-1/4 flex flex-col items-center lg:items-start">
-            <div className="w-56 max-w-full aspect-[2/3] rounded-md shadow-md mb-6 border border-gray-200 bg-white p-2">
+            <div className="w-72 max-w-full aspect-[2/3] rounded-md shadow-md mb-6 border border-gray-200 bg-white p-2">
               <img
                 src={getImageUrl(book.image)}
                 alt={book.title}
