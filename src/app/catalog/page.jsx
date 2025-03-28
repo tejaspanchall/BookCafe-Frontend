@@ -32,6 +32,8 @@ export default function BookCatalog() {
   const [allBooks, setAllBooks] = useState([]);
   const [displayedBooks, setDisplayedBooks] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchType, setSearchType] = useState("name");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -147,7 +149,7 @@ export default function BookCatalog() {
     try {
       let url;
       if (search) {
-        url = `${BACKEND}/books/search?query=${encodeURIComponent(search)}`;
+        url = `${BACKEND}/books/search?query=${encodeURIComponent(search)}&type=${searchType}`;
       } else {
         url = `${BACKEND}/books/get-books`;
       }
@@ -230,14 +232,53 @@ export default function BookCatalog() {
   };
 
   useEffect(() => {
+    // Clear any existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Skip the API call if search is triggered by initial render (empty string)
+    if (search === '' && allBooks.length === 0) {
+      return;
+    }
+    
+    // Create a new timeout to delay searching until typing stops
     const timer = setTimeout(() => {
       searchBooks().catch(err => {
-        console.error("Initial load error:", err);
-        setMessage("Could not load books. Please check your API configuration.");
+        console.error("Search error:", err);
+        setMessage("Could not perform search. Please try again.");
       });
-    }, 100);
+    }, 250); // 250ms delay for responsive search
     
-    return () => clearTimeout(timer);
+    setSearchTimeout(timer);
+    
+    // Cleanup the timeout when component unmounts or search changes again
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [search]); // Re-run when search changes
+
+  // Effect to handle search type changes
+  useEffect(() => {
+    // Clear the search when switching search types
+    setSearch("");
+    
+    // Reset page number
+    setPageNumber(1);
+  }, [searchType]);
+
+  // Initial load effect (separate from search effect)
+  useEffect(() => {
+    if (allBooks.length === 0) {
+      const timer = setTimeout(() => {
+        searchBooks().catch(err => {
+          console.error("Initial load error:", err);
+          setMessage("Could not load books. Please check your API configuration.");
+        });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   useEffect(() => {
@@ -451,60 +492,124 @@ export default function BookCatalog() {
           --color-secondary-rgb: 107, 114, 128; /* Gray shade - adjust to match your secondary color */
           --color-bg-secondary-rgb: 243, 244, 246; /* Light gray shade for backgrounds */
         }
+
+        @keyframes dot-bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-4px); }
+        }
+        
+        .animate-dot-bounce {
+          animation: dot-bounce 1.4s infinite ease-in-out both;
+        }
+        
+        /* Minimal search bar styles */
+        .search-container {
+          transition: all 0.3s ease;
+          border-radius: 0.75rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .search-container:focus-within {
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          transform: translateY(-1px);
+        }
+        
+        .search-input {
+          transition: all 0.2s ease;
+        }
+        
+        .search-type {
+          transition: all 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-type:hover {
+          background-color: var(--color-text-light) !important;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        .search-icon {
+          transition: all 0.3s ease;
+        }
+        
+        .search-container:focus-within .search-icon {
+          color: var(--color-primary) !important;
+        }
+        
+        @media (min-width: 640px) {
+          .search-container {
+            max-width: 85%;
+            margin: 0 auto;
+          }
+        }
       `}</style>
       
       <div className="mb-8 md:mb-12">
         <div className="max-w-3xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-grow flex">
-              <span className="inline-flex items-center px-3 bg-black border border-black text-white rounded-l-lg" style={{ 
-                backgroundColor: "var(--color-secondary)", 
-                borderColor: "var(--color-secondary)",
-                color: "var(--color-bg-primary)"
-              }}>
-                <Search />
-              </span>
-              <input
-                type="text"
-                className="flex-grow px-4 py-3 border rounded-r-lg focus:outline-none focus:ring-2"
-                placeholder="Search books..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && searchBooks()}
-                style={{ 
-                  backgroundColor: "var(--color-bg-secondary)", 
-                  color: "var(--color-text-primary)", 
-                  borderColor: "var(--color-border)",
-                  "--tw-ring-color": "var(--color-focus-ring)"
-                }}
-              />
-            </div>
-            <div className="flex flex-row gap-3">
-              <button 
-                onClick={searchBooks} 
-                className="flex-1 md:flex-none px-6 py-3 font-medium rounded-lg transition duration-200 disabled:opacity-50"
-                disabled={isLoading}
-                style={{ 
-                  backgroundColor: "var(--color-button-primary)", 
-                  color: "var(--color-bg-primary)"
-                }}
-              >
-                {isLoading ? "Searching..." : "Search"}
-              </button>
-
-              {/* Mobile Filter Button */}
-              <button 
-                className="md:hidden flex-1 md:flex-none px-6 py-3 font-medium rounded-lg transition duration-200"
-                onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-                style={{ 
-                  backgroundColor: "var(--color-secondary)",
-                  color: "var(--color-bg-primary)"
-                }}
-              >
-                <Funnel className="inline-block mr-2" /> Filter
-              </button>
+          {/* Minimal Search Bar */}
+          <div className="search-container bg-white overflow-hidden" style={{ 
+            backgroundColor: "var(--color-bg-secondary)"
+          }}>
+            <div className="flex flex-col sm:flex-row">
+              {/* Search Input */}
+              <div className="relative flex-grow">
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Search className="text-lg search-icon" style={{ color: "var(--color-secondary)" }} />
+                </div>
+                <input
+                  type="text"
+                  className="search-input w-full pl-12 pr-4 py-3.5 border-0 focus:outline-none focus:ring-0"
+                  placeholder={`Search by ${searchType}...`}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label={`Search books by ${searchType}`}
+                  aria-describedby="search-description"
+                  style={{ 
+                    backgroundColor: "var(--color-bg-secondary)", 
+                    color: "var(--color-text-primary)"
+                  }}
+                />
+                {isLoading && (
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex space-x-1" aria-hidden="true">
+                    <div className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)" }}></div>
+                    <div className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.2s' }}></div>
+                    <div className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.4s' }}></div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Vertical divider - only visible on sm and up */}
+              <div className="hidden sm:block w-px h-full self-stretch" style={{ backgroundColor: "var(--color-border)" }}></div>
+              
+              {/* Search Type Dropdown */}
+              <div className="sm:w-32 md:w-36 flex-shrink-0 border-t sm:border-t-0 relative overflow-hidden sm:overflow-visible" style={{ borderColor: "var(--color-border)" }}>
+                <select
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value)}
+                  className="search-type w-full h-full px-3 py-3.5 appearance-none border-0 focus:outline-none focus:ring-0 text-center sm:text-left pr-8 cursor-pointer font-medium sm:rounded-none rounded-b-lg transition duration-300"
+                  aria-label="Search type"
+                  style={{ 
+                    backgroundColor: "var(--color-text-secondary)",
+                    color: "white"
+                  }}
+                >
+                  <option value="name">Name</option>
+                  <option value="author">Author</option>
+                  <option value="isbn">ISBN</option>
+                </select>
+                <div className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ color: "white" }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
+          
+          {/* Helper text */}
+          <p className="text-xs mt-2 text-center" id="search-description" style={{ color: "var(--color-text-secondary)" }}>
+            Results update as you type • Searching by {searchType === "name" ? "book title" : searchType === "author" ? "author name" : "ISBN"}
+          </p>
         </div>
       </div>
 
