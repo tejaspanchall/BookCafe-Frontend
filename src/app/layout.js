@@ -24,8 +24,10 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className={GeistSans.className}>
         <AuthProvider>
-          <Navbar />  
-          {children}
+          <Navbar />
+          <main className="pt-0">  
+            {children}
+          </main>
         </AuthProvider>
       </body>
     </html>

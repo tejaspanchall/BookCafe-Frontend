@@ -44,6 +44,7 @@ export default function BookCatalog() {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const BOOKS_PER_PAGE = 18; // 6 books per row * 3 rows = 18 books per page
   
   const observer = useRef();
@@ -57,6 +58,24 @@ export default function BookCatalog() {
     });
     if (node) observer.current.observe(node);
   }, [isLoading, isLoadingMore, hasMore]);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Effect to track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const getImageUrl = (imagePath) => {
     console.log('Catalog - Constructing image URL:', {
@@ -542,6 +561,36 @@ export default function BookCatalog() {
             margin: 0 auto;
           }
         }
+
+        /* Scroll to top button styles */
+        .scroll-top-button {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 50;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(20px);
+        }
+        
+        .scroll-top-button.visible {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+        
+        .scroll-top-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
       `}</style>
       
       <div className="mb-8 md:mb-12">
@@ -683,6 +732,19 @@ export default function BookCatalog() {
           )}
         </div>
       </div>
+
+      {/* Scroll to top button */}
+      <button 
+        className={`scroll-top-button ${showScrollTop ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+        style={{ 
+          backgroundColor: "var(--color-primary)", 
+          color: "white"
+        }}
+      >
+        <ArrowUp size={20} />
+      </button>
     </div>
   );
 }

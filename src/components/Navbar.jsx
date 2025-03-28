@@ -51,7 +51,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-[var(--color-primary)] shadow-md py-4">
+    <nav className="bg-[var(--color-primary)] shadow-md py-4 sticky top-0 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center">
         <Link href="/catalog" className="text-2xl font-bold text-white flex items-center">
           <JournalBookmark className="mr-2 text-white" />
@@ -104,7 +104,7 @@ export default function Navbar() {
 
       {/* Mobile menu - only visible when toggled on small screens */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[var(--color-primary)] border-t border-[rgba(255,255,255,0.1)] mt-4 py-4">
+        <div className="md:hidden bg-[var(--color-primary)] border-t border-[rgba(255,255,255,0.1)] mt-4 py-4 fixed top-[60px] w-full left-0 shadow-md z-40">
           <div className="container mx-auto px-4">
             <div className="flex flex-col space-y-4">
               {isLoggedIn ? (

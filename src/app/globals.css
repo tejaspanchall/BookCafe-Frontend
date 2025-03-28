@@ -31,6 +31,16 @@
   
   /* Focus ring */
   --color-focus-ring: #000000;
+  
+  /* Navbar height for spacing */
+  --navbar-height: 60px;
+}
+
+/* Sticky navbar styles */
+body {
+  min-height: 100vh;
+  /* Prevent content jump when navbar becomes sticky */
+  scroll-padding-top: var(--navbar-height);
 }
 
 /* Make all clickable elements have a pointer cursor */
