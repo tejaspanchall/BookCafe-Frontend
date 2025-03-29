@@ -299,6 +299,9 @@ export default function EditBook() {
     setValidationErrors({});
     setIsSaving(true);
     
+    // Flag to track if we should show success message
+    let isSuccess = false;
+    
     try {
       const formData = new FormData();
       formData.append('title', editedBook.title.trim());
@@ -324,9 +327,8 @@ export default function EditBook() {
         formData.append('image', editedBook.image);
       }
 
-      let response;
       try {
-        response = await fetch(`${BACKEND}/books/${id}`, {
+        const response = await fetch(`${BACKEND}/books/${id}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${currentToken}`,
@@ -334,25 +336,57 @@ export default function EditBook() {
           },
           body: formData
         });
+        
+        if (response.status === 401) {
+          throw new Error("Your session has expired. Please log in again.");
+        }
+        
+        if (response.ok) {
+          isSuccess = true;
+        } else {
+          const errorText = await response.text();
+          let errorMessage;
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || 'Failed to update book';
+          } catch (e) {
+            errorMessage = 'Failed to update book. Please try again.';
+          }
+          throw new Error(errorMessage);
+        }
       } catch (fetchError) {
         console.error("Network error:", fetchError);
-        throw new Error("Network error. Please check your connection.");
-      }
-      
-      if (response.status === 401) {
-        throw new Error("Your session has expired. Please log in again.");
-      }
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage;
+        
+        // Wait a moment to let the server process the request
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if the book was actually updated by trying to fetch it again
         try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || 'Failed to update book';
-        } catch (e) {
-          errorMessage = 'Failed to update book. Please try again.';
+          const checkResponse = await fetch(`${BACKEND}/books/get-books?id=${id}`, {
+            headers: { "Accept": "application/json" }
+          });
+          
+          if (checkResponse.ok) {
+            const data = await checkResponse.json();
+            if (data.status === 'success' && Array.isArray(data.books)) {
+              // Look for the updated book
+              const updatedBook = data.books.find(b => b.id == id);
+              
+              if (updatedBook && 
+                  updatedBook.title.trim() === editedBook.title.trim() && 
+                  updatedBook.isbn.trim() === editedBook.isbn.trim()) {
+                console.log("Book was successfully updated despite network error");
+                isSuccess = true;
+              }
+            }
+          }
+        } catch (checkError) {
+          console.error("Error checking if book was updated:", checkError);
         }
-        throw new Error(errorMessage);
+        
+        if (!isSuccess) {
+          throw new Error("Network issue detected. The book may have been updated. Please check the catalog.");
+        }
       }
       
       // Show success message without attempting to parse the response
@@ -370,13 +404,18 @@ export default function EditBook() {
       console.error("Update error:", error);
       
       await Swal.fire({
-        icon: 'error',
-        title: 'Error',
+        icon: error.message.includes("Network issue") ? 'info' : 'error',
+        title: error.message.includes("Network issue") ? 'Note' : 'Error',
         text: error.message || "An unexpected error occurred",
         confirmButtonColor: 'var(--color-button-primary)'
       });
       
-      if (error.message.includes("session has expired")) {
+      // If it was a network issue, we might want to redirect anyway
+      if (error.message.includes("Network issue")) {
+        setTimeout(() => {
+          window.location.href = `/book/${id}`;
+        }, 2000);
+      } else if (error.message.includes("session has expired")) {
         setTimeout(() => {
           logout();
           router.refresh();

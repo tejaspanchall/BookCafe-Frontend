@@ -268,34 +268,66 @@ export default function BookDetail() {
 
     if (result.isConfirmed) {
       setIsDeleting(true);
+      
+      // Flag to track if the delete was successful
+      let isSuccess = false;
+      
       try {
-        let response;
         try {
-          response = await fetch(`${BACKEND}/books/${id}`, {
+          const response = await fetch(`${BACKEND}/books/${id}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             }
           });
+          
+          if (response.ok) {
+            isSuccess = true;
+          } else {
+            const errorText = await response.text();
+            let errorMessage;
+            try {
+              const errorData = JSON.parse(errorText);
+              errorMessage = errorData.error || 'Failed to delete book';
+            } catch (e) {
+              errorMessage = 'Failed to delete book. Please try again.';
+            }
+            throw new Error(errorMessage);
+          }
         } catch (fetchError) {
           console.error("Network error:", fetchError);
-          throw new Error("Network error. Please check your connection.");
-        }
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          let errorMessage;
+          
+          // Wait a moment to let the server process the request
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check if the book was actually deleted by trying to fetch it again
           try {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.error || 'Failed to delete book';
-          } catch (e) {
-            errorMessage = 'Failed to delete book. Please try again.';
+            const checkResponse = await fetch(`${BACKEND}/books/get-books?id=${id}`, {
+              headers: { "Accept": "application/json" }
+            });
+            
+            if (checkResponse.ok) {
+              const data = await checkResponse.json();
+              // If we can't find the book anymore, it was successfully deleted
+              if (data.status === 'success' && Array.isArray(data.books) && !data.books.find(b => b.id == id)) {
+                console.log("Book was successfully deleted despite network error");
+                isSuccess = true;
+              }
+            } else if (checkResponse.status === 404) {
+              // 404 might indicate the book is gone (deleted)
+              isSuccess = true;
+            }
+          } catch (checkError) {
+            console.error("Error checking if book was deleted:", checkError);
           }
-          throw new Error(errorMessage);
+          
+          if (!isSuccess) {
+            throw new Error("Network issue detected. The book may have been deleted. Please check the catalog.");
+          }
         }
 
-        // Show success message without attempting to read response body
+        // Show success message
         await Swal.fire({
           title: 'Deleted!',
           text: 'Book has been deleted.',
@@ -309,11 +341,18 @@ export default function BookDetail() {
       } catch (error) {
         console.error('Delete error:', error);
         await Swal.fire({
-          title: 'Error',
-          text: error.message || 'An unexpected error occurred',
-          icon: 'error',
+          title: error.message.includes("Network issue") ? 'Note' : 'Error',
+          text: error.message,
+          icon: error.message.includes("Network issue") ? 'info' : 'error',
           confirmButtonColor: '#333'
         });
+        
+        // If it was a network issue, we might want to redirect anyway
+        if (error.message.includes("Network issue")) {
+          setTimeout(() => {
+            router.push('/catalog');
+          }, 2000);
+        }
       } finally {
         setIsDeleting(false);
       }
