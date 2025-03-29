@@ -228,7 +228,11 @@ export default function EditBook() {
           title: 'Error!',
           text: 'Image size should not exceed 2MB',
           icon: 'error',
-          confirmButtonColor: 'var(--color-button-primary)'
+          confirmButtonColor: 'var(--color-button-primary)',
+          didOpen: () => {
+            // Ensure DOM is updated correctly
+            Swal.hideLoading();
+          }
         });
         e.target.value = '';
         return;
@@ -243,7 +247,11 @@ export default function EditBook() {
           title: 'Error!',
           text: 'Please upload a valid image file (JPEG, PNG, GIF)',
           icon: 'error',
-          confirmButtonColor: 'var(--color-button-primary)'
+          confirmButtonColor: 'var(--color-button-primary)',
+          didOpen: () => {
+            // Ensure DOM is updated correctly
+            Swal.hideLoading();
+          }
         });
         e.target.value = '';
         return;
@@ -347,10 +355,13 @@ export default function EditBook() {
         icon: 'success',
         title: 'Success',
         text: 'Book updated successfully',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: 'var(--color-button-primary)',
+        didOpen: () => {
+          // Ensure DOM is updated correctly
+          Swal.hideLoading();
+        }
       }).then(() => {
-        // Force a hard refresh of the page to clear any cached data
-        window.location.href = `/book/${id}`;
+        router.push(`/book/${id}`);
       });
     } catch (error) {
       console.error("Update error:", error);
@@ -358,8 +369,12 @@ export default function EditBook() {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.message,
-        confirmButtonColor: 'var(--color-button-primary)'
+        text: error.message || 'Failed to update book',
+        confirmButtonColor: 'var(--color-button-primary)',
+        didOpen: () => {
+          // Ensure DOM is updated correctly
+          Swal.hideLoading();
+        }
       });
       
       if (error.message.includes("session has expired")) {

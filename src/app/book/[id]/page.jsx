@@ -188,7 +188,10 @@ export default function BookDetail() {
         title: 'Success!',
         text: 'Book added to your library',
         icon: 'success',
-        confirmButtonColor: '#333'
+        confirmButtonColor: '#333',
+        didOpen: () => {
+          Swal.hideLoading();
+        }
       });
     } catch (error) {
       console.error('Add to library error:', error);
@@ -196,7 +199,10 @@ export default function BookDetail() {
         title: 'Error',
         text: error.message || 'Failed to add book to library',
         icon: 'error',
-        confirmButtonColor: '#333'
+        confirmButtonColor: '#333',
+        didOpen: () => {
+          Swal.hideLoading();
+        }
       });
     } finally {
       setIsAddingToLibrary(false);
@@ -230,7 +236,10 @@ export default function BookDetail() {
         title: 'Success!',
         text: 'Book removed from your library',
         icon: 'success',
-        confirmButtonColor: '#333'
+        confirmButtonColor: '#333',
+        didOpen: () => {
+          Swal.hideLoading();
+        }
       });
     } catch (error) {
       console.error('Remove from library error:', error);
@@ -238,7 +247,10 @@ export default function BookDetail() {
         title: 'Error',
         text: error.message || 'Failed to remove book from library',
         icon: 'error',
-        confirmButtonColor: '#333'
+        confirmButtonColor: '#333',
+        didOpen: () => {
+          Swal.hideLoading();
+        }
       });
     } finally {
       setIsRemovingFromLibrary(false);
@@ -287,7 +299,10 @@ export default function BookDetail() {
           title: 'Deleted!',
           text: 'Book has been deleted.',
           icon: 'success',
-          confirmButtonColor: '#333'
+          confirmButtonColor: '#333',
+          didOpen: () => {
+            Swal.hideLoading();
+          }
         }).then(() => {
           router.push('/catalog');
         });
@@ -297,7 +312,10 @@ export default function BookDetail() {
           title: 'Error',
           text: error.message || 'Failed to delete book',
           icon: 'error',
-          confirmButtonColor: '#333'
+          confirmButtonColor: '#333',
+          didOpen: () => {
+            Swal.hideLoading();
+          }
         });
       } finally {
         setIsDeleting(false);

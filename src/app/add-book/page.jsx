@@ -108,28 +108,37 @@ export default function AddBook() {
         body: formData,
       });
 
+      const data = await res.json();
+      
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || 'Failed to add book');
       }
-
-      const data = await res.json();
       
       Swal.fire({
         title: 'Success!',
         text: 'Book added successfully!',
         icon: 'success',
-        confirmButtonColor: 'var(--color-button-primary)'
-      }).then(() => {
-        router.refresh();
-        router.push('/catalog');
+        confirmButtonColor: 'var(--color-button-primary)',
+        didOpen: () => {
+          // Ensure DOM is updated correctly
+          Swal.hideLoading();
+        }
+      }).then((result) => {
+        if (result.isConfirmed || result.isDismissed) {
+          router.refresh();
+          router.push('/catalog');
+        }
       });
     } catch (error) {
       Swal.fire({
         title: 'Error!',
         text: error.message || 'Failed to connect to server',
         icon: 'error',
-        confirmButtonColor: 'var(--color-button-primary)'
+        confirmButtonColor: 'var(--color-button-primary)',
+        didOpen: () => {
+          // Ensure DOM is updated correctly
+          Swal.hideLoading();
+        }
       });
     } finally {
       setIsLoading(false);
