@@ -433,12 +433,18 @@ export default function EditBook() {
   
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto p-6 bg-[var(--color-bg-primary)] rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-bold text-[var(--color-danger)]">Error</h1>
-        <p className="text-[var(--color-text-primary)]">{error}</p>
+      <div className="max-w-3xl mx-auto py-8 px-4 text-center">
+        <h1 className="text-3xl font-bold mb-4 text-[var(--color-danger)]">Error</h1>
+        <p className="text-[var(--color-text-primary)] mb-6">{error}</p>
         <button 
           onClick={() => router.push('/catalog')}
-          className="mt-4 px-4 py-2 bg-[var(--color-button-primary)] text-white rounded-md"
+          className="w-full max-w-xs py-3 rounded-lg text-lg font-medium transition duration-300"
+          style={{ 
+            backgroundColor: 'var(--color-button-primary)',
+            color: 'var(--color-bg-primary)'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
         >
           Back to Catalog
         </button>
@@ -451,23 +457,24 @@ export default function EditBook() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-[var(--color-bg-primary)] rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold mb-8 text-center">Edit Book</h1>
+    <div className="max-w-3xl mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-8 text-center text-[var(--color-text-primary)]">Edit Book</h1>
       
       <form onSubmit={handleSaveEdit} className="space-y-6">
         <div>
-          <label className="block mb-2">Title</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Book Title</label>
           <input
             type="text"
             name="title"
             value={editedBook.title}
             onChange={handleInputChange}
-            className="w-full p-2 rounded border focus:outline-none"
+            className="w-full p-3 bg-transparent rounded focus:outline-none"
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
-              borderColor: validationErrors.title ? "red" : "var(--color-border)",
-              color: "var(--color-text-primary)"
+              color: 'var(--color-text-primary)',
+              borderColor: validationErrors.title ? "red" : 'var(--color-border)',
+              borderWidth: '1px',
             }}
+            placeholder="Enter book title"
           />
           {validationErrors.title && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.title}</p>
@@ -475,27 +482,27 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Image</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Cover Image</label>
           <input
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full p-2 rounded border focus:outline-none"
+            className="w-full p-3 bg-transparent rounded focus:outline-none"
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
-              borderColor: validationErrors.image ? "red" : "var(--color-border)",
-              color: "var(--color-text-primary)"
+              color: 'var(--color-text-primary)',
+              borderColor: validationErrors.image ? "red" : 'var(--color-border)',
+              borderWidth: '1px',
             }}
           />
           {validationErrors.image && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.image}</p>
           )}
           {previewUrl && (
-            <div className="mt-2">
+            <div className="mt-4 flex justify-center">
               <img 
                 src={previewUrl} 
                 alt="Preview" 
-                className="max-w-full h-auto max-h-48 rounded"
+                className="max-w-full h-auto max-h-64 rounded"
                 style={{ objectFit: 'contain' }}
               />
             </div>
@@ -503,18 +510,19 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Description</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Description</label>
           <textarea
             name="description"
             value={editedBook.description}
             onChange={handleInputChange}
             rows="4"
-            className="w-full p-2 rounded border focus:outline-none"
+            className="w-full p-3 bg-transparent rounded focus:outline-none"
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
-              borderColor: validationErrors.description ? "red" : "var(--color-border)",
-              color: "var(--color-text-primary)"
+              color: 'var(--color-text-primary)',
+              borderColor: validationErrors.description ? "red" : 'var(--color-border)',
+              borderWidth: '1px',
             }}
+            placeholder="Enter book description"
           />
           {validationErrors.description && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
@@ -522,18 +530,19 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">ISBN</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">ISBN</label>
           <input
             type="text"
             name="isbn"
             value={editedBook.isbn}
             onChange={handleInputChange}
-            className="w-full p-2 rounded border focus:outline-none"
+            className="w-full p-3 bg-transparent rounded focus:outline-none"
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
-              borderColor: validationErrors.isbn ? "red" : "var(--color-border)",
-              color: "var(--color-text-primary)"
+              color: 'var(--color-text-primary)',
+              borderColor: validationErrors.isbn ? "red" : 'var(--color-border)',
+              borderWidth: '1px',
             }}
+            placeholder="Enter ISBN number"
           />
           {validationErrors.isbn && (
             <p className="text-red-500 text-sm mt-1">{validationErrors.isbn}</p>
@@ -541,12 +550,12 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Authors</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Author(s)</label>
           <AuthorInput
             value={editedBook.authors}
             onChange={(value) => setEditedBook({ ...editedBook, authors: value })}
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
+              backgroundColor: "transparent",
               borderColor: validationErrors.authors ? "red" : "var(--color-border)",
               color: "var(--color-text-primary)"
             }}
@@ -557,12 +566,12 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Categories</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Categories</label>
           <CategorySelect
             value={editedBook.categories}
             onChange={(value) => setEditedBook({ ...editedBook, categories: value })}
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
+              backgroundColor: "transparent",
               borderColor: "var(--color-border)",
               color: "var(--color-text-primary)"
             }}
@@ -570,7 +579,7 @@ export default function EditBook() {
         </div>
 
         <div>
-          <label className="block mb-2">Price (₹)</label>
+          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Price (₹)</label>
           <input
             type="number"
             step="0.01"
@@ -578,39 +587,42 @@ export default function EditBook() {
             name="price"
             value={editedBook.price}
             onChange={handleInputChange}
-            className="w-full p-2 rounded border"
+            className="w-full p-3 bg-transparent rounded focus:outline-none"
             style={{ 
-              backgroundColor: "var(--color-bg-secondary)",
-              borderColor: "var(--color-border)",
-              color: "var(--color-text-primary)"
+              color: 'var(--color-text-primary)',
+              borderColor: validationErrors.price ? "red" : 'var(--color-border)',
+              borderWidth: '1px',
             }}
+            placeholder="Enter book price"
           />
+          {validationErrors.price && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.price}</p>
+          )}
         </div>
 
-        <div className="flex justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex-1 py-2 px-4 rounded transition duration-200"
-            style={{ 
-              backgroundColor: "var(--color-bg-primary)",
-              borderColor: "var(--color-border)",
-              borderWidth: "1px",
-              color: "var(--color-text-primary)"
-            }}
-          >
-            Cancel
-          </button>
+        <div className="pt-4">
           <button
             type="submit"
             disabled={isSaving}
-            className="flex-1 py-2 px-4 rounded transition duration-200 disabled:opacity-50"
+            className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ 
-              backgroundColor: "var(--color-button-primary)",
-              color: "var(--color-bg-primary)"
+              backgroundColor: isSaving ? 'var(--color-text-light)' : 'var(--color-button-primary)',
+              color: 'var(--color-bg-primary)', 
             }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+        
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="text-[var(--color-link)] hover:underline font-medium"
+          >
+            Back to Book Details
           </button>
         </div>
       </form>
