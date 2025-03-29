@@ -197,7 +197,31 @@ export default function BookDetail() {
         }
       });
       
-      const responseData = await response.json();
+      // Handle 500 errors specifically
+      if (response.status === 500) {
+        console.error('Server error when adding book to library');
+        await Swal.fire({
+          title: 'Server Error',
+          text: 'The server encountered an error. This could be a temporary issue. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+        return;
+      }
+      
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        await Swal.fire({
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+        return;
+      }
       
       if (response.ok) {
         // Update UI only after confirmed success
@@ -270,7 +294,31 @@ export default function BookDetail() {
         }
       });
       
-      const responseData = await response.json();
+      // Handle 500 errors specifically
+      if (response.status === 500) {
+        console.error('Server error when removing book from library');
+        await Swal.fire({
+          title: 'Server Error',
+          text: 'The server encountered an error. This could be a temporary issue. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+        return;
+      }
+      
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        await Swal.fire({
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+        return;
+      }
       
       if (response.ok) {
         // Update UI only after confirmed success
