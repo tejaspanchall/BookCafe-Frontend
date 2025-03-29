@@ -168,36 +168,95 @@ export default function BookDetail() {
     }
 
     setIsAddingToLibrary(true);
+    
+    // Flag to track if the operation was successful
+    let isSuccess = false;
+    
     try {
-      const res = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}`
+      try {
+        const response = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+        
+        if (response.ok) {
+          isSuccess = true;
+        } else {
+          const errorText = await response.text();
+          let errorMessage;
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || 'Failed to add book to library';
+          } catch (e) {
+            errorMessage = 'Failed to add book to library. Please try again.';
+          }
+          throw new Error(errorMessage);
         }
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to add book to library');
+      } catch (fetchError) {
+        console.error("Network error:", fetchError);
+        
+        // Wait a moment to let the server process the request
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if the book was actually added to the library
+        try {
+          const checkResponse = await fetch(`${BACKEND}/books/my-library`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+              Accept: "application/json",
+            }
+          });
+          
+          if (checkResponse.ok) {
+            const data = await checkResponse.json();
+            if (data.status === "success" && Array.isArray(data.books)) {
+              // If the book is now in the library, the operation was successful
+              const hasBook = data.books.some((b) => parseInt(b.id) === parseInt(id));
+              if (hasBook) {
+                console.log("Book was successfully added to library despite network error");
+                isSuccess = true;
+              }
+            }
+          }
+        } catch (checkError) {
+          console.error("Error checking library status:", checkError);
+        }
+        
+        if (!isSuccess) {
+          throw new Error("Network issue detected. The book may have been added to your library. Please check your library.");
+        }
       }
 
+      // Update UI state to reflect success
       setInLibrary(true);
-      Swal.fire({
+      
+      // Show success message
+      await Swal.fire({
         title: 'Success!',
         text: 'Book added to your library',
         icon: 'success',
         confirmButtonColor: '#333'
       });
+      
     } catch (error) {
       console.error('Add to library error:', error);
-      Swal.fire({
-        title: 'Error',
-        text: error.message || 'Failed to add book to library',
-        icon: 'error',
+      await Swal.fire({
+        title: error.message.includes("Network issue") ? 'Note' : 'Error',
+        text: error.message,
+        icon: error.message.includes("Network issue") ? 'info' : 'error',
         confirmButtonColor: '#333'
       });
+      
+      // If it was a network issue, we might want to refresh the library status
+      if (error.message.includes("Network issue")) {
+        setTimeout(() => {
+          fetchLibraryStatus();
+        }, 2000);
+      }
     } finally {
       setIsAddingToLibrary(false);
     }
@@ -210,36 +269,95 @@ export default function BookDetail() {
     }
 
     setIsRemovingFromLibrary(true);
+    
+    // Flag to track if the operation was successful
+    let isSuccess = false;
+    
     try {
-      const res = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      try {
+        const response = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          isSuccess = true;
+        } else {
+          const errorText = await response.text();
+          let errorMessage;
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || 'Failed to remove book from library';
+          } catch (e) {
+            errorMessage = 'Failed to remove book from library. Please try again.';
+          }
+          throw new Error(errorMessage);
         }
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to remove book from library');
+      } catch (fetchError) {
+        console.error("Network error:", fetchError);
+        
+        // Wait a moment to let the server process the request
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if the book was actually removed from the library
+        try {
+          const checkResponse = await fetch(`${BACKEND}/books/my-library`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            }
+          });
+          
+          if (checkResponse.ok) {
+            const data = await checkResponse.json();
+            if (data.status === "success" && Array.isArray(data.books)) {
+              // If the book is no longer in the library, the operation was successful
+              const hasBook = data.books.some((b) => parseInt(b.id) === parseInt(id));
+              if (!hasBook) {
+                console.log("Book was successfully removed from library despite network error");
+                isSuccess = true;
+              }
+            }
+          }
+        } catch (checkError) {
+          console.error("Error checking library status:", checkError);
+        }
+        
+        if (!isSuccess) {
+          throw new Error("Network issue detected. The book may have been removed from your library. Please check your library.");
+        }
       }
 
+      // Update UI state to reflect success
       setInLibrary(false);
-      Swal.fire({
+      
+      // Show success message
+      await Swal.fire({
         title: 'Success!',
         text: 'Book removed from your library',
         icon: 'success',
         confirmButtonColor: '#333'
       });
+      
     } catch (error) {
       console.error('Remove from library error:', error);
-      Swal.fire({
-        title: 'Error',
-        text: error.message || 'Failed to remove book from library',
-        icon: 'error',
+      await Swal.fire({
+        title: error.message.includes("Network issue") ? 'Note' : 'Error',
+        text: error.message,
+        icon: error.message.includes("Network issue") ? 'info' : 'error',
         confirmButtonColor: '#333'
       });
+      
+      // If it was a network issue, we might want to refresh the library status
+      if (error.message.includes("Network issue")) {
+        setTimeout(() => {
+          fetchLibraryStatus();
+        }, 2000);
+      }
     } finally {
       setIsRemovingFromLibrary(false);
     }
