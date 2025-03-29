@@ -269,36 +269,46 @@ export default function BookDetail() {
     if (result.isConfirmed) {
       setIsDeleting(true);
       try {
-        const res = await fetch(`${BACKEND}/books/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!res.ok) {
-          try {
-            const data = await res.json();
-            throw new Error(data.error || 'Failed to delete book');
-          } catch (jsonError) {
-            throw new Error('Book deletion failed. Please try again.');
-          }
+        let response;
+        try {
+          response = await fetch(`${BACKEND}/books/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        } catch (fetchError) {
+          console.error("Network error:", fetchError);
+          throw new Error("Network error. Please check your connection.");
         }
 
-        // Show success message without waiting for JSON response
-        Swal.fire({
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorMessage;
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || 'Failed to delete book';
+          } catch (e) {
+            errorMessage = 'Failed to delete book. Please try again.';
+          }
+          throw new Error(errorMessage);
+        }
+
+        // Show success message without attempting to read response body
+        await Swal.fire({
           title: 'Deleted!',
           text: 'Book has been deleted.',
           icon: 'success',
           confirmButtonColor: '#333'
-        }).then(() => {
-          // Navigate after the alert is closed
-          router.push('/catalog');
         });
+        
+        // Navigate only after the alert is completely closed
+        router.push('/catalog');
+        
       } catch (error) {
         console.error('Delete error:', error);
-        Swal.fire({
+        await Swal.fire({
           title: 'Error',
           text: error.message || 'An unexpected error occurred',
           icon: 'error',

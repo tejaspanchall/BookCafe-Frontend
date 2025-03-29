@@ -100,35 +100,46 @@ export default function AddBook() {
         formData.append('image', book.image);
       }
       
-      const res = await fetch(`${BACKEND}/books/add`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        try {
-          const data = await res.json();
-          throw new Error(data.error || 'Failed to add book');
-        } catch (jsonError) {
-          throw new Error('Book operation failed. Please try again.');
-        }
+      let response;
+      try {
+        response = await fetch(`${BACKEND}/books/add`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData,
+        });
+      } catch (fetchError) {
+        console.error("Network error:", fetchError);
+        throw new Error("Network error. Please check your connection.");
       }
 
-      Swal.fire({
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || 'Failed to add book';
+        } catch (e) {
+          errorMessage = 'Failed to add book. Please try again.';
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Success path - don't try to parse the response body at all
+      await Swal.fire({
         title: 'Success!',
         text: 'Book added successfully!',
         icon: 'success',
         confirmButtonColor: 'var(--color-button-primary)'
-      }).then(() => {
-        router.push('/catalog');
-        setTimeout(() => router.refresh(), 100);
       });
       
+      // Navigate only after the alert is completely closed
+      router.push('/catalog');
+      
     } catch (error) {
-      Swal.fire({
+      console.error("Add book error:", error);
+      await Swal.fire({
         title: 'Error!',
         text: error.message || 'An unexpected error occurred',
         icon: 'error',

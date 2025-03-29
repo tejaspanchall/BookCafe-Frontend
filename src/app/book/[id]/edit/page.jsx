@@ -324,42 +324,52 @@ export default function EditBook() {
         formData.append('image', editedBook.image);
       }
 
-      const res = await fetch(`${BACKEND}/books/${id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'X-HTTP-Method-Override': 'PUT'
-        },
-        body: formData
-      });
+      let response;
+      try {
+        response = await fetch(`${BACKEND}/books/${id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'X-HTTP-Method-Override': 'PUT'
+          },
+          body: formData
+        });
+      } catch (fetchError) {
+        console.error("Network error:", fetchError);
+        throw new Error("Network error. Please check your connection.");
+      }
       
-      if (res.status === 401) {
+      if (response.status === 401) {
         throw new Error("Your session has expired. Please log in again.");
       }
       
-      if (!res.ok) {
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
         try {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to update book");
-        } catch (jsonError) {
-          throw new Error("Book update failed. Please try again.");
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || 'Failed to update book';
+        } catch (e) {
+          errorMessage = 'Failed to update book. Please try again.';
         }
+        throw new Error(errorMessage);
       }
       
-      // Show success message without waiting for JSON response
-      Swal.fire({
+      // Show success message without attempting to parse the response
+      await Swal.fire({
         icon: 'success',
         title: 'Success',
         text: 'Book updated successfully',
         confirmButtonColor: 'var(--color-button-primary)'
-      }).then(() => {
-        // Navigate after the alert is closed
-        window.location.href = `/book/${id}`;
       });
+      
+      // Navigate only after the alert is completely closed
+      window.location.href = `/book/${id}`;
+      
     } catch (error) {
       console.error("Update error:", error);
       
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Error',
         text: error.message || "An unexpected error occurred",
