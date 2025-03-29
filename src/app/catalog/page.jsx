@@ -43,6 +43,7 @@ export default function BookCatalog() {
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 5000]);
+  const [maxBookPrice, setMaxBookPrice] = useState(5000);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const BOOKS_PER_PAGE = 18; // 6 books per row * 3 rows = 18 books per page
@@ -203,6 +204,15 @@ export default function BookCatalog() {
       )].sort();
       setCategories(uniqueCategories);
       
+      // Find the maximum book price and round it to the nearest hundred above
+      if (books.length > 0) {
+        const highestPrice = Math.max(...books.map(book => parseFloat(book.price || 0)));
+        const roundedMaxPrice = Math.ceil(highestPrice / 100) * 100;
+        setMaxBookPrice(roundedMaxPrice);
+        // Update price range to use the new maximum
+        setPriceRange([0, roundedMaxPrice]);
+      }
+      
       const filteredBooks = applyFilter(books);
       setAllBooks(books);
 
@@ -331,7 +341,7 @@ export default function BookCatalog() {
 
   const clearFilters = () => {
     setSelectedCategories([]);
-    setPriceRange([0, 5000]);
+    setPriceRange([0, maxBookPrice]);
     setFilter("recent");
   };
 
@@ -431,28 +441,12 @@ export default function BookCatalog() {
           <input
             type="range"
             min="0"
-            max="5000"
-            step="100"
+            max={maxBookPrice}
+            step={Math.max(1, Math.floor(maxBookPrice / 50))}
             value={priceRange[1]}
             onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
             className="w-full accent-current"
             style={{ accentColor: "var(--color-primary)" }}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs">Max price:</span>
-          <input
-            type="number"
-            min="0"
-            max="5000"
-            value={priceRange[1]}
-            onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
-            className="flex-1 px-2 py-1.5 text-xs rounded border focus:outline-none focus:ring-1"
-            style={{ 
-              backgroundColor: "var(--color-bg-primary)", 
-              borderColor: "var(--color-border)",
-              "--tw-ring-color": "var(--color-focus-ring)" 
-            }}
           />
         </div>
       </div>
