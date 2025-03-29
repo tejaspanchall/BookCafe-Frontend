@@ -102,23 +102,16 @@ export default function BookDetail() {
     }
 
     try {
-      console.log(`Checking library status for book ${id}...`);
-      
+      // Simple fetch without additional settings
       const res = await fetch(`${BACKEND}/books/my-library`, {
         method: "GET",
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        },
-        mode: 'cors',
-        cache: 'no-store',
-        credentials: 'same-origin'
+        }
       });
 
-      console.log(`Library status check response: ${res.status}`);
-
       if (res.status === 401) {
-        console.log('Authentication failed when checking library status');
         setInLibrary(false);
         return;
       }
@@ -128,24 +121,14 @@ export default function BookDetail() {
         return;
       }
 
-      let responseText;
-      try {
-        responseText = await res.text();
-        const response = JSON.parse(responseText);
-        
-        if (response.status === "success" && Array.isArray(response.books)) {
-          // Convert both IDs to strings for safer comparison
-          const hasBook = response.books.some((book) => String(book.id) === String(id));
-          console.log(`Book ${id} in library: ${hasBook}`, response.books);
-          setInLibrary(hasBook);
-        } else {
-          console.log('No books found in library or unexpected response format');
-          setInLibrary(false);
-        }
-      } catch (parseError) {
-        console.error('Failed to parse library response:', parseError);
-        console.log('Response text:', responseText);
-        // Do not update state on parse error
+      const response = await res.json();
+      
+      if (response.status === "success" && Array.isArray(response.books)) {
+        // Simple string comparison of IDs
+        const hasBook = response.books.some((book) => String(book.id) === String(id));
+        setInLibrary(hasBook);
+      } else {
+        setInLibrary(false);
       }
     } catch (error) {
       console.error("Library status error:", error);
@@ -206,30 +189,17 @@ export default function BookDetail() {
       // Optimistically update UI
       setInLibrary(true);
       
-      console.log(`Attempting to add book ${id} to library with token`, currentToken.substring(0, 10) + '...');
-      
+      // Very simple request - no body needed for this endpoint
       const response = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        },
-        mode: 'cors',
-        cache: 'no-store',
-        credentials: 'same-origin'
+        }
       });
       
-      // Log the response status for debugging
       console.log(`Add to library response status: ${response.status}`);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error response from server: ${errorText}`);
-        throw new Error('Failed to add book to library');
-      }
-      
-      // Show success message
+      // Show success message without checking response content
       await Swal.fire({
         title: 'Success!',
         text: 'Book added to your library',
@@ -237,49 +207,27 @@ export default function BookDetail() {
         confirmButtonColor: '#333'
       });
       
-      // Refresh library status to confirm
-      setTimeout(() => fetchLibraryStatus(), 500);
+      // Refresh status after success
+      setTimeout(() => {
+        fetchLibraryStatus();
+      }, 500);
       
     } catch (error) {
       console.error('Add to library error:', error);
       
-      // Make a direct attempt to verify library status
-      try {
-        // Double check if the book is actually in the library despite the error
-        const verifyResponse = await fetch(`${BACKEND}/books/my-library`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          },
-          cache: 'no-store'
-        });
-        
-        if (verifyResponse.ok) {
-          const data = await verifyResponse.json();
-          if (data.status === 'success' && Array.isArray(data.books)) {
-            const bookExists = data.books.some(b => String(b.id) === String(id));
-            
-            if (bookExists) {
-              // Book is already in library despite the error
-              console.log('Book was successfully added to library despite fetch error');
-              return; // Keep the optimistic UI update
-            }
-          }
-        }
-        
-        // If verification failed or book isn't in library, revert UI and show error
-        setInLibrary(false);
-        await Swal.fire({
-          title: 'Error',
-          text: 'Failed to add book to library. Please try again.',
-          icon: 'error',
-          confirmButtonColor: '#333'
-        });
-      } catch (verificationError) {
-        console.error('Library verification error:', verificationError);
-        // In case of double error, leave the UI as is (optimistic)
-      }
+      // Don't change UI on error since we used optimistic updates
+      // Just show an error message
+      await Swal.fire({
+        title: 'Note',
+        text: 'There may have been an issue adding the book to your library. Please check your library.',
+        icon: 'info',
+        confirmButtonColor: '#333'
+      });
+      
+      // Double-check library status
+      setTimeout(() => {
+        fetchLibraryStatus();
+      }, 500);
     } finally {
       setIsAddingToLibrary(false);
     }
@@ -303,30 +251,17 @@ export default function BookDetail() {
       // Optimistically update UI
       setInLibrary(false);
       
-      console.log(`Attempting to remove book ${id} from library with token`, currentToken.substring(0, 10) + '...');
-      
+      // Very simple request - no body needed for this endpoint
       const response = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
         method: 'DELETE',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        },
-        mode: 'cors',
-        cache: 'no-store',
-        credentials: 'same-origin'
+        }
       });
       
-      // Log the response status for debugging
       console.log(`Remove from library response status: ${response.status}`);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error response from server: ${errorText}`);
-        throw new Error('Failed to remove book from library');
-      }
-      
-      // Show success message
+      // Show success message without checking response content
       await Swal.fire({
         title: 'Success!',
         text: 'Book removed from your library',
@@ -334,49 +269,27 @@ export default function BookDetail() {
         confirmButtonColor: '#333'
       });
       
-      // Refresh library status to confirm
-      setTimeout(() => fetchLibraryStatus(), 500);
+      // Refresh status after success
+      setTimeout(() => {
+        fetchLibraryStatus();
+      }, 500);
       
     } catch (error) {
       console.error('Remove from library error:', error);
       
-      // Make a direct attempt to verify library status
-      try {
-        // Double check if the book is actually removed from the library despite the error
-        const verifyResponse = await fetch(`${BACKEND}/books/my-library`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          },
-          cache: 'no-store'
-        });
-        
-        if (verifyResponse.ok) {
-          const data = await verifyResponse.json();
-          if (data.status === 'success' && Array.isArray(data.books)) {
-            const bookExists = data.books.some(b => String(b.id) === String(id));
-            
-            if (!bookExists) {
-              // Book is not in library despite the error
-              console.log('Book was successfully removed from library despite fetch error');
-              return; // Keep the optimistic UI update
-            }
-          }
-        }
-        
-        // If verification failed or book is still in library, revert UI and show error
-        setInLibrary(true);
-        await Swal.fire({
-          title: 'Error',
-          text: 'Failed to remove book from library. Please try again.',
-          icon: 'error',
-          confirmButtonColor: '#333'
-        });
-      } catch (verificationError) {
-        console.error('Library verification error:', verificationError);
-        // In case of double error, leave the UI as is (optimistic)
-      }
+      // Don't change UI on error since we used optimistic updates
+      // Just show an error message
+      await Swal.fire({
+        title: 'Note',
+        text: 'There may have been an issue removing the book from your library. Please check your library.',
+        icon: 'info',
+        confirmButtonColor: '#333'
+      });
+      
+      // Double-check library status
+      setTimeout(() => {
+        fetchLibraryStatus();
+      }, 500);
     } finally {
       setIsRemovingFromLibrary(false);
     }
