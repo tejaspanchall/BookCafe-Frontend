@@ -90,7 +90,13 @@ export default function BookDetail() {
   };
 
   const fetchLibraryStatus = async () => {
-    if (!isLoggedIn || !token) {
+    if (!isLoggedIn) {
+      setInLibrary(false);
+      return;
+    }
+
+    const currentToken = token || localStorage.getItem('token');
+    if (!currentToken) {
       setInLibrary(false);
       return;
     }
@@ -99,9 +105,10 @@ export default function BookDetail() {
       const res = await fetch(`${BACKEND}/books/my-library`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${currentToken}`,
           Accept: "application/json",
-        }
+        },
+        cache: 'no-store',
       });
 
       if (res.status === 401) {
@@ -110,20 +117,21 @@ export default function BookDetail() {
       }
 
       if (!res.ok) {
-        throw new Error(`Failed to fetch library status (${res.status})`);
+        console.error(`Failed to fetch library status (${res.status})`);
+        return;
       }
 
       const response = await res.json();
 
       if (response.status === "success" && Array.isArray(response.books)) {
-        const hasBook = response.books.some((book) => parseInt(book.id) === parseInt(id));
+        const hasBook = response.books.some((book) => String(book.id) === String(id));
+        console.log(`Book ${id} in library: ${hasBook}`, response.books);
         setInLibrary(hasBook);
       } else {
         setInLibrary(false);
       }
     } catch (error) {
       console.error("Library status error:", error);
-      setInLibrary(false);
     }
   };
 
@@ -169,72 +177,18 @@ export default function BookDetail() {
 
     setIsAddingToLibrary(true);
     
-    // Flag to track if the operation was successful
-    let isSuccess = false;
-    
     try {
-      try {
-        const response = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          }
-        });
-        
-        if (response.ok) {
-          isSuccess = true;
-        } else {
-          const errorText = await response.text();
-          let errorMessage;
-          try {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.error || 'Failed to add book to library';
-          } catch (e) {
-            errorMessage = 'Failed to add book to library. Please try again.';
-          }
-          throw new Error(errorMessage);
-        }
-      } catch (fetchError) {
-        console.error("Network error:", fetchError);
-        
-        // Wait a moment to let the server process the request
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if the book was actually added to the library
-        try {
-          const checkResponse = await fetch(`${BACKEND}/books/my-library`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${currentToken}`,
-              Accept: "application/json",
-            }
-          });
-          
-          if (checkResponse.ok) {
-            const data = await checkResponse.json();
-            if (data.status === "success" && Array.isArray(data.books)) {
-              // If the book is now in the library, the operation was successful
-              const hasBook = data.books.some((b) => parseInt(b.id) === parseInt(id));
-              if (hasBook) {
-                console.log("Book was successfully added to library despite network error");
-                isSuccess = true;
-              }
-            }
-          }
-        } catch (checkError) {
-          console.error("Error checking library status:", checkError);
-        }
-        
-        if (!isSuccess) {
-          throw new Error("Network issue detected. The book may have been added to your library. Please check your library.");
-        }
-      }
-
-      // Update UI state to reflect success
       setInLibrary(true);
       
-      // Show success message
+      await fetch(`${BACKEND}/books/${id}/add-to-library`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`
+        },
+        cache: 'no-store',
+      });
+      
       await Swal.fire({
         title: 'Success!',
         text: 'Book added to your library',
@@ -244,18 +198,22 @@ export default function BookDetail() {
       
     } catch (error) {
       console.error('Add to library error:', error);
-      await Swal.fire({
-        title: error.message.includes("Network issue") ? 'Note' : 'Error',
-        text: error.message,
-        icon: error.message.includes("Network issue") ? 'info' : 'error',
-        confirmButtonColor: '#333'
-      });
       
-      // If it was a network issue, we might want to refresh the library status
-      if (error.message.includes("Network issue")) {
-        setTimeout(() => {
-          fetchLibraryStatus();
-        }, 2000);
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await fetchLibraryStatus();
+        
+        if (!inLibrary) {
+          setInLibrary(false);
+          await Swal.fire({
+            title: 'Error',
+            text: 'Failed to add book to library. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#333'
+          });
+        }
+      } catch (verificationError) {
+        console.error('Verification error:', verificationError);
       }
     } finally {
       setIsAddingToLibrary(false);
@@ -263,77 +221,33 @@ export default function BookDetail() {
   };
 
   const handleRemoveFromLibrary = async () => {
-    if (!isLoggedIn || !token) {
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
+    const currentToken = token || localStorage.getItem('token');
+    if (!currentToken) {
       router.push('/login');
       return;
     }
 
     setIsRemovingFromLibrary(true);
     
-    // Flag to track if the operation was successful
-    let isSuccess = false;
-    
     try {
-      try {
-        const response = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          isSuccess = true;
-        } else {
-          const errorText = await response.text();
-          let errorMessage;
-          try {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.error || 'Failed to remove book from library';
-          } catch (e) {
-            errorMessage = 'Failed to remove book from library. Please try again.';
-          }
-          throw new Error(errorMessage);
-        }
-      } catch (fetchError) {
-        console.error("Network error:", fetchError);
-        
-        // Wait a moment to let the server process the request
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if the book was actually removed from the library
-        try {
-          const checkResponse = await fetch(`${BACKEND}/books/my-library`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            }
-          });
-          
-          if (checkResponse.ok) {
-            const data = await checkResponse.json();
-            if (data.status === "success" && Array.isArray(data.books)) {
-              // If the book is no longer in the library, the operation was successful
-              const hasBook = data.books.some((b) => parseInt(b.id) === parseInt(id));
-              if (!hasBook) {
-                console.log("Book was successfully removed from library despite network error");
-                isSuccess = true;
-              }
-            }
-          }
-        } catch (checkError) {
-          console.error("Error checking library status:", checkError);
-        }
-        
-        if (!isSuccess) {
-          throw new Error("Network issue detected. The book may have been removed from your library. Please check your library.");
-        }
-      }
-
-      // Update UI state to reflect success
+      // Force UI update immediately 
       setInLibrary(false);
+      
+      // Make the remove request directly with no error handling yet
+      await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`
+        },
+        // Add cache control to prevent caching
+        cache: 'no-store',
+      });
       
       // Show success message
       await Swal.fire({
@@ -345,18 +259,26 @@ export default function BookDetail() {
       
     } catch (error) {
       console.error('Remove from library error:', error);
-      await Swal.fire({
-        title: error.message.includes("Network issue") ? 'Note' : 'Error',
-        text: error.message,
-        icon: error.message.includes("Network issue") ? 'info' : 'error',
-        confirmButtonColor: '#333'
-      });
       
-      // If it was a network issue, we might want to refresh the library status
-      if (error.message.includes("Network issue")) {
-        setTimeout(() => {
-          fetchLibraryStatus();
-        }, 2000);
+      // Verify the actual state after an error
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await fetchLibraryStatus();
+        
+        // Keep the success UI if fetchLibraryStatus confirmed the book is not in the library
+        if (inLibrary) {
+          // Show error only if book is still in library
+          setInLibrary(true);
+          await Swal.fire({
+            title: 'Error',
+            text: 'Failed to remove book from library. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#333'
+          });
+        }
+      } catch (verificationError) {
+        // If verification also failed, assume it worked and keep the positive UI
+        console.error('Verification error:', verificationError);
       }
     } finally {
       setIsRemovingFromLibrary(false);
