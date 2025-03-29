@@ -102,17 +102,19 @@ export default function BookDetail() {
     }
 
     try {
-      // Simple fetch without additional settings
       const res = await fetch(`${BACKEND}/books/my-library`, {
         method: "GET",
         headers: {
           'Accept': 'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
         }
       });
 
-      if (res.status === 401) {
+      // Handle common error statuses
+      if (res.status === 401 || res.status === 403) {
         setInLibrary(false);
+        console.error('Authentication error fetching library status');
         return;
       }
 
@@ -124,15 +126,20 @@ export default function BookDetail() {
       const response = await res.json();
       
       if (response.status === "success" && Array.isArray(response.books)) {
-        // Simple string comparison of IDs
-        const hasBook = response.books.some((book) => String(book.id) === String(id));
+        // More robust string comparison with fallbacks for IDs
+        const bookId = String(id);
+        const hasBook = response.books.some((bookItem) => 
+          String(bookItem.id) === bookId
+        );
         setInLibrary(hasBook);
       } else {
+        console.warn('Unexpected response format from my-library API', response);
         setInLibrary(false);
       }
     } catch (error) {
-      console.error("Library status error:", error);
-      // Do not update state on network error
+      console.error("Library status fetch error:", error);
+      // We don't update state on network error to avoid flickering
+      // but log it for troubleshooting
     }
   };
 
@@ -142,16 +149,11 @@ export default function BookDetail() {
 
   useEffect(() => {
     if (book && isLoggedIn) {
-      // Add a small delay to ensure token is fully set in state/localStorage
-      const timer = setTimeout(() => {
-        fetchLibraryStatus();
-      }, 300);
-      
-      return () => clearTimeout(timer);
+      fetchLibraryStatus();
     } else if (!isLoggedIn) {
       setInLibrary(false);
     }
-  }, [book, id, token, isLoggedIn, userRole]);
+  }, [book, id, isLoggedIn]);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -186,48 +188,59 @@ export default function BookDetail() {
     setIsAddingToLibrary(true);
     
     try {
-      // Optimistically update UI
-      setInLibrary(true);
-      
-      // Very simple request - no body needed for this endpoint
       const response = await fetch(`${BACKEND}/books/${id}/add-to-library`, {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
         }
       });
       
-      console.log(`Add to library response status: ${response.status}`);
+      const responseData = await response.json();
       
-      // Show success message without checking response content
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Book added to your library',
-        icon: 'success',
-        confirmButtonColor: '#333'
-      });
+      if (response.ok) {
+        // Update UI only after confirmed success
+        setInLibrary(true);
+        
+        await Swal.fire({
+          title: 'Success!',
+          text: responseData.message || 'Book added to your library',
+          icon: 'success',
+          confirmButtonColor: '#333'
+        });
+      } else {
+        // Handle error cases
+        let errorMessage = 'There was an issue adding the book to your library.';
+        if (responseData.message) {
+          errorMessage = responseData.message;
+        } else if (responseData.error) {
+          errorMessage = responseData.error;
+        }
+        
+        await Swal.fire({
+          title: 'Error',
+          text: errorMessage,
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+      }
       
-      // Refresh status after success
-      setTimeout(() => {
-        fetchLibraryStatus();
-      }, 500);
+      // Refresh status after operation completes
+      fetchLibraryStatus();
       
     } catch (error) {
       console.error('Add to library error:', error);
       
-      // Don't change UI on error since we used optimistic updates
-      // Just show an error message
       await Swal.fire({
-        title: 'Note',
-        text: 'There may have been an issue adding the book to your library. Please check your library.',
-        icon: 'info',
+        title: 'Error',
+        text: 'Network error occurred. Please try again later.',
+        icon: 'error',
         confirmButtonColor: '#333'
       });
       
-      // Double-check library status
-      setTimeout(() => {
-        fetchLibraryStatus();
-      }, 500);
+      // Make sure UI reflects actual state
+      fetchLibraryStatus();
     } finally {
       setIsAddingToLibrary(false);
     }
@@ -248,48 +261,59 @@ export default function BookDetail() {
     setIsRemovingFromLibrary(true);
     
     try {
-      // Optimistically update UI
-      setInLibrary(false);
-      
-      // Very simple request - no body needed for this endpoint
       const response = await fetch(`${BACKEND}/books/${id}/remove-from-library`, {
         method: 'DELETE',
         headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
         }
       });
       
-      console.log(`Remove from library response status: ${response.status}`);
+      const responseData = await response.json();
       
-      // Show success message without checking response content
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Book removed from your library',
-        icon: 'success',
-        confirmButtonColor: '#333'
-      });
+      if (response.ok) {
+        // Update UI only after confirmed success
+        setInLibrary(false);
+        
+        await Swal.fire({
+          title: 'Success!',
+          text: responseData.message || 'Book removed from your library',
+          icon: 'success',
+          confirmButtonColor: '#333'
+        });
+      } else {
+        // Handle error cases
+        let errorMessage = 'There was an issue removing the book from your library.';
+        if (responseData.message) {
+          errorMessage = responseData.message;
+        } else if (responseData.error) {
+          errorMessage = responseData.error;
+        }
+        
+        await Swal.fire({
+          title: 'Error',
+          text: errorMessage,
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+      }
       
-      // Refresh status after success
-      setTimeout(() => {
-        fetchLibraryStatus();
-      }, 500);
+      // Refresh status after operation completes
+      fetchLibraryStatus();
       
     } catch (error) {
       console.error('Remove from library error:', error);
       
-      // Don't change UI on error since we used optimistic updates
-      // Just show an error message
       await Swal.fire({
-        title: 'Note',
-        text: 'There may have been an issue removing the book from your library. Please check your library.',
-        icon: 'info',
+        title: 'Error',
+        text: 'Network error occurred. Please try again later.',
+        icon: 'error',
         confirmButtonColor: '#333'
       });
       
-      // Double-check library status
-      setTimeout(() => {
-        fetchLibraryStatus();
-      }, 500);
+      // Make sure UI reflects actual state
+      fetchLibraryStatus();
     } finally {
       setIsRemovingFromLibrary(false);
     }
