@@ -188,10 +188,7 @@ export default function BookDetail() {
         title: 'Success!',
         text: 'Book added to your library',
         icon: 'success',
-        confirmButtonColor: '#333',
-        didOpen: () => {
-          Swal.hideLoading();
-        }
+        confirmButtonColor: '#333'
       });
     } catch (error) {
       console.error('Add to library error:', error);
@@ -199,10 +196,7 @@ export default function BookDetail() {
         title: 'Error',
         text: error.message || 'Failed to add book to library',
         icon: 'error',
-        confirmButtonColor: '#333',
-        didOpen: () => {
-          Swal.hideLoading();
-        }
+        confirmButtonColor: '#333'
       });
     } finally {
       setIsAddingToLibrary(false);
@@ -236,10 +230,7 @@ export default function BookDetail() {
         title: 'Success!',
         text: 'Book removed from your library',
         icon: 'success',
-        confirmButtonColor: '#333',
-        didOpen: () => {
-          Swal.hideLoading();
-        }
+        confirmButtonColor: '#333'
       });
     } catch (error) {
       console.error('Remove from library error:', error);
@@ -247,10 +238,7 @@ export default function BookDetail() {
         title: 'Error',
         text: error.message || 'Failed to remove book from library',
         icon: 'error',
-        confirmButtonColor: '#333',
-        didOpen: () => {
-          Swal.hideLoading();
-        }
+        confirmButtonColor: '#333'
       });
     } finally {
       setIsRemovingFromLibrary(false);
@@ -289,33 +277,32 @@ export default function BookDetail() {
           }
         });
 
-        const data = await res.json();
-
         if (!res.ok) {
-          throw new Error(data.error || 'Failed to delete book');
+          try {
+            const data = await res.json();
+            throw new Error(data.error || 'Failed to delete book');
+          } catch (jsonError) {
+            throw new Error('Book deletion failed. Please try again.');
+          }
         }
 
+        // Show success message without waiting for JSON response
         Swal.fire({
           title: 'Deleted!',
           text: 'Book has been deleted.',
           icon: 'success',
-          confirmButtonColor: '#333',
-          didOpen: () => {
-            Swal.hideLoading();
-          }
+          confirmButtonColor: '#333'
         }).then(() => {
+          // Navigate after the alert is closed
           router.push('/catalog');
         });
       } catch (error) {
         console.error('Delete error:', error);
         Swal.fire({
           title: 'Error',
-          text: error.message || 'Failed to delete book',
+          text: error.message || 'An unexpected error occurred',
           icon: 'error',
-          confirmButtonColor: '#333',
-          didOpen: () => {
-            Swal.hideLoading();
-          }
+          confirmButtonColor: '#333'
         });
       } finally {
         setIsDeleting(false);

@@ -228,11 +228,7 @@ export default function EditBook() {
           title: 'Error!',
           text: 'Image size should not exceed 2MB',
           icon: 'error',
-          confirmButtonColor: 'var(--color-button-primary)',
-          didOpen: () => {
-            // Ensure DOM is updated correctly
-            Swal.hideLoading();
-          }
+          confirmButtonColor: 'var(--color-button-primary)'
         });
         e.target.value = '';
         return;
@@ -247,11 +243,7 @@ export default function EditBook() {
           title: 'Error!',
           text: 'Please upload a valid image file (JPEG, PNG, GIF)',
           icon: 'error',
-          confirmButtonColor: 'var(--color-button-primary)',
-          didOpen: () => {
-            // Ensure DOM is updated correctly
-            Swal.hideLoading();
-          }
+          confirmButtonColor: 'var(--color-button-primary)'
         });
         e.target.value = '';
         return;
@@ -345,23 +337,24 @@ export default function EditBook() {
         throw new Error("Your session has expired. Please log in again.");
       }
       
-      const data = await res.json();
-      
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update book");
+        try {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to update book");
+        } catch (jsonError) {
+          throw new Error("Book update failed. Please try again.");
+        }
       }
       
+      // Show success message without waiting for JSON response
       Swal.fire({
         icon: 'success',
         title: 'Success',
         text: 'Book updated successfully',
-        confirmButtonColor: 'var(--color-button-primary)',
-        didOpen: () => {
-          // Ensure DOM is updated correctly
-          Swal.hideLoading();
-        }
+        confirmButtonColor: 'var(--color-button-primary)'
       }).then(() => {
-        router.push(`/book/${id}`);
+        // Navigate after the alert is closed
+        window.location.href = `/book/${id}`;
       });
     } catch (error) {
       console.error("Update error:", error);
@@ -369,12 +362,8 @@ export default function EditBook() {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.message || 'Failed to update book',
-        confirmButtonColor: 'var(--color-button-primary)',
-        didOpen: () => {
-          // Ensure DOM is updated correctly
-          Swal.hideLoading();
-        }
+        text: error.message || "An unexpected error occurred",
+        confirmButtonColor: 'var(--color-button-primary)'
       });
       
       if (error.message.includes("session has expired")) {
