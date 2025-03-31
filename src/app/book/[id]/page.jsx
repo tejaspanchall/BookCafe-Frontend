@@ -197,13 +197,25 @@ export default function BookDetail() {
         }
       });
       
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        await Swal.fire({
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+        setIsAddingToLibrary(false);
+        return;
+      }
+
       // Handle 500 errors specifically with retry logic
       if (response.status === 500 && retryCount < 2) {
         console.log(`Server error, retrying (${retryCount + 1}/2)...`);
-        
-        // Wait a moment before retrying
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
         setIsAddingToLibrary(false);
         return handleAddToLibrary(retryCount + 1);
       }
@@ -219,18 +231,17 @@ export default function BookDetail() {
         setIsAddingToLibrary(false);
         return;
       }
-      
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        console.error('Error parsing response JSON:', parseError);
+
+      // Check if the book is already in the library
+      if (response.status === 409) {
         await Swal.fire({
-          title: 'Error',
-          text: 'Could not process the server response. Please try again later.',
-          icon: 'error',
+          title: 'Already in Library',
+          text: 'This book is already in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
+        // Update the UI state to reflect the actual state
+        setInLibrary(true);
         setIsAddingToLibrary(false);
         return;
       }
@@ -271,10 +282,7 @@ export default function BookDetail() {
       // Implement retry for network errors
       if (retryCount < 2) {
         console.log(`Network error, retrying (${retryCount + 1}/2)...`);
-        
-        // Wait a moment before retrying
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
         setIsAddingToLibrary(false);
         return handleAddToLibrary(retryCount + 1);
       }
@@ -317,30 +325,6 @@ export default function BookDetail() {
         }
       });
       
-      // Handle 500 errors specifically with retry logic
-      if (response.status === 500 && retryCount < 2) {
-        console.log(`Server error, retrying (${retryCount + 1}/2)...`);
-        
-        // Wait a moment before retrying
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        setIsRemovingFromLibrary(false);
-        return handleRemoveFromLibrary(retryCount + 1);
-      }
-      
-      // Handle 500 errors specifically
-      if (response.status === 500) {
-        console.error('Server error when removing book from library');
-        await Swal.fire({
-          title: 'Server Error',
-          text: 'The server encountered an error. This could be a temporary issue. Please try again later.',
-          icon: 'error',
-          confirmButtonColor: '#333'
-        });
-        setIsRemovingFromLibrary(false);
-        return;
-      }
-      
       let responseData;
       try {
         responseData = await response.json();
@@ -352,6 +336,40 @@ export default function BookDetail() {
           icon: 'error',
           confirmButtonColor: '#333'
         });
+        setIsRemovingFromLibrary(false);
+        return;
+      }
+
+      // Handle 500 errors specifically with retry logic
+      if (response.status === 500 && retryCount < 2) {
+        console.log(`Server error, retrying (${retryCount + 1}/2)...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setIsRemovingFromLibrary(false);
+        return handleRemoveFromLibrary(retryCount + 1);
+      }
+      
+      if (response.status === 500) {
+        console.error('Server error when removing book from library');
+        await Swal.fire({
+          title: 'Server Error',
+          text: 'The server encountered an error. This could be a temporary issue. Please try again later.',
+          icon: 'error',
+          confirmButtonColor: '#333'
+        });
+        setIsRemovingFromLibrary(false);
+        return;
+      }
+
+      // Check if the book is not in the library
+      if (response.status === 404) {
+        await Swal.fire({
+          title: 'Not in Library',
+          text: 'This book is not in your library.',
+          icon: 'info',
+          confirmButtonColor: '#333'
+        });
+        // Update the UI state to reflect the actual state
+        setInLibrary(false);
         setIsRemovingFromLibrary(false);
         return;
       }
@@ -392,10 +410,7 @@ export default function BookDetail() {
       // Implement retry for network errors
       if (retryCount < 2) {
         console.log(`Network error, retrying (${retryCount + 1}/2)...`);
-        
-        // Wait a moment before retrying
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
         setIsRemovingFromLibrary(false);
         return handleRemoveFromLibrary(retryCount + 1);
       }
