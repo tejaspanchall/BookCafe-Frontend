@@ -231,18 +231,7 @@ export default function BookDetail() {
         return;
       }
 
-      // Check if the book is already in the library
-      if (response.status === 409 || (responseData && responseData.message && responseData.message.toLowerCase().includes('already in library'))) {
-        setIsAddingToLibrary(false);
-        await Swal.fire({
-          title: 'Already in Library',
-          text: 'This book is already in your library.',
-          icon: 'info',
-          confirmButtonColor: '#333'
-        });
-        return;
-      }
-      
+      // If response is successful, add the book
       if (response.ok) {
         setInLibrary(true);
         await Swal.fire({
@@ -251,20 +240,36 @@ export default function BookDetail() {
           icon: 'success',
           confirmButtonColor: '#333'
         });
-      } else {
-        let errorMessage = 'There was an issue adding the book to your library.';
-        if (responseData.message) {
-          errorMessage = responseData.message;
-        } else if (responseData.error) {
-          errorMessage = responseData.error;
+      } 
+      // If response is not successful, check for specific error cases
+      else {
+        // Check if the book is already in the library
+        if (response.status === 409 || 
+            (responseData && responseData.message && 
+             responseData.message.toLowerCase().includes('already in library'))) {
+          setIsAddingToLibrary(false);
+          await Swal.fire({
+            title: 'Already in Library',
+            text: 'This book is already in your library.',
+            icon: 'info',
+            confirmButtonColor: '#333'
+          });
+        } else {
+          // Handle other error cases
+          let errorMessage = 'There was an issue adding the book to your library.';
+          if (responseData.message) {
+            errorMessage = responseData.message;
+          } else if (responseData.error) {
+            errorMessage = responseData.error;
+          }
+          
+          await Swal.fire({
+            title: 'Error',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonColor: '#333'
+          });
         }
-        
-        await Swal.fire({
-          title: 'Error',
-          text: errorMessage,
-          icon: 'error',
-          confirmButtonColor: '#333'
-        });
       }
       
       // Refresh status after operation completes
