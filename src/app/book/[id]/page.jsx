@@ -194,7 +194,8 @@ export default function BookDetail() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        }
+        },
+        body: JSON.stringify({ book_id: id })
       });
 
       // First check the response status
@@ -204,6 +205,17 @@ export default function BookDetail() {
           title: 'Already in Library',
           text: 'This book is already in your library.',
           icon: 'info',
+          confirmButtonColor: '#333'
+        });
+        return;
+      }
+
+      if (response.status === 400) {
+        setIsAddingToLibrary(false);
+        await Swal.fire({
+          title: 'Invalid Request',
+          text: 'The request was invalid. Please try again.',
+          icon: 'error',
           confirmButtonColor: '#333'
         });
         return;
@@ -314,7 +326,8 @@ export default function BookDetail() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        }
+        },
+        body: JSON.stringify({ book_id: id })
       });
 
       // First check the response status
@@ -324,6 +337,17 @@ export default function BookDetail() {
           title: 'Not in Library',
           text: 'This book is not in your library.',
           icon: 'info',
+          confirmButtonColor: '#333'
+        });
+        return;
+      }
+
+      if (response.status === 400) {
+        setIsRemovingFromLibrary(false);
+        await Swal.fire({
+          title: 'Invalid Request',
+          text: 'The request was invalid. Please try again.',
+          icon: 'error',
           confirmButtonColor: '#333'
         });
         return;
