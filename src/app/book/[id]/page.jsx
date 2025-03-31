@@ -196,23 +196,19 @@ export default function BookDetail() {
           'Authorization': `Bearer ${currentToken}`
         }
       });
-      
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        console.error('Error parsing response JSON:', parseError);
+
+      // First check the response status
+      if (response.status === 409) {
+        setIsAddingToLibrary(false);
         await Swal.fire({
-          title: 'Error',
-          text: 'Could not process the server response. Please try again later.',
-          icon: 'error',
+          title: 'Already in Library',
+          text: 'This book is already in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
-        setIsAddingToLibrary(false);
         return;
       }
 
-      // Handle 500 errors specifically with retry logic
       if (response.status === 500 && retryCount < 2) {
         console.log(`Server error, retrying (${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -221,35 +217,34 @@ export default function BookDetail() {
       }
       
       if (response.status === 500) {
-        console.error('Server error when adding book to library');
+        setIsAddingToLibrary(false);
         await Swal.fire({
           title: 'Server Error',
           text: 'The server encountered an error. This could be a temporary issue. Please try again later.',
           icon: 'error',
           confirmButtonColor: '#333'
         });
-        setIsAddingToLibrary(false);
         return;
       }
 
-      // Check if the book is already in the library
-      if (response.status === 409) {
+      // Only try to parse JSON if we haven't handled the status code above
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        setIsAddingToLibrary(false);
         await Swal.fire({
-          title: 'Already in Library',
-          text: 'This book is already in your library.',
-          icon: 'info',
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
+          icon: 'error',
           confirmButtonColor: '#333'
         });
-        // Update the UI state to reflect the actual state
-        setInLibrary(true);
-        setIsAddingToLibrary(false);
         return;
       }
       
       if (response.ok) {
-        // Update UI only after confirmed success
         setInLibrary(true);
-        
         await Swal.fire({
           title: 'Success!',
           text: responseData.message || 'Book added to your library',
@@ -257,7 +252,6 @@ export default function BookDetail() {
           confirmButtonColor: '#333'
         });
       } else {
-        // Handle error cases
         let errorMessage = 'There was an issue adding the book to your library.';
         if (responseData.message) {
           errorMessage = responseData.message;
@@ -279,7 +273,6 @@ export default function BookDetail() {
     } catch (error) {
       console.error('Add to library error:', error);
       
-      // Implement retry for network errors
       if (retryCount < 2) {
         console.log(`Network error, retrying (${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -294,7 +287,6 @@ export default function BookDetail() {
         confirmButtonColor: '#333'
       });
       
-      // Make sure UI reflects actual state
       fetchLibraryStatus();
     } finally {
       setIsAddingToLibrary(false);
@@ -324,23 +316,19 @@ export default function BookDetail() {
           'Authorization': `Bearer ${currentToken}`
         }
       });
-      
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        console.error('Error parsing response JSON:', parseError);
+
+      // First check the response status
+      if (response.status === 404) {
+        setIsRemovingFromLibrary(false);
         await Swal.fire({
-          title: 'Error',
-          text: 'Could not process the server response. Please try again later.',
-          icon: 'error',
+          title: 'Not in Library',
+          text: 'This book is not in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
-        setIsRemovingFromLibrary(false);
         return;
       }
 
-      // Handle 500 errors specifically with retry logic
       if (response.status === 500 && retryCount < 2) {
         console.log(`Server error, retrying (${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -349,35 +337,34 @@ export default function BookDetail() {
       }
       
       if (response.status === 500) {
-        console.error('Server error when removing book from library');
+        setIsRemovingFromLibrary(false);
         await Swal.fire({
           title: 'Server Error',
           text: 'The server encountered an error. This could be a temporary issue. Please try again later.',
           icon: 'error',
           confirmButtonColor: '#333'
         });
-        setIsRemovingFromLibrary(false);
         return;
       }
 
-      // Check if the book is not in the library
-      if (response.status === 404) {
+      // Only try to parse JSON if we haven't handled the status code above
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        setIsRemovingFromLibrary(false);
         await Swal.fire({
-          title: 'Not in Library',
-          text: 'This book is not in your library.',
-          icon: 'info',
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
+          icon: 'error',
           confirmButtonColor: '#333'
         });
-        // Update the UI state to reflect the actual state
-        setInLibrary(false);
-        setIsRemovingFromLibrary(false);
         return;
       }
       
       if (response.ok) {
-        // Update UI only after confirmed success
         setInLibrary(false);
-        
         await Swal.fire({
           title: 'Success!',
           text: responseData.message || 'Book removed from your library',
@@ -385,7 +372,6 @@ export default function BookDetail() {
           confirmButtonColor: '#333'
         });
       } else {
-        // Handle error cases
         let errorMessage = 'There was an issue removing the book from your library.';
         if (responseData.message) {
           errorMessage = responseData.message;
@@ -407,7 +393,6 @@ export default function BookDetail() {
     } catch (error) {
       console.error('Remove from library error:', error);
       
-      // Implement retry for network errors
       if (retryCount < 2) {
         console.log(`Network error, retrying (${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -422,7 +407,6 @@ export default function BookDetail() {
         confirmButtonColor: '#333'
       });
       
-      // Make sure UI reflects actual state
       fetchLibraryStatus();
     } finally {
       setIsRemovingFromLibrary(false);
