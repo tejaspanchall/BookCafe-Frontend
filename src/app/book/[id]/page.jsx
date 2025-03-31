@@ -194,33 +194,25 @@ export default function BookDetail() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        },
-        body: JSON.stringify({ book_id: id })
+        }
       });
 
-      // First check the response status
-      if (response.status === 409) {
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
         setIsAddingToLibrary(false);
         await Swal.fire({
-          title: 'Already in Library',
-          text: 'This book is already in your library.',
-          icon: 'info',
-          confirmButtonColor: '#333'
-        });
-        return;
-      }
-
-      if (response.status === 400) {
-        setIsAddingToLibrary(false);
-        await Swal.fire({
-          title: 'Invalid Request',
-          text: 'The request was invalid. Please try again.',
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
           icon: 'error',
           confirmButtonColor: '#333'
         });
         return;
       }
 
+      // Handle 500 errors specifically with retry logic
       if (response.status === 500 && retryCount < 2) {
         console.log(`Server error, retrying (${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -239,17 +231,13 @@ export default function BookDetail() {
         return;
       }
 
-      // Only try to parse JSON if we haven't handled the status code above
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        console.error('Error parsing response JSON:', parseError);
+      // Check if the book is already in the library
+      if (response.status === 409 || (responseData && responseData.message && responseData.message.toLowerCase().includes('already in library'))) {
         setIsAddingToLibrary(false);
         await Swal.fire({
-          title: 'Error',
-          text: 'Could not process the server response. Please try again later.',
-          icon: 'error',
+          title: 'Already in Library',
+          text: 'This book is already in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
         return;
@@ -326,33 +314,25 @@ export default function BookDetail() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
-        },
-        body: JSON.stringify({ book_id: id })
+        }
       });
 
-      // First check the response status
-      if (response.status === 404) {
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
         setIsRemovingFromLibrary(false);
         await Swal.fire({
-          title: 'Not in Library',
-          text: 'This book is not in your library.',
-          icon: 'info',
-          confirmButtonColor: '#333'
-        });
-        return;
-      }
-
-      if (response.status === 400) {
-        setIsRemovingFromLibrary(false);
-        await Swal.fire({
-          title: 'Invalid Request',
-          text: 'The request was invalid. Please try again.',
+          title: 'Error',
+          text: 'Could not process the server response. Please try again later.',
           icon: 'error',
           confirmButtonColor: '#333'
         });
         return;
       }
 
+      // Handle 500 errors specifically with retry logic
       if (response.status === 500 && retryCount < 2) {
         console.log(`Server error, retrying (${retryCount + 1}/2)...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -371,17 +351,13 @@ export default function BookDetail() {
         return;
       }
 
-      // Only try to parse JSON if we haven't handled the status code above
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        console.error('Error parsing response JSON:', parseError);
+      // Check if the book is not in the library
+      if (response.status === 404 || (responseData && responseData.message && responseData.message.toLowerCase().includes('not in library'))) {
         setIsRemovingFromLibrary(false);
         await Swal.fire({
-          title: 'Error',
-          text: 'Could not process the server response. Please try again later.',
-          icon: 'error',
+          title: 'Not in Library',
+          text: 'This book is not in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
         return;
