@@ -168,7 +168,7 @@ export default function BookDetail() {
     }
   }, [location]);
 
-  const handleAddToLibrary = async () => {
+  const handleAddToLibrary = async (retryCount = 0) => {
     const currentToken = token || localStorage.getItem('token');
     if (!isLoggedIn || !currentToken) {
       Swal.fire({
@@ -197,7 +197,17 @@ export default function BookDetail() {
         }
       });
       
-      // Handle 500 errors specifically
+      // Handle 500 errors specifically with retry logic
+      if (response.status === 500 && retryCount < 2) {
+        console.log(`Server error, retrying (${retryCount + 1}/2)...`);
+        
+        // Wait a moment before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setIsAddingToLibrary(false);
+        return handleAddToLibrary(retryCount + 1);
+      }
+      
       if (response.status === 500) {
         console.error('Server error when adding book to library');
         await Swal.fire({
@@ -206,6 +216,7 @@ export default function BookDetail() {
           icon: 'error',
           confirmButtonColor: '#333'
         });
+        setIsAddingToLibrary(false);
         return;
       }
       
@@ -220,6 +231,7 @@ export default function BookDetail() {
           icon: 'error',
           confirmButtonColor: '#333'
         });
+        setIsAddingToLibrary(false);
         return;
       }
       
@@ -256,6 +268,17 @@ export default function BookDetail() {
     } catch (error) {
       console.error('Add to library error:', error);
       
+      // Implement retry for network errors
+      if (retryCount < 2) {
+        console.log(`Network error, retrying (${retryCount + 1}/2)...`);
+        
+        // Wait a moment before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setIsAddingToLibrary(false);
+        return handleAddToLibrary(retryCount + 1);
+      }
+      
       await Swal.fire({
         title: 'Error',
         text: 'Network error occurred. Please try again later.',
@@ -270,7 +293,7 @@ export default function BookDetail() {
     }
   };
 
-  const handleRemoveFromLibrary = async () => {
+  const handleRemoveFromLibrary = async (retryCount = 0) => {
     if (!isLoggedIn) {
       router.push('/login');
       return;
@@ -294,6 +317,17 @@ export default function BookDetail() {
         }
       });
       
+      // Handle 500 errors specifically with retry logic
+      if (response.status === 500 && retryCount < 2) {
+        console.log(`Server error, retrying (${retryCount + 1}/2)...`);
+        
+        // Wait a moment before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setIsRemovingFromLibrary(false);
+        return handleRemoveFromLibrary(retryCount + 1);
+      }
+      
       // Handle 500 errors specifically
       if (response.status === 500) {
         console.error('Server error when removing book from library');
@@ -303,6 +337,7 @@ export default function BookDetail() {
           icon: 'error',
           confirmButtonColor: '#333'
         });
+        setIsRemovingFromLibrary(false);
         return;
       }
       
@@ -317,6 +352,7 @@ export default function BookDetail() {
           icon: 'error',
           confirmButtonColor: '#333'
         });
+        setIsRemovingFromLibrary(false);
         return;
       }
       
@@ -352,6 +388,17 @@ export default function BookDetail() {
       
     } catch (error) {
       console.error('Remove from library error:', error);
+      
+      // Implement retry for network errors
+      if (retryCount < 2) {
+        console.log(`Network error, retrying (${retryCount + 1}/2)...`);
+        
+        // Wait a moment before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        setIsRemovingFromLibrary(false);
+        return handleRemoveFromLibrary(retryCount + 1);
+      }
       
       await Swal.fire({
         title: 'Error',
@@ -549,7 +596,7 @@ export default function BookDetail() {
                 inLibrary ? (
                   <button
                     className="w-full py-2.5 px-4 rounded border border-gray-300 bg-white text-gray-700 font-medium flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-60"
-                    onClick={handleRemoveFromLibrary}
+                    onClick={() => handleRemoveFromLibrary()}
                     disabled={isRemovingFromLibrary}
                   >
                     {isRemovingFromLibrary ? (
@@ -561,7 +608,7 @@ export default function BookDetail() {
                 ) : (
                   <button
                     className="w-full py-2.5 px-4 rounded bg-gray-900 text-white font-medium flex items-center justify-center hover:bg-black transition-colors disabled:opacity-60"
-                    onClick={handleAddToLibrary}
+                    onClick={() => handleAddToLibrary()}
                     disabled={isAddingToLibrary}
                   >
                     {isAddingToLibrary ? (
