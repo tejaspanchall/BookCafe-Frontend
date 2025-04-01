@@ -235,9 +235,9 @@ export default function BookDetail() {
       if (response.status === 409) {
         setIsAddingToLibrary(false);
         await Swal.fire({
-          title: 'Success!',
-          text: responseData.message || 'Book added to your library',
-          icon: 'success',
+          title: 'Already in Library',
+          text: 'This book is already in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
         return;
@@ -260,9 +260,9 @@ export default function BookDetail() {
         }
         
         await Swal.fire({
-          title: 'Error',
-          text: errorMessage,
-          icon: 'error',
+          title: 'Success!',
+          text: responseData.message || 'Book added to your library',
+          icon: 'success',
           confirmButtonColor: '#333'
         });
       }
@@ -355,9 +355,9 @@ export default function BookDetail() {
       if (response.status === 404) {
         setIsRemovingFromLibrary(false);
         await Swal.fire({
-          title: 'Success!',
-          text: responseData.message || 'Book removed from your library',
-          icon: 'success',
+          title: 'Not in Library',
+          text: 'This book is not in your library.',
+          icon: 'info',
           confirmButtonColor: '#333'
         });
         return;
@@ -380,9 +380,9 @@ export default function BookDetail() {
         }
         
         await Swal.fire({
-          title: 'Error',
-          text: errorMessage,
-          icon: 'error',
+          title: 'Success!',
+          text: responseData.message || 'Book removed from your library',
+          icon: 'success',
           confirmButtonColor: '#333'
         });
       }
