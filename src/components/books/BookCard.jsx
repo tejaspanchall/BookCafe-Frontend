@@ -60,14 +60,25 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
           {showRemoveButton && (
             <button
               onClick={handleRemove}
-              className="absolute top-2 left-2 w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-200 text-lg font-bold z-20 shadow-lg"
+              className="absolute top-2 left-2 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 text-xl font-bold z-30 group-hover:z-50 hover:scale-110 hover:shadow-xl"
               style={{ 
-                backgroundColor: 'rgba(255, 0, 0, 0.85)',
+                backgroundColor: 'rgba(239, 68, 68, 0.9)',
                 backdropFilter: 'blur(4px)',
-                color: 'white'
+                color: 'white',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
               }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 0, 0, 1)'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 0, 0, 0.85)'}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 1)';
+                e.currentTarget.style.transform = 'scale(1.1)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.zIndex = '9999';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                e.currentTarget.style.zIndex = '30';
+              }}
             >
               ×
             </button>

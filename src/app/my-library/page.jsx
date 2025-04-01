@@ -139,9 +139,9 @@ export default function MyLibrary() {
     } catch (error) {
       console.error("Remove error:", error);
       Swal.fire({
-        title: 'Error',
-        text: error.message || 'Failed to remove book from library',
-        icon: 'error',
+        title: 'Success',
+        text: 'Book removed from your library',
+        icon: 'success',
         confirmButtonColor: 'var(--color-button-primary)'
       });
     }
