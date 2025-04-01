@@ -30,27 +30,35 @@ export default function ForgotPassword() {
     
     setIsLoading(true);
     try {
+      console.log('Sending request to:', `${BACKEND}/auth/forgot-password`);
       const res = await fetch(`${BACKEND}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
+        credentials: 'include'
       });
       
       const data = await res.json();
+      console.log('Response:', data);
+      
       if (res.ok) {
         setIsSubmitted(true);
       } else {
+        let errorMessage = data.error || data.message || 'Failed to send reset instructions';
+        console.error('Error details:', data);
+        
         Swal.fire({
           title: 'Error!',
-          text: data.error || 'Failed to send reset instructions',
+          text: errorMessage,
           icon: 'error',
           confirmButtonColor: 'var(--color-button-primary)'
         });
       }
     } catch (error) {
+      console.error('Fetch error:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Failed to send reset instructions',
+        text: 'Network error. Please check your connection and try again.',
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
