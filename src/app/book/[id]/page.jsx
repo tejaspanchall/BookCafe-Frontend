@@ -261,7 +261,7 @@ export default function BookDetail() {
         
         await Swal.fire({
           title: 'Success!',
-          text: responseData.message || 'Book added to your library',
+          text: 'Book added to your library',
           icon: 'success',
           confirmButtonColor: '#333'
         });
@@ -381,7 +381,7 @@ export default function BookDetail() {
         
         await Swal.fire({
           title: 'Success!',
-          text: responseData.message || 'Book removed from your library',
+          text: 'Book removed from your library',
           icon: 'success',
           confirmButtonColor: '#333'
         });
