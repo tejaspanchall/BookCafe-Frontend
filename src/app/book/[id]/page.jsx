@@ -235,9 +235,9 @@ export default function BookDetail() {
       if (response.status === 409) {
         setIsAddingToLibrary(false);
         await Swal.fire({
-          title: 'Already in Library',
-          text: 'This book is already in your library.',
-          icon: 'info',
+          title: 'Success!',
+          text: responseData.message || 'Book added to your library',
+          icon: 'success',
           confirmButtonColor: '#333'
         });
         return;
@@ -355,9 +355,9 @@ export default function BookDetail() {
       if (response.status === 404) {
         setIsRemovingFromLibrary(false);
         await Swal.fire({
-          title: 'Not in Library',
-          text: 'This book is not in your library.',
-          icon: 'info',
+          title: 'Success!',
+          text: responseData.message || 'Book removed from your library',
+          icon: 'success',
           confirmButtonColor: '#333'
         });
         return;
