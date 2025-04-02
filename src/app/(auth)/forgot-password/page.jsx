@@ -41,7 +41,6 @@ export default function ForgotPassword() {
     
     setIsLoading(true);
     try {
-      console.log('Sending request to:', `${BACKEND}/auth/forgot-password`);
       const res = await fetch(`${BACKEND}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -59,7 +58,7 @@ export default function ForgotPassword() {
         console.error('Error details:', data);
         
         Swal.fire({
-          title: 'Error!',
+          title: 'Error!!',
           text: errorMessage,
           icon: 'error',
           confirmButtonColor: 'var(--color-button-primary)'
@@ -68,7 +67,7 @@ export default function ForgotPassword() {
     } catch (error) {
       console.error('Fetch error:', error);
       Swal.fire({
-        title: 'Error!',
+        title: 'Error!!!',
         text: 'Network error. Please check your connection and try again.',
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
