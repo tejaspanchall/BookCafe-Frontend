@@ -13,18 +13,29 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const router = useRouter();
+
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Clear previous errors
+    setEmailError('');
+    
+    // Validate email
     if (!email) {
-      Swal.fire({
-        title: 'Error!',
-        text: 'Email is required',
-        icon: 'error',
-        confirmButtonColor: 'var(--color-button-primary)'
-      });
+      setEmailError('Email is required');
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
       return;
     }
     
@@ -82,8 +93,12 @@ export default function ForgotPassword() {
               </svg>
             </div>
           </div>
-          <p className="text-[var(--color-text-primary)]">
+          <p className="text-[var(--color-text-primary)] mb-4">
+            We've sent password reset instructions to <span className="font-medium">{email}</span>.
+          </p>
+          <p className="text-[var(--color-text-secondary)] text-sm">
             Follow the instructions in the email to reset your password. If you don't see the email, check your spam folder.
+            The link will expire in 1 hour for security reasons.
           </p>
         </div>
         
@@ -105,14 +120,23 @@ export default function ForgotPassword() {
       footerLink={{ href: '/login', text: 'Back to Login' }}
     >
       <div className="space-y-6">
-        <FormInput 
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          icon={<FiMail className="text-[var(--color-text-secondary)]" />}
-        />
+        <div>
+          <FormInput 
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={e => {
+              setEmail(e.target.value);
+              setEmailError('');
+            }}
+            required
+            icon={<FiMail className="text-[var(--color-text-secondary)]" />}
+            error={emailError}
+          />
+          {emailError && (
+            <p className="text-red-500 text-sm mt-1">{emailError}</p>
+          )}
+        </div>
       
         <FormButton 
           type="submit"
