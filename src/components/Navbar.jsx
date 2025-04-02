@@ -53,7 +53,7 @@ export default function Navbar() {
   return (
     <nav className="bg-[var(--color-primary)] shadow-md py-4 sticky top-0 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link href="/catalog" className="text-2xl font-bold text-white flex items-center">
+        <Link href="/" className="text-2xl font-bold text-white flex items-center">
           <JournalBookmark className="mr-2 text-white" />
           <span className="text-white">Book</span>
           <span className="text-[var(--color-text-logo)]">Cafe</span>

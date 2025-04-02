@@ -6,7 +6,6 @@ import Swal from 'sweetalert2';
 import AuthForm from '@/components/auth/AuthForm';
 import FormInput from '@/components/auth/FormInput';
 import FormButton from '@/components/auth/FormButton';
-import { AuthSkeleton } from '@/components/skeleton';
 import { FiMail, FiLock } from 'react-icons/fi';
 
 export default function Login() {
@@ -70,10 +69,6 @@ export default function Login() {
       setIsLoading(false);
     }
   };
-
-  if (isLoading) {
-    return <AuthSkeleton />;
-  }
 
   return (
     <AuthForm 

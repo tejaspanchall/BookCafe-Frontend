@@ -23,16 +23,7 @@ export default function Home() {
     'Non-Fiction',
     'Science Fiction',
     'Mystery',
-    'Romance',
-    'Fantasy',
-    'Biography',
-    'History',
-    'Science',
-    'Technology',
-    'Business',
-    'Self-Help',
-    'Children\'s Books',
-    'Educational'
+    'Romance'
   ];
   
   // Helper function to get categories that have books
@@ -310,6 +301,12 @@ export default function Home() {
               0% { transform: translateY(0) rotate(0); }
               100% { transform: translateY(-15px) rotate(3deg); }
             }
+            
+            @keyframes bookFloat {
+              0% { transform: translateY(0); }
+              50% { transform: translateY(-10px); }
+              100% { transform: translateY(0); }
+            }
           `}</style>
           {renderPattern('circle', 15)}
           {renderPattern('square', 10)}
@@ -351,20 +348,22 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="relative hidden lg:block lg:col-span-2" style={{ marginTop: "-40px" }}>
-              <div className="book-stack">
+            <div className="relative hidden lg:flex lg:col-span-2 justify-center items-center" style={{ margin: "0 auto" }}>
+              <div className="book-stack relative" style={{ top: "-150px" }}>
                 {[...Array(2)].map((_, i) => (
                   <div 
                     key={i} 
-                    className="absolute w-48 h-72 bg-white shadow-2xl"
+                    className="absolute w-56 h-80 bg-white shadow-2xl"
                     style={{
                       transform: `perspective(1000px) rotateY(${-5 * (i+1)}deg) rotateX(${2 * (i+1)}deg) translateZ(${-10 * i}px) translateX(${15 * i}px)`,
                       zIndex: 3 - i,
                       border: '1px solid black',
+                      animation: 'bookFloat 4s ease-in-out infinite',
+                      animationDelay: `${i * 0.5}s`
                     }}
                   >
                     <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gray-50">
-                      <BookmarkStar className="text-4xl mb-6" />
+                      <BookmarkStar className="text-5xl mb-6" />
                       <div className="w-3/4 h-1 bg-black mb-3"></div>
                       <div className="w-1/2 h-1 bg-black"></div>
                     </div>
@@ -411,7 +410,13 @@ export default function Home() {
             </div>
             
             {getAvailableCategories().length > 1 && (
-              <div className="hidden md:flex absolute -right-2 top-0 bottom-0 items-center">
+              <div className="hidden md:flex absolute -right-2 top-0 bottom-0 items-center space-x-2">
+                <button
+                  onClick={handlePrevCategory}
+                  className="p-3 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors"
+                >
+                  <ChevronLeft size={18} />
+                </button>
                 <button
                   onClick={handleNextCategory}
                   className="p-3 bg-white border border-black text-black hover:bg-black hover:text-white transition-colors"
