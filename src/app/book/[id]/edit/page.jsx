@@ -5,7 +5,6 @@ import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '@/components/context/AuthContext';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { EditBookSkeleton } from '@/components/skeleton';
 import CategorySelect from '@/components/books/CategorySelect';
 import AuthorInput from '@/components/books/AuthorInput';
 
@@ -428,7 +427,12 @@ export default function EditBook() {
   };
 
   if (isLoading) {
-    return <EditBookSkeleton />;
+    return (
+      <div className="max-w-3xl mx-auto py-8 px-4">
+        <h1 className="text-3xl font-bold mb-8 text-center text-[var(--color-text-primary)]">Edit Book</h1>
+        <LoadingSpinner />
+      </div>
+    );
   }
   
   if (error) {

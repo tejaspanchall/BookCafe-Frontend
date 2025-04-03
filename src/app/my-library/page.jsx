@@ -228,7 +228,7 @@ export default function MyLibrary() {
             <div className="h-10 w-64 rounded-full animate-pulse" style={{ backgroundColor: 'var(--color-bg-secondary)' }}></div>
           </div>
         </div>
-        <CardSkeleton count={6} />
+        <CardSkeleton count={12} layout="my-library" showStats={true} showFilters={true} />
       </div>
     );
   }

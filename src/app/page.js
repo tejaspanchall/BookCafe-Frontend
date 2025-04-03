@@ -428,7 +428,7 @@ export default function Home() {
           </div>
           
           {isLoading ? (
-            <CardSkeleton count={6} />
+            <CardSkeleton count={6} layout="landing" />
           ) : noBooks ? (
             <div className="text-center py-20 border border-gray-300">
               <Book className="text-gray-500 text-5xl mx-auto mb-6" />
@@ -446,7 +446,7 @@ export default function Home() {
               </div>
             </div>
           ) : categoryLoading ? (
-            <CardSkeleton count={6} />
+            <CardSkeleton count={6} layout="landing" />
           ) : popularBooks[activeCategory]?.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {popularBooks[activeCategory].map((book) => (
