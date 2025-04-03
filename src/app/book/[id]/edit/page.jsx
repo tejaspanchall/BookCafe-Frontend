@@ -612,7 +612,7 @@ export default function EditBook() {
             onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
             onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? <div className="flex justify-center items-center"><LoadingSpinner size="w-5 h-5" color="text-white" /></div> : 'Save Changes'}
           </button>
         </div>
         

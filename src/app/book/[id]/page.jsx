@@ -595,19 +595,22 @@ export default function BookDetail() {
                 inLibrary ? (
                   <button
                     className="w-full py-2.5 px-4 rounded border border-gray-300 bg-white text-gray-700 font-medium flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-60"
-                    onClick={() => handleRemoveFromLibrary()}
+                    onClick={handleRemoveFromLibrary}
                     disabled={isRemovingFromLibrary}
                   >
                     {isRemovingFromLibrary ? (
-                      <LoadingSpinner size="w-5 h-5" />
+                      <LoadingSpinner size="w-5 h-5" color="text-gray-800" />
                     ) : (
-                      <><DashCircle className="mr-2" />Remove from Library</>
+                      <>
+                        <DashCircle className="mr-2" />
+                        Remove from Library
+                      </>
                     )}
                   </button>
                 ) : (
                   <button
                     className="w-full py-2.5 px-4 rounded bg-gray-900 text-white font-medium flex items-center justify-center hover:bg-black transition-colors disabled:opacity-60"
-                    onClick={() => handleAddToLibrary()}
+                    onClick={handleAddToLibrary}
                     disabled={isAddingToLibrary}
                   >
                     {isAddingToLibrary ? (
@@ -633,7 +636,7 @@ export default function BookDetail() {
                     disabled={isDeleting}
                   >
                     {isDeleting ? (
-                      <LoadingSpinner size="w-5 h-5" />
+                      <LoadingSpinner size="w-5 h-5" color="text-gray-800" />
                     ) : (
                       <><Trash className="mr-2" />Delete Book</>
                     )}
