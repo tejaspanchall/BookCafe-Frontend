@@ -1,6 +1,6 @@
 # BookCafe Frontend
 
-A modern, responsive bookstore frontend built with Next.js and Tailwind CSS.
+BookCafe is an educational platform designed for students and teachers to discover, read, and manage digital books. The application allows users to explore books across various categories, manage personal libraries, and for teachers to add and edit book content.
 
 ## Backend Repository
 
@@ -8,64 +8,61 @@ The backend for this project is available at: [BookCafe-Backend](https://github.
 
 ## Features
 
-- 📚 Book listing and details
-- 👤 User authentication
+- 📚 Comprehensive book catalog with categories
+- 📖 Detailed book pages with covers and descriptions
+- 👤 User authentication (login, register, password reset)
 - 🔍 Search and filter capabilities
+- 💼 Personal library management for users
+- 👨‍🏫 Teacher-specific features (add/edit books)
 - 📱 Responsive design for all devices
 - 🎨 Modern UI with Tailwind CSS
-- ⚡ Fast page loads with Next.js
+- ⚡ Fast page loads with Next.js App Router
 
 ## Technologies Used
 
-- **Framework**: Next.js 15.2.0
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS
-- **Icons**: React Bootstrap Icons
-- **Alerts**: SweetAlert2
-- **Font**: Geist
+- **Framework**: [Next.js 15.2.0](https://nextjs.org/) with App Router
+- **UI Library**: [React 19](https://react.dev/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Icons**: [React Bootstrap Icons](https://www.npmjs.com/package/react-bootstrap-icons)
+- **Alerts**: [SweetAlert2](https://sweetalert2.github.io/)
+- **Font**: [Geist](https://vercel.com/font)
+- **State Management**: React Context API
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
+- [Node.js](https://nodejs.org/) (v18 or higher)
 - npm or yarn package manager
+- Backend API server ([BookCafe Backend](https://github.com/tejaspanchall/BookCafe-Backend))
 
 ## Getting Started
 
-1. Clone the repository:
+1. **Clone the repository:**
 ```bash
 git clone https://github.com/tejaspanchall/BookCafe-Frontend.git
 cd BookCafe-Frontend
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Set up environment variables:
+3. **Set up environment variables:**
 Create a `.env.local` file in the root directory with the following variables:
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_BACKEND=http://localhost:8000/api
 ```
 
-4. Run the development server:
+4. **Start the backend server:**
+Make sure you have the [backend server](https://github.com/tejaspanchall/BookCafe-Backend) running.
+
+5. **Run the development server:**
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-The application will be available at `http://localhost:3000`
-
-## Available Scripts
-
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build the application for production
-- `npm run start` - Start the production server
-- `npm run lint` - Run ESLint for code linting
-
+6. **Access the application:**
+Open your browser and visit `http://localhost:3000`
 
 ## License
 
