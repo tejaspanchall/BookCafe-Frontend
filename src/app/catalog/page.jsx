@@ -33,7 +33,7 @@ export default function BookCatalog() {
   const [displayedBooks, setDisplayedBooks] = useState([]);
   const [search, setSearch] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
-  const [searchType, setSearchType] = useState("name");
+  const [searchType, setSearchType] = useState("all");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -636,6 +636,7 @@ export default function BookCatalog() {
                     color: "white"
                   }}
                 >
+                  <option value="all">All Fields</option>
                   <option value="name">Name</option>
                   <option value="author">Author</option>
                   <option value="isbn">ISBN</option>
@@ -651,10 +652,32 @@ export default function BookCatalog() {
           
           {/* Helper text */}
           <p className="text-xs mt-2 text-center" id="search-description" style={{ color: "var(--color-text-secondary)" }}>
-            Results update as you type • Searching by {searchType === "name" ? "book title" : searchType === "author" ? "author name" : "ISBN"}
+            Results update as you type • Searching by {searchType === "all" ? "all fields" : searchType === "name" ? "book title" : searchType === "author" ? "author name" : "ISBN"}
           </p>
         </div>
       </div>
+
+      {/* Results count - positioned above filter and book grid */}
+      {search && (
+        <div className="mb-8 text-center">
+          <p className="text-sm md:text-base font-medium" style={{ color: "var(--color-text-primary)" }}>
+            {isLoading ? (
+              <span className="inline-flex items-center">
+                <span>Searching</span>
+                <span className="ml-1 flex space-x-1">
+                  <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)" }}></span>
+                  <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.2s' }}></span>
+                  <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.4s' }}></span>
+                </span>
+              </span>
+            ) : (
+              <span>
+                {applyFilter(allBooks).length.toLocaleString()} {applyFilter(allBooks).length === 1 ? 'result' : 'results'} for "<span className="font-semibold">{search}</span>"
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
       {message && (
         <div
