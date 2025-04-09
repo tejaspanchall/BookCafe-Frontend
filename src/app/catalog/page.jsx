@@ -734,7 +734,7 @@ export default function BookCatalog() {
                 </div>
               )}
               
-              {!hasMore && displayedBooks.length > 0 && (
+              {!hasMore && displayedBooks.length > 0 && allBooks.length > BOOKS_PER_PAGE && (
                 <div className="mt-8 text-center">
                   <p className="py-3 px-6 rounded-lg inline-block text-sm"
                      style={{ 
