@@ -347,150 +347,172 @@ export default function BookCatalog() {
 
   const FilterSidebar = () => (
     <div 
-      className={`bg-white p-4 rounded-lg shadow-md ${isMobileFilterOpen ? 'block' : 'hidden'} md:block md:sticky md:top-4`}
-      style={{ 
-        backgroundColor: "var(--color-bg-secondary)", 
-        color: "var(--color-text-primary)",
-        maxHeight: "calc(100vh - 2rem)",
-        overflowY: "auto"
-      }}
+      className={`${isMobileFilterOpen ? 'block' : 'hidden'} md:block
+         md:static md:w-auto md:bg-white md:p-4 md:rounded-lg md:shadow-md md:sticky md:top-4
+         fixed inset-0 z-50 md:z-auto bg-black bg-opacity-50 md:bg-opacity-100 md:inset-auto`}
     >
-      <div className="flex justify-between items-center mb-4 sticky top-0 pt-1 pb-2 bg-inherit z-10">
-        <h3 className="text-lg font-bold">Filters</h3>
-        <button 
-          onClick={clearFilters}
-          className="text-sm flex items-center gap-1 hover:underline transition-colors duration-200 px-2 py-1 rounded-md"
-          style={{ 
-            color: "var(--color-secondary)",
-            backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
-          }}
-        >
-          <XCircle size={14} /> Clear all
-        </button>
-      </div>
-      
-      {/* Sort Options */}
-      <div className="mb-6">
-        <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Sort By</h4>
-        <div className="space-y-1.5">
-          <button 
-            onClick={() => setFilter("recent")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'recent' ? 'font-semibold' : ''}`}
-            style={{ 
-              backgroundColor: filter === 'recent' ? "var(--color-border)" : "transparent",
-            }}
-          >
-            {filter === 'recent' && <Check size={14} />} Recently Added
-          </button>
-          <button 
-            onClick={() => setFilter("last")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'last' ? 'font-semibold' : ''}`}
-            style={{ 
-              backgroundColor: filter === 'last' ? "var(--color-border)" : "transparent",
-            }}
-          >
-            {filter === 'last' && <Check size={14} />} Last Added
-          </button>
-          <button 
-            onClick={() => setFilter("asc")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'asc' ? 'font-semibold' : ''}`}
-            style={{ 
-              backgroundColor: filter === 'asc' ? "var(--color-border)" : "transparent",
-            }}
-          >
-            {filter === 'asc' && <Check size={14} />} Title (A-Z)
-          </button>
-          <button 
-            onClick={() => setFilter("desc")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'desc' ? 'font-semibold' : ''}`}
-            style={{ 
-              backgroundColor: filter === 'desc' ? "var(--color-border)" : "transparent",
-            }}
-          >
-            {filter === 'desc' && <Check size={14} />} Title (Z-A)
-          </button>
-          <button 
-            onClick={() => setFilter("price_low_high")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
-            style={{ 
-              backgroundColor: filter === 'price_low_high' ? "var(--color-border)" : "transparent",
-            }}
-          >
-            {filter === 'price_low_high' && <Check size={14} />} Price <ArrowUp size={14} />
-          </button>
-          <button 
-            onClick={() => setFilter("price_high_low")}
-            className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
-            style={{ 
-              backgroundColor: filter === 'price_high_low' ? "var(--color-border)" : "transparent",
-            }}
-          >
-            {filter === 'price_high_low' && <Check size={14} />} Price <ArrowDown size={14} />
-          </button>
-        </div>
-      </div>
-      
-      {/* Price Range */}
-      <div className="mb-6">
-        <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Price Range</h4>
-        <div className="mb-2 text-sm flex justify-between">
-          <span>₹0</span>
-          <span className="px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.1)" }}>₹{priceRange[1]}</span>
-        </div>
-        <div className="px-1 mb-2">
-          <input
-            type="range"
-            min="0"
-            max={maxBookPrice}
-            step={Math.max(1, Math.floor(maxBookPrice / 50))}
-            value={priceRange[1]}
-            onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
-            className="w-full accent-current"
-            style={{ accentColor: "var(--color-primary)" }}
-          />
-        </div>
-      </div>
-      
-      {/* Categories */}
-      <div className="mb-6">
-        <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Categories</h4>
-        <div className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-          {categories.map(category => (
-            <label 
-              key={category} 
-              className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1.5 rounded transition-colors duration-200 hover:bg-opacity-50"
+      <div 
+        className="bg-white h-full md:h-auto overflow-y-auto w-3/4 max-w-xs md:w-auto transform transition-transform duration-300 ease-in-out md:transform-none"
+        style={{ 
+          backgroundColor: "var(--color-bg-secondary)", 
+          color: "var(--color-text-primary)",
+          maxHeight: "100vh",
+          overflowY: "auto",
+          boxShadow: "2px 0 10px rgba(0,0,0,0.2)"
+        }}
+      >
+        <div className="flex justify-between items-center mb-4 sticky top-0 pt-3 pb-2 px-4 md:px-0 bg-inherit z-10 border-b md:border-b-0" style={{ borderColor: "var(--color-border)" }}>
+          <h3 className="text-lg font-bold">Filters</h3>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={clearFilters}
+              className="text-sm flex items-center gap-1 hover:underline transition-colors duration-200 px-2 py-1 rounded-md"
               style={{ 
-                backgroundColor: selectedCategories.includes(category) 
-                  ? "rgba(var(--color-primary-rgb), 0.1)" 
-                  : "transparent" 
+                color: "var(--color-secondary)",
+                backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
               }}
             >
+              <XCircle size={14} /> Clear all
+            </button>
+            <button 
+              className="md:hidden text-sm flex items-center justify-center p-1 rounded-full"
+              onClick={() => setIsMobileFilterOpen(false)}
+              aria-label="Close filters"
+              style={{ 
+                color: "var(--color-text-secondary)",
+                backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
+              }}
+            >
+              <XCircle size={20} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="px-4 md:px-0">
+          {/* Sort Options */}
+          <div className="mb-6">
+            <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Sort By</h4>
+            <div className="space-y-1.5">
+              <button 
+                onClick={() => setFilter("recent")}
+                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'recent' ? 'font-semibold' : ''}`}
+                style={{ 
+                  backgroundColor: filter === 'recent' ? "var(--color-border)" : "transparent",
+                }}
+              >
+                {filter === 'recent' && <Check size={14} />} Recently Added
+              </button>
+              <button 
+                onClick={() => setFilter("last")}
+                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'last' ? 'font-semibold' : ''}`}
+                style={{ 
+                  backgroundColor: filter === 'last' ? "var(--color-border)" : "transparent",
+                }}
+              >
+                {filter === 'last' && <Check size={14} />} Last Added
+              </button>
+              <button 
+                onClick={() => setFilter("asc")}
+                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'asc' ? 'font-semibold' : ''}`}
+                style={{ 
+                  backgroundColor: filter === 'asc' ? "var(--color-border)" : "transparent",
+                }}
+              >
+                {filter === 'asc' && <Check size={14} />} Title (A-Z)
+              </button>
+              <button 
+                onClick={() => setFilter("desc")}
+                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'desc' ? 'font-semibold' : ''}`}
+                style={{ 
+                  backgroundColor: filter === 'desc' ? "var(--color-border)" : "transparent",
+                }}
+              >
+                {filter === 'desc' && <Check size={14} />} Title (Z-A)
+              </button>
+              <button 
+                onClick={() => setFilter("price_low_high")}
+                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
+                style={{ 
+                  backgroundColor: filter === 'price_low_high' ? "var(--color-border)" : "transparent",
+                }}
+              >
+                {filter === 'price_low_high' && <Check size={14} />} Price <ArrowUp size={14} />
+              </button>
+              <button 
+                onClick={() => setFilter("price_high_low")}
+                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
+                style={{ 
+                  backgroundColor: filter === 'price_high_low' ? "var(--color-border)" : "transparent",
+                }}
+              >
+                {filter === 'price_high_low' && <Check size={14} />} Price <ArrowDown size={14} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Price Range */}
+          <div className="mb-6">
+            <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Price Range</h4>
+            <div className="mb-2 text-sm flex justify-between">
+              <span>₹0</span>
+              <span className="px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.1)" }}>₹{priceRange[1]}</span>
+            </div>
+            <div className="px-1 mb-2">
               <input
-                type="checkbox"
-                checked={selectedCategories.includes(category)}
-                onChange={() => handleCategoryToggle(category)}
-                className="text-blue-600 rounded"
+                type="range"
+                min="0"
+                max={maxBookPrice}
+                step={Math.max(1, Math.floor(maxBookPrice / 50))}
+                value={priceRange[1]}
+                onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
+                className="w-full accent-current"
                 style={{ accentColor: "var(--color-primary)" }}
               />
-              <span className={selectedCategories.includes(category) ? "font-medium" : ""}>
-                {category}
-              </span>
-            </label>
-          ))}
+            </div>
+          </div>
+          
+          {/* Categories */}
+          <div className="mb-6">
+            <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Categories</h4>
+            <div className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+              {categories.map(category => (
+                <label 
+                  key={category} 
+                  className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1.5 rounded transition-colors duration-200 hover:bg-opacity-50"
+                  style={{ 
+                    backgroundColor: selectedCategories.includes(category) 
+                      ? "rgba(var(--color-primary-rgb), 0.1)" 
+                      : "transparent" 
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(category)}
+                    onChange={() => handleCategoryToggle(category)}
+                    className="text-blue-600 rounded"
+                    style={{ accentColor: "var(--color-primary)" }}
+                  />
+                  <span className={selectedCategories.includes(category) ? "font-medium" : ""}>
+                    {category}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+          
+          {/* Apply Filters Button (Mobile Only) */}
+          <button 
+            className="w-full md:hidden py-2.5 px-4 rounded font-medium mt-4 mb-6 transition-colors duration-200"
+            style={{ 
+              backgroundColor: "var(--color-button-primary)", 
+              color: "var(--color-bg-primary)"
+            }}
+            onClick={() => setIsMobileFilterOpen(false)}
+          >
+            Apply Filters
+          </button>
         </div>
       </div>
-      
-      {/* Apply Filters Button (Mobile Only) */}
-      <button 
-        className="w-full md:hidden py-2 px-4 rounded font-medium mt-4 transition-colors duration-200"
-        style={{ 
-          backgroundColor: "var(--color-button-primary)", 
-          color: "var(--color-bg-primary)"
-        }}
-        onClick={() => setIsMobileFilterOpen(false)}
-      >
-        Apply Filters
-      </button>
     </div>
   );
 
@@ -691,6 +713,21 @@ export default function BookCatalog() {
         </div>
       )}
 
+      {/* Mobile Filter Toggle Button - only visible on small screens */}
+      <div className="md:hidden mb-4">
+        <button 
+          onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+          className="w-full py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
+          style={{ 
+            backgroundColor: "var(--color-button-primary)", 
+            color: "var(--color-bg-primary)"
+          }}
+        >
+          <Funnel size={16} /> 
+          {isMobileFilterOpen ? 'Hide Filters' : 'Show Filters'}
+        </button>
+      </div>
+
       {/* Main Content with sidebar */}
       <div className="flex flex-col md:flex-row gap-6">
         {/* Filter Sidebar */}
@@ -708,7 +745,7 @@ export default function BookCatalog() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 px-1">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6 px-1">
                 {displayedBooks.map((book, index) => (
                   <div 
                     key={book.id} 
@@ -761,6 +798,19 @@ export default function BookCatalog() {
         }}
       >
         <ArrowUp size={20} />
+      </button>
+
+      {/* Floating Filter Button - Mobile Only */}
+      <button 
+        className="md:hidden fixed bottom-24 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105"
+        onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+        aria-label={isMobileFilterOpen ? "Hide filters" : "Show filters"}
+        style={{ 
+          backgroundColor: "var(--color-primary)", 
+          color: "white"
+        }}
+      >
+        <Funnel size={18} />
       </button>
     </div>
   );
