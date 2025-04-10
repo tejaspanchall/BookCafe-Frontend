@@ -676,7 +676,7 @@ export default function BookCatalog() {
               <div className="md:hidden flex flex-shrink-0 border-t sm:border-t-0 overflow-hidden rounded-lg" style={{ borderColor: "var(--color-border)" }}>
                 {/* Mobile Filter Button */}
                 <button 
-                  className="flex items-center justify-between gap-2 py-3.5 px-4 font-medium w-1/2 text-center rounded-l-lg"
+                  className="flex items-center justify-between py-3.5 px-4 font-medium w-1/2 text-center rounded-l-lg"
                   style={{ 
                     backgroundColor: "var(--color-text-secondary)", 
                     color: "white",
@@ -685,13 +685,9 @@ export default function BookCatalog() {
                   onClick={() => setIsMobileFilterOpen(true)}
                   aria-label="Open filters"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <Funnel size={16} /> 
-                    <span>Filters</span>
-                  </div>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ color: "white" }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                  <Funnel size={16} />
+                  <span>Filters</span>
+                  <div className="w-4"></div> {/* Empty spacer to balance layout */}
                 </button>
                 
                 {/* Search Type Dropdown - Mobile */}
