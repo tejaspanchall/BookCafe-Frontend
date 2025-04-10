@@ -346,27 +346,47 @@ export default function BookCatalog() {
   };
 
   const FilterSidebar = () => (
-    <div 
-      className={`${isMobileFilterOpen ? 'block' : 'hidden'} md:block
-         md:static md:w-auto md:bg-white md:p-4 md:rounded-lg md:shadow-md md:sticky md:top-4
-         fixed inset-0 z-50 md:z-auto bg-black bg-opacity-50 md:bg-opacity-100 md:inset-auto`}
-    >
+    <>
+      {/* Backdrop overlay for mobile */}
+      {isMobileFilterOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" 
+          onClick={() => setIsMobileFilterOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      
       <div 
-        className="bg-white h-full md:h-auto overflow-y-auto w-3/4 max-w-xs md:w-auto transform transition-transform duration-300 ease-in-out md:transform-none"
+        className={`bg-white p-4 rounded-lg shadow-md ${isMobileFilterOpen ? 'fixed inset-0 z-50 overflow-auto pt-14 pb-24' : 'hidden'} md:block md:sticky md:top-4 md:relative md:z-10 md:pt-4 md:pb-4`}
         style={{ 
           backgroundColor: "var(--color-bg-secondary)", 
           color: "var(--color-text-primary)",
           maxHeight: "100vh",
-          overflowY: "auto",
-          boxShadow: "2px 0 10px rgba(0,0,0,0.2)"
+          overflowY: "auto"
         }}
       >
-        <div className="flex justify-between items-center mb-4 sticky top-0 pt-3 pb-2 px-4 md:px-0 bg-inherit z-10 border-b md:border-b-0" style={{ borderColor: "var(--color-border)" }}>
+        {/* Fixed header for mobile */}
+        <div className={`${isMobileFilterOpen ? 'fixed top-0 left-0 right-0 p-4 z-10' : 'mb-4 sticky top-0 pt-1 pb-2'} flex justify-between items-center bg-inherit`}
+          style={{
+            borderBottom: isMobileFilterOpen ? '1px solid var(--color-border)' : 'none',
+            boxShadow: isMobileFilterOpen ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+          }}
+        >
           <h3 className="text-lg font-bold">Filters</h3>
           <div className="flex items-center gap-2">
             <button 
+              onClick={() => setIsMobileFilterOpen(false)}
+              className="md:hidden text-sm flex items-center justify-center p-1 rounded-full"
+              style={{ 
+                backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
+              }}
+              aria-label="Close filters"
+            >
+              <XCircle size={18} />
+            </button>
+            <button 
               onClick={clearFilters}
-              className="text-sm flex items-center gap-1 hover:underline transition-colors duration-200 px-2 py-1 rounded-md"
+              className="text-sm flex items-center gap-1 hover:underline transition-colors duration-200 px-2 py-1 rounded-md md:block hidden"
               style={{ 
                 color: "var(--color-secondary)",
                 backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
@@ -374,146 +394,152 @@ export default function BookCatalog() {
             >
               <XCircle size={14} /> Clear all
             </button>
+          </div>
+        </div>
+      
+        {/* Sort Options */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Sort By</h4>
+          <div className="space-y-1.5">
             <button 
-              className="md:hidden text-sm flex items-center justify-center p-1 rounded-full"
-              onClick={() => setIsMobileFilterOpen(false)}
-              aria-label="Close filters"
+              onClick={() => setFilter("recent")}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'recent' ? 'font-semibold' : ''}`}
               style={{ 
-                color: "var(--color-text-secondary)",
-                backgroundColor: "rgba(var(--color-secondary-rgb), 0.1)"
+                backgroundColor: filter === 'recent' ? "var(--color-border)" : "transparent",
               }}
             >
-              <XCircle size={20} />
+              {filter === 'recent' && <Check size={14} />} Recently Added
+            </button>
+            <button 
+              onClick={() => setFilter("last")}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'last' ? 'font-semibold' : ''}`}
+              style={{ 
+                backgroundColor: filter === 'last' ? "var(--color-border)" : "transparent",
+              }}
+            >
+              {filter === 'last' && <Check size={14} />} Last Added
+            </button>
+            <button 
+              onClick={() => setFilter("asc")}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'asc' ? 'font-semibold' : ''}`}
+              style={{ 
+                backgroundColor: filter === 'asc' ? "var(--color-border)" : "transparent",
+              }}
+            >
+              {filter === 'asc' && <Check size={14} />} Title (A-Z)
+            </button>
+            <button 
+              onClick={() => setFilter("desc")}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'desc' ? 'font-semibold' : ''}`}
+              style={{ 
+                backgroundColor: filter === 'desc' ? "var(--color-border)" : "transparent",
+              }}
+            >
+              {filter === 'desc' && <Check size={14} />} Title (Z-A)
+            </button>
+            <button 
+              onClick={() => setFilter("price_low_high")}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
+              style={{ 
+                backgroundColor: filter === 'price_low_high' ? "var(--color-border)" : "transparent",
+              }}
+            >
+              {filter === 'price_low_high' && <Check size={14} />} Price <ArrowUp size={14} />
+            </button>
+            <button 
+              onClick={() => setFilter("price_high_low")}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
+              style={{ 
+                backgroundColor: filter === 'price_high_low' ? "var(--color-border)" : "transparent",
+              }}
+            >
+              {filter === 'price_high_low' && <Check size={14} />} Price <ArrowDown size={14} />
             </button>
           </div>
         </div>
         
-        <div className="px-4 md:px-0">
-          {/* Sort Options */}
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Sort By</h4>
-            <div className="space-y-1.5">
-              <button 
-                onClick={() => setFilter("recent")}
-                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'recent' ? 'font-semibold' : ''}`}
-                style={{ 
-                  backgroundColor: filter === 'recent' ? "var(--color-border)" : "transparent",
-                }}
-              >
-                {filter === 'recent' && <Check size={14} />} Recently Added
-              </button>
-              <button 
-                onClick={() => setFilter("last")}
-                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'last' ? 'font-semibold' : ''}`}
-                style={{ 
-                  backgroundColor: filter === 'last' ? "var(--color-border)" : "transparent",
-                }}
-              >
-                {filter === 'last' && <Check size={14} />} Last Added
-              </button>
-              <button 
-                onClick={() => setFilter("asc")}
-                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'asc' ? 'font-semibold' : ''}`}
-                style={{ 
-                  backgroundColor: filter === 'asc' ? "var(--color-border)" : "transparent",
-                }}
-              >
-                {filter === 'asc' && <Check size={14} />} Title (A-Z)
-              </button>
-              <button 
-                onClick={() => setFilter("desc")}
-                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'desc' ? 'font-semibold' : ''}`}
-                style={{ 
-                  backgroundColor: filter === 'desc' ? "var(--color-border)" : "transparent",
-                }}
-              >
-                {filter === 'desc' && <Check size={14} />} Title (Z-A)
-              </button>
-              <button 
-                onClick={() => setFilter("price_low_high")}
-                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_low_high' ? 'font-semibold' : ''}`}
-                style={{ 
-                  backgroundColor: filter === 'price_low_high' ? "var(--color-border)" : "transparent",
-                }}
-              >
-                {filter === 'price_low_high' && <Check size={14} />} Price <ArrowUp size={14} />
-              </button>
-              <button 
-                onClick={() => setFilter("price_high_low")}
-                className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded transition-colors duration-200 ${filter === 'price_high_low' ? 'font-semibold' : ''}`}
-                style={{ 
-                  backgroundColor: filter === 'price_high_low' ? "var(--color-border)" : "transparent",
-                }}
-              >
-                {filter === 'price_high_low' && <Check size={14} />} Price <ArrowDown size={14} />
-              </button>
-            </div>
+        {/* Price Range */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Price Range</h4>
+          <div className="mb-2 text-sm flex justify-between">
+            <span>₹0</span>
+            <span className="px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.1)" }}>₹{priceRange[1]}</span>
           </div>
-          
-          {/* Price Range */}
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Price Range</h4>
-            <div className="mb-2 text-sm flex justify-between">
-              <span>₹0</span>
-              <span className="px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(var(--color-primary-rgb), 0.1)" }}>₹{priceRange[1]}</span>
-            </div>
-            <div className="px-1 mb-2">
-              <input
-                type="range"
-                min="0"
-                max={maxBookPrice}
-                step={Math.max(1, Math.floor(maxBookPrice / 50))}
-                value={priceRange[1]}
-                onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
-                className="w-full accent-current"
-                style={{ accentColor: "var(--color-primary)" }}
-              />
-            </div>
+          <div className="px-1 mb-2">
+            <input
+              type="range"
+              min="0"
+              max={maxBookPrice}
+              step={Math.max(1, Math.floor(maxBookPrice / 50))}
+              value={priceRange[1]}
+              onChange={(e) => handlePriceRangeChange(Number(e.target.value))}
+              className="w-full accent-current"
+              style={{ accentColor: "var(--color-primary)" }}
+            />
           </div>
-          
-          {/* Categories */}
-          <div className="mb-6">
-            <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Categories</h4>
-            <div className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
-              {categories.map(category => (
-                <label 
-                  key={category} 
-                  className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1.5 rounded transition-colors duration-200 hover:bg-opacity-50"
-                  style={{ 
-                    backgroundColor: selectedCategories.includes(category) 
-                      ? "rgba(var(--color-primary-rgb), 0.1)" 
-                      : "transparent" 
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(category)}
-                    onChange={() => handleCategoryToggle(category)}
-                    className="text-blue-600 rounded"
-                    style={{ accentColor: "var(--color-primary)" }}
-                  />
-                  <span className={selectedCategories.includes(category) ? "font-medium" : ""}>
-                    {category}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-          
-          {/* Apply Filters Button (Mobile Only) */}
-          <button 
-            className="w-full md:hidden py-2.5 px-4 rounded font-medium mt-4 mb-6 transition-colors duration-200"
-            style={{ 
-              backgroundColor: "var(--color-button-primary)", 
-              color: "var(--color-bg-primary)"
-            }}
-            onClick={() => setIsMobileFilterOpen(false)}
-          >
-            Apply Filters
-          </button>
         </div>
+        
+        {/* Categories */}
+        <div className="mb-6">
+          <h4 className="font-semibold mb-2 border-b pb-1" style={{ borderColor: "var(--color-border)" }}>Categories</h4>
+          <div className="max-h-64 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+            {categories.map(category => (
+              <label 
+                key={category} 
+                className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1.5 rounded transition-colors duration-200 hover:bg-opacity-50"
+                style={{ 
+                  backgroundColor: selectedCategories.includes(category) 
+                    ? "rgba(var(--color-primary-rgb), 0.1)" 
+                    : "transparent" 
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category)}
+                  onChange={() => handleCategoryToggle(category)}
+                  className="text-blue-600 rounded"
+                  style={{ accentColor: "var(--color-primary)" }}
+                />
+                <span className={selectedCategories.includes(category) ? "font-medium" : ""}>
+                  {category}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        
+        {/* Apply Filters Button (Mobile Only) - Fixed to bottom of screen */}
+        {isMobileFilterOpen && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-inherit border-t md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.05)]"
+            style={{ borderColor: "var(--color-border)" }}
+          >
+            <div className="flex justify-between gap-3">
+              <button 
+                onClick={clearFilters}
+                className="py-3 px-4 rounded-lg transition-colors duration-200 border flex items-center justify-center gap-1 font-medium flex-1"
+                style={{ 
+                  borderColor: "var(--color-border)",
+                  color: "var(--color-text-secondary)",
+                  backgroundColor: "rgba(var(--color-bg-secondary-rgb), 0.4)"
+                }}
+              >
+                <XCircle size={14} /> Clear All
+              </button>
+              <button 
+                className="py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex-1"
+                style={{ 
+                  backgroundColor: "var(--color-button-primary)", 
+                  color: "var(--color-bg-primary)"
+                }}
+                onClick={() => setIsMobileFilterOpen(false)}
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 
   return (
@@ -646,8 +672,55 @@ export default function BookCatalog() {
               {/* Vertical divider - only visible on sm and up */}
               <div className="hidden sm:block w-px h-full self-stretch" style={{ backgroundColor: "var(--color-border)" }}></div>
               
-              {/* Search Type Dropdown */}
-              <div className="sm:w-32 md:w-36 flex-shrink-0 border-t sm:border-t-0 relative overflow-hidden sm:overflow-visible" style={{ borderColor: "var(--color-border)" }}>
+              {/* Buttons Container for mobile */}
+              <div className="md:hidden flex flex-shrink-0 border-t sm:border-t-0 overflow-hidden rounded-lg" style={{ borderColor: "var(--color-border)" }}>
+                {/* Mobile Filter Button */}
+                <button 
+                  className="flex items-center justify-between gap-2 py-3.5 px-4 font-medium w-1/2 text-center rounded-l-lg"
+                  style={{ 
+                    backgroundColor: "var(--color-text-secondary)", 
+                    color: "white",
+                    borderRight: "1px solid var(--color-border)"
+                  }}
+                  onClick={() => setIsMobileFilterOpen(true)}
+                  aria-label="Open filters"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Funnel size={16} /> 
+                    <span>Filters</span>
+                  </div>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ color: "white" }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+                
+                {/* Search Type Dropdown - Mobile */}
+                <div className="relative w-1/2">
+                  <select
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value)}
+                    className="search-type w-full px-3 py-3.5 appearance-none border-0 focus:outline-none focus:ring-0 text-center cursor-pointer font-medium rounded-r-lg"
+                    aria-label="Search type"
+                    style={{ 
+                      backgroundColor: "var(--color-text-secondary)",
+                      color: "white"
+                    }}
+                  >
+                    <option value="all">All Fields</option>
+                    <option value="name">Name</option>
+                    <option value="author">Author</option>
+                    <option value="isbn">ISBN</option>
+                  </select>
+                  <div className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ color: "white" }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Search Type Dropdown - Desktop Only */}
+              <div className="hidden md:block sm:w-32 md:w-36 flex-shrink-0 relative overflow-hidden sm:overflow-visible">
                 <select
                   value={searchType}
                   onChange={(e) => setSearchType(e.target.value)}
@@ -679,27 +752,29 @@ export default function BookCatalog() {
         </div>
       </div>
 
-      {/* Results count - positioned above filter and book grid */}
-      {search && (
-        <div className="mb-8 text-center">
-          <p className="text-sm md:text-base font-medium" style={{ color: "var(--color-text-primary)" }}>
-            {isLoading ? (
-              <span className="inline-flex items-center">
-                <span>Searching</span>
-                <span className="ml-1 flex space-x-1">
-                  <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)" }}></span>
-                  <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.2s' }}></span>
-                  <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.4s' }}></span>
+      {/* Results count row - remove filter button from here */}
+      <div className="flex flex-wrap justify-between items-center mb-4">
+        {search && (
+          <div className="mb-4 w-full">
+            <p className="text-sm md:text-base font-medium" style={{ color: "var(--color-text-primary)" }}>
+              {isLoading ? (
+                <span className="inline-flex items-center">
+                  <span>Searching</span>
+                  <span className="ml-1 flex space-x-1">
+                    <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)" }}></span>
+                    <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.2s' }}></span>
+                    <span className="h-1.5 w-1.5 rounded-full animate-dot-bounce" style={{ backgroundColor: "var(--color-secondary)", animationDelay: '0.4s' }}></span>
+                  </span>
                 </span>
-              </span>
-            ) : (
-              <span>
-                {applyFilter(allBooks).length.toLocaleString()} {applyFilter(allBooks).length === 1 ? 'result' : 'results'} for "<span className="font-semibold">{search}</span>"
-              </span>
-            )}
-          </p>
-        </div>
-      )}
+              ) : (
+                <span>
+                  {applyFilter(allBooks).length.toLocaleString()} {applyFilter(allBooks).length === 1 ? 'result' : 'results'} for "<span className="font-semibold">{search}</span>"
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+      </div>
 
       {message && (
         <div
@@ -712,21 +787,6 @@ export default function BookCatalog() {
           {message}
         </div>
       )}
-
-      {/* Mobile Filter Toggle Button - only visible on small screens */}
-      <div className="md:hidden mb-4">
-        <button 
-          onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-          className="w-full py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
-          style={{ 
-            backgroundColor: "var(--color-button-primary)", 
-            color: "var(--color-bg-primary)"
-          }}
-        >
-          <Funnel size={16} /> 
-          {isMobileFilterOpen ? 'Hide Filters' : 'Show Filters'}
-        </button>
-      </div>
 
       {/* Main Content with sidebar */}
       <div className="flex flex-col md:flex-row gap-6">
@@ -745,7 +805,7 @@ export default function BookCatalog() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6 px-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 px-1">
                 {displayedBooks.map((book, index) => (
                   <div 
                     key={book.id} 
@@ -798,19 +858,6 @@ export default function BookCatalog() {
         }}
       >
         <ArrowUp size={20} />
-      </button>
-
-      {/* Floating Filter Button - Mobile Only */}
-      <button 
-        className="md:hidden fixed bottom-24 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105"
-        onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-        aria-label={isMobileFilterOpen ? "Hide filters" : "Show filters"}
-        style={{ 
-          backgroundColor: "var(--color-primary)", 
-          color: "white"
-        }}
-      >
-        <Funnel size={18} />
       </button>
     </div>
   );
