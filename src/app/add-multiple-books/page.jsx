@@ -360,17 +360,56 @@ export default function AddMultipleBooks() {
   };
 
   const handleDownloadTemplate = async () => {
+    setIsLoading(true);
     try {
       console.log('Template download URL:', `${BACKEND}/excel-imports/template`);
-      window.open(`${BACKEND}/excel-imports/template`, '_blank');
+      
+      const response = await fetch(`${BACKEND}/excel-imports/template`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'book_import_template.xlsx';
+      document.body.appendChild(a);
+      
+      // Trigger the download
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      Swal.fire({
+        title: 'Success!',
+        text: 'Template downloaded successfully',
+        icon: 'success',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
     } catch (error) {
       console.error('Error downloading template:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Failed to download template',
+        text: 'Failed to download template: ' + error.message,
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -393,9 +432,16 @@ export default function AddMultipleBooks() {
           <button
             onClick={handleDownloadTemplate}
             className="flex items-center mb-4 md:mb-0 md:mr-4 px-4 py-2 bg-[var(--color-button-secondary)] text-[var(--color-text-primary)] rounded-md transition duration-200 hover:opacity-80"
+            disabled={isLoading}
           >
-            <FileEarmarkArrowDown className="mr-2" />
-            Download Template
+            {isLoading ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <>
+                <FileEarmarkArrowDown className="mr-2" />
+                Download Template
+              </>
+            )}
           </button>
           
           <p className="text-sm text-[var(--color-text-secondary)]">
