@@ -8,11 +8,13 @@ import CategorySelect from '@/components/books/CategorySelect';
 import AuthorInput from '@/components/books/AuthorInput';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { FileEarmarkPlus, Book } from 'react-bootstrap-icons';
 
 export default function AddBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const router = useRouter();
   const { token, isTeacher } = useContext(AuthContext);
+  const [activeOption, setActiveOption] = useState('single'); // 'single' or 'multiple'
   const [book, setBook] = useState({
     title: '',
     image: null,
@@ -196,164 +198,223 @@ export default function AddBook() {
     }
   };
 
+  const renderOptionButtons = () => {
+    return (
+      <div className="mb-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <button
+          type="button"
+          className={`flex items-center justify-center py-3 px-6 rounded-lg text-lg transition-colors duration-200 ${
+            activeOption === 'single'
+              ? 'bg-[var(--color-button-primary)] text-white'
+              : 'bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]'
+          }`}
+          onClick={() => setActiveOption('single')}
+        >
+          <Book className="mr-2" />
+          Add Single Book
+        </button>
+        
+        <button
+          type="button"
+          className={`flex items-center justify-center py-3 px-6 rounded-lg text-lg transition-colors duration-200 ${
+            activeOption === 'multiple'
+              ? 'bg-[var(--color-button-primary)] text-white'
+              : 'bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]'
+          }`}
+          onClick={() => setActiveOption('multiple')}
+        >
+          <FileEarmarkPlus className="mr-2" />
+          Add Multiple Books
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center text-[var(--color-text-primary)]">Add New Book</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center text-[var(--color-text-primary)]">Add Books</h1>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Book Title</label>
-          <input
-            type="text"
-            className="w-full p-3 bg-transparent rounded focus:outline-none"
-            style={{ 
-              color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)',
-              borderWidth: '1px',
-            }}
-            placeholder="Enter book title"
-            value={book.title}
-            onChange={(e) => setBook({ ...book, title: e.target.value })}
-            required
-            disabled={isLoading}
+      {renderOptionButtons()}
+      
+      {activeOption === 'single' ? (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Book Title</label>
+            <input
+              type="text"
+              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              style={{ 
+                color: 'var(--color-text-primary)',
+                borderColor: 'var(--color-border)',
+                borderWidth: '1px',
+              }}
+              placeholder="Enter book title"
+              value={book.title}
+              onChange={(e) => setBook({ ...book, title: e.target.value })}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Cover Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              style={{ 
+                color: 'var(--color-text-primary)',
+                borderColor: 'var(--color-border)',
+                borderWidth: '1px',
+              }}
+              onChange={handleImageChange}
+              disabled={isLoading}
+            />
+            {previewUrl && (
+              <div className="mt-4 flex justify-center">
+                <img 
+                  src={previewUrl} 
+                  alt="Preview" 
+                  className="max-w-full h-auto max-h-64 rounded"
+                  style={{ objectFit: 'contain' }}
+                />
+              </div>
+            )}
+          </div>
+          
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Description</label>
+            <textarea
+              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              style={{ 
+                color: 'var(--color-text-primary)',
+                borderColor: 'var(--color-border)',
+                borderWidth: '1px',
+              }}
+              placeholder="Enter book description"
+              value={book.description}
+              onChange={(e) => setBook({ ...book, description: e.target.value })}
+              rows="4"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">ISBN</label>
+            <input
+              type="text"
+              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              style={{ 
+                color: 'var(--color-text-primary)',
+                borderColor: 'var(--color-border)',
+                borderWidth: '1px',
+              }}
+              placeholder="Enter ISBN number"
+              value={book.isbn}
+              onChange={(e) => setBook({ ...book, isbn: e.target.value })}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Author(s)</label>
+            <AuthorInput 
+              value={book.authors}
+              onChange={(value) => setBook({ ...book, authors: value })}
+              style={{ 
+                backgroundColor: "transparent",
+                borderColor: "var(--color-border)",
+                color: "var(--color-text-primary)"
+              }}
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Categories</label>
+            <CategorySelect 
+              value={book.categories}
+              onChange={(value) => setBook({ ...book, categories: value })}
+              style={{ 
+                backgroundColor: "transparent",
+                borderColor: "var(--color-border)",
+                color: "var(--color-text-primary)"
+              }}
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Price (₹)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              style={{ 
+                color: 'var(--color-text-primary)',
+                borderColor: 'var(--color-border)',
+                borderWidth: '1px',
+              }}
+              placeholder="Enter book price"
+              value={book.price}
+              onChange={(e) => setBook({ ...book, price: e.target.value })}
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="pt-4">
+            <button 
+              type="submit" 
+              className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              style={{ 
+                backgroundColor: isLoading ? 'var(--color-text-light)' : 'var(--color-button-primary)',
+                color: 'var(--color-bg-primary)', 
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <LoadingSpinner size="w-5 h-5" color="text-white" />
+              ) : 'Add Book'}
+            </button>
+          </div>
+          
+          <div className="text-center pt-2">
+            <Link 
+              href="/catalog" 
+              className="text-[var(--color-link)] hover:underline font-medium"
+            >
+              Back to Catalog
+            </Link>
+          </div>
+        </form>
+      ) : (
+        <div className="text-center">
+          <img 
+            src="/excel-import.svg" 
+            alt="Excel Import" 
+            className="mx-auto w-48 h-48 mb-6"
           />
-        </div>
-        
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Cover Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            className="w-full p-3 bg-transparent rounded focus:outline-none"
-            style={{ 
-              color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)',
-              borderWidth: '1px',
-            }}
-            onChange={handleImageChange}
-            disabled={isLoading}
-          />
-          {previewUrl && (
-            <div className="mt-4 flex justify-center">
-              <img 
-                src={previewUrl} 
-                alt="Preview" 
-                className="max-w-full h-auto max-h-64 rounded"
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-          )}
-        </div>
-        
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Description</label>
-          <textarea
-            className="w-full p-3 bg-transparent rounded focus:outline-none"
-            style={{ 
-              color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)',
-              borderWidth: '1px',
-            }}
-            placeholder="Enter book description"
-            value={book.description}
-            onChange={(e) => setBook({ ...book, description: e.target.value })}
-            rows="4"
-            disabled={isLoading}
-          />
-        </div>
-        
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">ISBN</label>
-          <input
-            type="text"
-            className="w-full p-3 bg-transparent rounded focus:outline-none"
-            style={{ 
-              color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)',
-              borderWidth: '1px',
-            }}
-            placeholder="Enter ISBN number"
-            value={book.isbn}
-            onChange={(e) => setBook({ ...book, isbn: e.target.value })}
-            required
-            disabled={isLoading}
-          />
-        </div>
-        
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Author(s)</label>
-          <AuthorInput
-            value={book.authors}
-            onChange={(value) => setBook({ ...book, authors: value })}
-            style={{ 
-              backgroundColor: "transparent",
-              borderColor: "var(--color-border)",
-              color: "var(--color-text-primary)"
-            }}
-            disabled={isLoading}
-          />
-        </div>
-        
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Categories</label>
-          <CategorySelect
-            value={book.categories}
-            onChange={(value) => setBook({ ...book, categories: value })}
-            style={{ 
-              backgroundColor: "transparent",
-              borderColor: "var(--color-border)",
-              color: "var(--color-text-primary)"
-            }}
-            disabled={isLoading}
-          />
-        </div>
-        
-        <div>
-          <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Price (₹)</label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            className="w-full p-3 bg-transparent rounded focus:outline-none"
-            style={{ 
-              color: 'var(--color-text-primary)',
-              borderColor: 'var(--color-border)',
-              borderWidth: '1px',
-            }}
-            placeholder="Enter book price"
-            value={book.price}
-            onChange={(e) => setBook({ ...book, price: e.target.value })}
-            disabled={isLoading}
-          />
-        </div>
-        
-        <div className="pt-4">
-          <button 
-            type="submit" 
-            className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            style={{ 
-              backgroundColor: isLoading ? 'var(--color-text-light)' : 'var(--color-button-primary)',
-              color: 'var(--color-bg-primary)', 
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <LoadingSpinner size="w-5 h-5" color="text-white" />
-            ) : 'Add Book'}
-          </button>
-        </div>
-        
-        <div className="text-center pt-2">
+          <h2 className="text-2xl mb-4 text-[var(--color-text-primary)]">Add Multiple Books via Excel</h2>
+          <p className="mb-4 text-[var(--color-text-secondary)]">
+            Upload an Excel file with multiple book records to quickly add them to your catalog.
+          </p>
+          <p className="mb-8 text-[var(--color-text-secondary)]">
+            <span className="font-medium">New feature:</span> You can now include image URLs directly in your Excel file!
+          </p>
+          
           <Link 
-            href="/catalog" 
-            className="text-[var(--color-link)] hover:underline font-medium"
+            href="/add-multiple-books"
+            className="inline-flex items-center justify-center px-6 py-3 bg-[var(--color-button-primary)] text-white rounded-md"
           >
-            Back to Catalog
+            <FileEarmarkPlus className="mr-2" />
+            Continue to Excel Upload
           </Link>
         </div>
-      </form>
+      )}
     </div>
   );
 }
