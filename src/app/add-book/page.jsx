@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { AuthContext } from '@/components/context/AuthContext';
@@ -8,7 +8,7 @@ import CategorySelect from '@/components/books/CategorySelect';
 import AuthorInput from '@/components/books/AuthorInput';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { FileEarmarkPlus, Book } from 'react-bootstrap-icons';
+import { FileEarmarkPlus, Book, FileEarmarkArrowDown, FileEarmarkExcel, Upload, ArrowLeft, Trash, FileEarmarkCheck } from 'react-bootstrap-icons';
 
 export default function AddBook() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -26,6 +26,13 @@ export default function AddBook() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
+  
+  // Excel upload state variables
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [excelFile, setExcelFile] = useState(null);
+  const [fileError, setFileError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingFileId, setProcessingFileId] = useState(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -198,12 +205,331 @@ export default function AddBook() {
     }
   };
 
+  // Fetch uploaded Excel files when component mounts
+  useEffect(() => {
+    if (token && isTeacher() && activeOption === 'multiple') {
+      fetchUploadedFiles();
+    }
+  }, [token, activeOption]);
+
+  // Fetch Excel files that have been previously uploaded
+  const fetchUploadedFiles = async () => {
+    setIsLoading(true);
+    try {
+      const filesUrl = `${BACKEND}/excel-imports/files`;
+      
+      const response = await fetch(filesUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          setUploadedFiles(data.files || []);
+        } else {
+          console.error('Failed to fetch uploaded files:', data.message);
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Error fetching files:', response.status, errorText);
+      }
+    } catch (error) {
+      console.error('Error fetching uploaded files:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Excel file selection
+  const handleExcelFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFileError('');
+    
+    if (!selectedFile) {
+      setExcelFile(null);
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'];
+    if (!validTypes.includes(selectedFile.type)) {
+      setFileError('Please select a valid Excel file (.xlsx, .xls, or .csv)');
+      e.target.value = '';
+      setExcelFile(null);
+      return;
+    }
+    
+    // Validate file size (10MB max)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setFileError('File size must be less than 10MB');
+      e.target.value = '';
+      setExcelFile(null);
+      return;
+    }
+    
+    setExcelFile(selectedFile);
+  };
+
+  // Upload Excel file
+  const handleExcelUpload = async (e) => {
+    e.preventDefault();
+    
+    if (!excelFile) {
+      setFileError('Please select a file to upload');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('excel_file', excelFile);
+      
+      const response = await fetch(`${BACKEND}/excel-imports/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(responseText);
+      } catch (error) {
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      if (response.ok && data.status === 'success') {
+        // Save the file_id from the response for easy access
+        const fileId = data.file_id;
+        
+        Swal.fire({
+          title: 'Success!',
+          text: 'Excel file uploaded successfully',
+          icon: 'success',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+        
+        setExcelFile(null);
+        // Reset file input
+        document.getElementById('excel-file-input').value = '';
+        
+        // Refresh the uploaded files list
+        await fetchUploadedFiles();
+        
+        // Option to immediately import the uploaded file
+        const importResult = await Swal.fire({
+          title: 'Import Now?',
+          text: 'Would you like to import the books from this file now?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: 'var(--color-button-primary)',
+          cancelButtonColor: 'var(--color-text-light)',
+          confirmButtonText: 'Yes, import now',
+          cancelButtonText: 'No, I\'ll do it later'
+        });
+        
+        if (importResult.isConfirmed) {
+          // Call the import function with the new file_id
+          handleImportBooks(fileId);
+        }
+      } else {
+        throw new Error(data.message || data.error || 'Failed to upload file');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: error.message || 'Failed to upload file',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete Excel file
+  const handleDeleteExcelFile = async (fileId) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'This will permanently delete this Excel file',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--color-button-primary)',
+      cancelButtonColor: 'var(--color-text-light)',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${BACKEND}/excel-imports/file/${fileId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'success') {
+            Swal.fire({
+              title: 'Deleted!',
+              text: 'The file has been deleted',
+              icon: 'success',
+              confirmButtonColor: 'var(--color-button-primary)'
+            });
+            // Remove the deleted file from the list
+            setUploadedFiles(uploadedFiles.filter(file => file.file_id !== fileId));
+          } else {
+            throw new Error(data.message || 'Failed to delete file');
+          }
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to delete file');
+        }
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: error.message || 'Failed to delete file',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+      }
+    }
+  };
+
+  // Import books from Excel file
+  const handleImportBooks = async (fileId) => {
+    const result = await Swal.fire({
+      title: 'Import Books',
+      text: 'Are you sure you want to import books from this Excel file?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'var(--color-button-primary)',
+      cancelButtonColor: 'var(--color-text-light)',
+      confirmButtonText: 'Yes, import books'
+    });
+    
+    if (result.isConfirmed) {
+      try {
+        setIsProcessing(true);
+        setProcessingFileId(fileId);
+        
+        const response = await fetch(`${BACKEND}/excel-imports/import/${fileId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        // First get response as text for debugging
+        const responseText = await response.text();
+        console.log('Import response text:', responseText);
+        
+        // Try to parse as JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          console.error('Failed to parse import response:', e);
+          throw new Error('Invalid response from server');
+        }
+        
+        if (response.ok && data.status === 'success') {
+          Swal.fire({
+            title: 'Success!',
+            html: `
+              <p>Books imported successfully.</p>
+              <div class="text-left mt-4">
+                <p><strong>Books added:</strong> ${data.results.success}</p>
+                <p><strong>Failed entries:</strong> ${data.results.failed}</p>
+                <p><strong>Duplicates:</strong> ${data.results.duplicates}</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonColor: 'var(--color-button-primary)'
+          });
+          
+          // Refresh uploaded files list to reflect import status
+          await fetchUploadedFiles();
+          
+          // Redirect to catalog after successful import
+          router.push('/catalog');
+        } else {
+          throw new Error(data.message || data.error || 'Failed to import books');
+        }
+      } catch (error) {
+        console.error('Error importing books:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: error.message || 'Failed to import books',
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
+      } finally {
+        setIsProcessing(false);
+        setProcessingFileId(null);
+      }
+    }
+  };
+
+  // Download Excel template
+  const handleDownloadTemplate = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${BACKEND}/excel-imports/template`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        // Create a blob from the response
+        const blob = await response.blob();
+        // Create a URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        // Create a temporary anchor element
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'books_import_template.xlsx';
+        // Trigger a click on the anchor
+        document.body.appendChild(a);
+        a.click();
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download template');
+      }
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: error.message || 'Failed to download template',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderOptionButtons = () => {
     return (
-      <div className="mb-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
         <button
           type="button"
-          className={`flex items-center justify-center py-3 px-6 rounded-lg text-lg transition-colors duration-200 ${
+          className={`flex items-center justify-center py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-base sm:text-lg transition-colors duration-200 ${
             activeOption === 'single'
               ? 'bg-[var(--color-button-primary)] text-white'
               : 'bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]'
@@ -216,7 +542,7 @@ export default function AddBook() {
         
         <button
           type="button"
-          className={`flex items-center justify-center py-3 px-6 rounded-lg text-lg transition-colors duration-200 ${
+          className={`flex items-center justify-center py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-base sm:text-lg transition-colors duration-200 ${
             activeOption === 'multiple'
               ? 'bg-[var(--color-button-primary)] text-white'
               : 'bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]'
@@ -231,8 +557,8 @@ export default function AddBook() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center text-[var(--color-text-primary)]">Add Books</h1>
+    <div className="max-w-3xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[var(--color-text-primary)]">Add Books</h1>
       
       {renderOptionButtons()}
       
@@ -392,27 +718,125 @@ export default function AddBook() {
           </div>
         </form>
       ) : (
-        <div className="text-center">
-          <img 
-            src="/excel-import.svg" 
-            alt="Excel Import" 
-            className="mx-auto w-48 h-48 mb-6"
-          />
-          <h2 className="text-2xl mb-4 text-[var(--color-text-primary)]">Add Multiple Books via Excel</h2>
-          <p className="mb-4 text-[var(--color-text-secondary)]">
-            Upload an Excel file with multiple book records to quickly add them to your catalog.
-          </p>
-          <p className="mb-8 text-[var(--color-text-secondary)]">
-            <span className="font-medium">New feature:</span> You can now include image URLs directly in your Excel file!
-          </p>
+        <div className="bg-[var(--color-card-bg)] rounded-xl p-4 sm:p-6 shadow-sm">
+          <div className="text-center mb-6 sm:mb-8">
+            <img 
+              src="/excel-import.svg" 
+              alt="Excel Import" 
+              className="mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-3 sm:mb-4"
+            />
+            <h2 className="text-xl sm:text-2xl mb-3 sm:mb-4 text-[var(--color-text-primary)]">Add Multiple Books via Excel</h2>
+            <p className="mb-4 text-sm sm:text-base text-[var(--color-text-secondary)]">
+              Upload an Excel file with multiple book records to quickly add them to your catalog.
+            </p>
+            <button
+              onClick={handleDownloadTemplate}
+              className="inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm bg-transparent border border-[var(--color-border)] text-[var(--color-text-primary)] rounded-md hover:bg-[var(--color-bg-hover)] transition-colors duration-200 mb-6 sm:mb-8"
+              disabled={isLoading}
+            >
+              <FileEarmarkArrowDown className="mr-1 sm:mr-2" />
+              Download Template
+            </button>
+          </div>
+
+          {/* Upload Form */}
+          <form onSubmit={handleExcelUpload} className="mb-8">
+            <div className="mb-4">
+              <label className="block mb-2 text-[var(--color-text-primary)] font-medium">Select Excel File</label>
+              <div className="relative">
+                <input
+                  id="excel-file-input"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="w-full p-3 bg-transparent rounded focus:outline-none text-sm"
+                  style={{ 
+                    color: 'var(--color-text-primary)',
+                    borderColor: 'var(--color-border)',
+                    borderWidth: '1px',
+                  }}
+                  onChange={handleExcelFileChange}
+                  disabled={isLoading}
+                />
+              </div>
+              {fileError && (
+                <p className="mt-2 text-red-500 text-sm">{fileError}</p>
+              )}
+            </div>
+            <button 
+              type="submit" 
+              className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              style={{ 
+                backgroundColor: isLoading ? 'var(--color-text-light)' : 'var(--color-button-primary)',
+                color: 'var(--color-bg-primary)', 
+              }}
+              disabled={isLoading || !excelFile}
+            >
+              {isLoading ? (
+                <LoadingSpinner size="w-5 h-5" color="text-white" />
+              ) : (
+                <>
+                  <Upload className="mr-2" />
+                  Upload Excel File
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Previously Uploaded Files */}
+          {uploadedFiles.length > 0 && (
+            <div>
+              <h3 className="text-xl mb-4 text-[var(--color-text-primary)]">Previously Uploaded Files</h3>
+              <div className="space-y-4">
+                {uploadedFiles.map((file) => (
+                  <div 
+                    key={file.file_id} 
+                    className="p-4 rounded border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3"
+                  >
+                    <div className="flex items-center w-full">
+                      <FileEarmarkExcel className="text-green-500 text-xl min-w-[1.25rem] mr-3" />
+                      <div className="overflow-hidden">
+                        <p className="font-medium text-[var(--color-text-primary)] truncate">{file.original_name}</p>
+                        <p className="text-sm text-[var(--color-text-secondary)]">Uploaded: {new Date(file.uploaded_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
+                      <button
+                        onClick={() => handleImportBooks(file.file_id)}
+                        className="p-2 rounded text-white bg-[var(--color-button-primary)] hover:bg-[var(--color-button-hover)] transition-colors duration-200 disabled:opacity-50 flex items-center gap-1"
+                        disabled={isProcessing && processingFileId === file.file_id}
+                      >
+                        {isProcessing && processingFileId === file.file_id ? (
+                          <LoadingSpinner size="w-5 h-5" color="text-white" />
+                        ) : (
+                          <>
+                            <FileEarmarkCheck title="Import Books" />
+                            <span className="sm:hidden text-sm">Import</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteExcelFile(file.file_id)}
+                        className="p-2 rounded text-white bg-red-500 hover:bg-red-600 transition-colors duration-200 disabled:opacity-50 flex items-center gap-1"
+                        disabled={isProcessing}
+                      >
+                        <Trash title="Delete File" />
+                        <span className="sm:hidden text-sm">Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
-          <Link 
-            href="/add-multiple-books"
-            className="inline-flex items-center justify-center px-6 py-3 bg-[var(--color-button-primary)] text-white rounded-md"
-          >
-            <FileEarmarkPlus className="mr-2" />
-            Continue to Excel Upload
-          </Link>
+          <div className="text-center mt-6">
+            <Link 
+              href="/catalog" 
+              className="text-[var(--color-link)] hover:underline font-medium"
+            >
+              Back to Catalog
+            </Link>
+          </div>
         </div>
       )}
     </div>
