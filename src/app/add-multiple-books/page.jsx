@@ -371,12 +371,27 @@ export default function AddMultipleBooks() {
         }
       });
       
+      console.log('Template download response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        const contentType = response.headers.get('content-type');
+        let errorMessage = `Error: ${response.status}`;
+        
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
       
       // Get the blob from the response
       const blob = await response.blob();
+      console.log('Template blob received, size:', blob.size);
+      
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty.');
+      }
       
       // Create a temporary URL for the blob
       const url = window.URL.createObjectURL(blob);
@@ -404,7 +419,7 @@ export default function AddMultipleBooks() {
       console.error('Error downloading template:', error);
       Swal.fire({
         title: 'Error!',
-        text: 'Failed to download template: ' + error.message,
+        text: `Failed to download template: ${error.message}`,
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
@@ -431,7 +446,7 @@ export default function AddMultipleBooks() {
         <div className="flex flex-col md:flex-row items-start md:items-center mb-6">
           <button
             onClick={handleDownloadTemplate}
-            className="flex items-center mb-4 md:mb-0 md:mr-4 px-4 py-2 bg-[var(--color-button-secondary)] text-[var(--color-text-primary)] rounded-md transition duration-200 hover:opacity-80"
+            className="flex items-center mb-4 md:mb-0 md:mr-4 px-5 py-2.5 bg-[var(--color-button-secondary)] text-[var(--color-text-primary)] rounded-md transition-all duration-300 hover:opacity-90 hover:shadow-md"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -449,10 +464,10 @@ export default function AddMultipleBooks() {
           </p>
         </div>
         
-        <div className="mb-6 p-4 bg-[var(--color-bg-hover)] rounded-md">
-          <h3 className="text-md font-semibold mb-2 text-[var(--color-text-primary)]">Template Features:</h3>
-          <ul className="list-disc pl-5 text-sm text-[var(--color-text-secondary)] space-y-1">
-            <li>Required fields: Title, ISBN, and Authors</li>
+        <div className="mb-6 p-5 bg-[var(--color-bg-hover)] rounded-md shadow-sm border-l-4 border-[var(--color-button-primary)]">
+          <h3 className="text-md font-semibold mb-3 text-[var(--color-text-primary)]">Template Features:</h3>
+          <ul className="list-disc pl-5 text-sm text-[var(--color-text-secondary)] space-y-2">
+            <li>Required fields: <span className="font-medium">Title, ISBN, and Authors</span></li>
             <li>Optional fields: Description, Categories, Price, and Image URL</li>
             <li>You can add image URLs directly in the Excel file instead of uploading them separately</li>
             <li>Multiple authors or categories should be separated by commas</li>
@@ -467,7 +482,7 @@ export default function AddMultipleBooks() {
               type="file"
               accept=".xlsx,.xls,.csv"
               onChange={handleFileChange}
-              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              className="w-full p-3 bg-transparent rounded focus:outline-none focus:border-[var(--color-button-primary)] focus:ring-1 focus:ring-[var(--color-button-primary)]"
               style={{ 
                 color: 'var(--color-text-primary)',
                 borderColor: 'var(--color-border)',
@@ -483,7 +498,7 @@ export default function AddMultipleBooks() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="flex items-center justify-center px-6 py-3 bg-[var(--color-button-primary)] text-white rounded-md"
+              className="flex items-center justify-center px-6 py-3 bg-[var(--color-button-primary)] text-white rounded-md hover:opacity-90 transition-opacity"
               disabled={isLoading || !file}
             >
               {isLoading ? (
