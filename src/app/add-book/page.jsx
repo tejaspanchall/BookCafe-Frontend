@@ -508,14 +508,48 @@ export default function AddBook() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to download template');
+        const errorText = await response.text();
+        let errorMessage;
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorData.error || 'Failed to download template';
+        } catch (e) {
+          // If we can't parse the response as JSON, use the text directly
+          errorMessage = errorText || 'Failed to download template';
+        }
+        
+        // Check for permission-related errors
+        const isPermissionError = errorMessage.includes('Operation not permitted') || 
+                                 errorMessage.includes('Permission denied') || 
+                                 errorMessage.includes('Server permission error');
+        
+        Swal.fire({
+          title: 'Error!',
+          html: `${errorMessage}<br><br>
+          ${isPermissionError ? 
+            'Please use the <a href="/static/book_import_template.xlsx" download style="color:blue;text-decoration:underline;">static template</a> instead.' : 
+            ''}`,
+          icon: 'error',
+          confirmButtonColor: 'var(--color-button-primary)'
+        });
       }
     } catch (error) {
       console.error('Error downloading template:', error);
+      
+      // Check if it's a permission error
+      const isPermissionError = error.message && (
+        error.message.includes('Operation not permitted') || 
+        error.message.includes('Permission denied') ||
+        error.message.includes('Server permission error')
+      );
+      
       Swal.fire({
         title: 'Error!',
-        text: error.message || 'Failed to download template',
+        html: `${error.message || 'Failed to download template'}<br><br>
+        ${isPermissionError ? 
+          'Please use the <a href="/static/book_import_template.xlsx" download style="color:blue;text-decoration:underline;">static template</a> instead.' : 
+          ''}`,
         icon: 'error',
         confirmButtonColor: 'var(--color-button-primary)'
       });
@@ -737,6 +771,17 @@ export default function AddBook() {
               <FileEarmarkArrowDown className="mr-1 sm:mr-2" />
               Download Template
             </button>
+            <p className="text-xs text-[var(--color-text-secondary)]">
+              If template download fails, use the 
+              <a 
+                href="/static/book_import_template.xlsx" 
+                download 
+                className="mx-1 text-[var(--color-link)] hover:underline"
+              >
+                static template
+              </a>
+              instead.
+            </p>
           </div>
 
           {/* Upload Form */}
@@ -761,6 +806,16 @@ export default function AddBook() {
               {fileError && (
                 <p className="mt-2 text-red-500 text-sm">{fileError}</p>
               )}
+              <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                Required columns: title, isbn, authors (comma-separated). Optional: description, categories (comma-separated), price, image_url.
+                <a 
+                  href="/static/book_import_template.xlsx" 
+                  download 
+                  className="ml-1 text-[var(--color-link)] hover:underline"
+                >
+                  Download static template
+                </a>
+              </p>
             </div>
             <button 
               type="submit" 
