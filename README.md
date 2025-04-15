@@ -14,6 +14,7 @@ The backend for this project is available at: [BookCafe-Backend](https://github.
 - 🔍 Search and filter capabilities
 - 💼 Personal library management for users
 - 👨‍🏫 Teacher-specific features (add/edit books)
+- 📊 Bulk book import via Excel templates
 - 📱 Responsive design for all devices
 - 🎨 Modern UI with Tailwind CSS
 - ⚡ Fast page loads with Next.js App Router
@@ -27,6 +28,7 @@ The backend for this project is available at: [BookCafe-Backend](https://github.
 - **Alerts**: [SweetAlert2](https://sweetalert2.github.io/)
 - **Font**: [Geist](https://vercel.com/font)
 - **State Management**: React Context API
+- **Excel Processing**: [PhpSpreadsheet](https://phpspreadsheet.readthedocs.io/) (backend)
 
 ## Prerequisites
 
