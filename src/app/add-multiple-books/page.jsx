@@ -6,13 +6,14 @@ import Link from 'next/link';
 import Swal from 'sweetalert2';
 import { AuthContext } from '@/components/context/AuthContext';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { FileEarmarkArrowDown, FileEarmarkExcel, Upload, ArrowLeft, Trash, FileEarmarkCheck } from 'react-bootstrap-icons';
+import { FileEarmarkArrowDown, FileEarmarkExcel, Upload, ArrowLeft, Trash, FileEarmarkCheck, Download } from 'react-bootstrap-icons';
 
 export default function AddMultipleBooks() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const router = useRouter();
   const { token, isTeacher } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
@@ -428,6 +429,61 @@ export default function AddMultipleBooks() {
     }
   };
 
+  const handleExportBooks = async () => {
+    try {
+      setIsExporting(true);
+      
+      // Create a temporary anchor element
+      const a = document.createElement('a');
+      a.href = `${BACKEND}/books/export`;
+      a.download = `books_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      // Add authorization header
+      const headers = new Headers();
+      headers.append('Authorization', `Bearer ${token}`);
+      
+      // Fetch the file
+      const response = await fetch(`${BACKEND}/books/export`, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status} ${response.statusText}`);
+      }
+      
+      // Get blob from response
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      a.href = url;
+      
+      // Trigger download
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      Swal.fire({
+        title: 'Success!',
+        text: 'Books exported successfully',
+        icon: 'success',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    } catch (error) {
+      console.error('Error exporting books:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to export books: ${error.message}`,
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex items-center mb-8">
@@ -441,7 +497,24 @@ export default function AddMultipleBooks() {
       </div>
       
       <div className="bg-[var(--color-bg-secondary)] p-6 rounded-lg mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">Upload Excel File</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Upload Excel File</h2>
+          
+          <button
+            onClick={handleExportBooks}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200"
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <>
+                <Download className="mr-2" />
+                Export Books
+              </>
+            )}
+          </button>
+        </div>
         
         <div className="flex flex-col md:flex-row items-start md:items-center mb-6">
           <button
@@ -465,7 +538,7 @@ export default function AddMultipleBooks() {
         </div>
         
         <div className="mb-6 p-5 bg-[var(--color-bg-hover)] rounded-md shadow-sm border-l-4 border-[var(--color-button-primary)]">
-          <h3 className="text-md font-semibold mb-3 text-[var(--color-text-primary)]">Template Features:</h3>
+          <h3 className="text-md font-semibold mb-3 text-[var(--color-text-primary)]">Template Instructions:</h3>
           <ul className="list-disc pl-5 text-sm text-[var(--color-text-secondary)] space-y-2">
             <li>Required fields: <span className="font-medium">Title, ISBN, and Authors</span></li>
             <li>Optional fields: Description, Categories, Price, and Image URL</li>
@@ -549,27 +622,24 @@ export default function AddMultipleBooks() {
                       {new Date(file.uploaded_at).toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end items-center space-x-2">
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleDeleteFile(file.file_id)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+                          disabled={isProcessing && processingFileId === file.file_id}
+                        >
+                          <Trash />
+                        </button>
                         <button
                           onClick={() => handleImport(file.file_id)}
-                          className="p-2 text-[var(--color-button-primary)] rounded-full hover:bg-[var(--color-bg-hover)]"
-                          disabled={isProcessing}
-                          title="Import Books"
+                          className="p-2 text-[var(--color-button-primary)] hover:bg-[var(--color-button-primary-light)] rounded-full"
+                          disabled={isProcessing && processingFileId === file.file_id}
                         >
                           {isProcessing && processingFileId === file.file_id ? (
-                            <LoadingSpinner size="sm" />
+                            <LoadingSpinner size="sm" color="text-[var(--color-button-primary)]" />
                           ) : (
                             <FileEarmarkCheck />
                           )}
-                        </button>
-                        
-                        <button
-                          onClick={() => handleDeleteFile(file.file_id)}
-                          className="p-2 text-red-500 rounded-full hover:bg-[var(--color-bg-hover)]"
-                          disabled={isProcessing}
-                          title="Delete File"
-                        >
-                          <Trash />
                         </button>
                       </div>
                     </td>

@@ -574,18 +574,15 @@ export default function AddBook() {
           Add Single Book
         </button>
         
-        <button
-          type="button"
-          className={`flex items-center justify-center py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-base sm:text-lg transition-colors duration-200 ${
-            activeOption === 'multiple'
-              ? 'bg-[var(--color-button-primary)] text-white'
-              : 'bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]'
-          }`}
-          onClick={() => setActiveOption('multiple')}
+        <Link 
+          href="/add-multiple-books"
+          className={`flex items-center justify-center py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-base sm:text-lg transition-colors duration-200 
+            bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]
+            hover:bg-[var(--color-button-hover)] hover:text-white`}
         >
           <FileEarmarkPlus className="mr-2" />
           Add Multiple Books
-        </button>
+        </Link>
       </div>
     );
   };
