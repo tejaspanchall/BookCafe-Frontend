@@ -73,8 +73,8 @@ export default function Navbar() {
           {isLoggedIn ? (
             <>
               {userName && (
-                <Link href="/my-library" className="text-white hover:text-[var(--color-text-light)] flex items-center">
-                  <PersonFill className="mr-1" /> {userName.firstname}'s Library
+                <Link href="/dashboard" className="text-white hover:text-[var(--color-text-light)] flex items-center">
+                  <PersonFill className="mr-1" /> Dashboard
                 </Link>
               )}
               {userRole === 'teacher' && (
@@ -111,11 +111,11 @@ export default function Navbar() {
                 <>
                   {userName && (
                     <Link 
-                      href="/my-library" 
+                      href="/dashboard" 
                       className="text-white hover:text-[var(--color-text-light)] flex items-center"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <PersonFill className="mr-2" /> {userName.firstname}'s Library
+                      <PersonFill className="mr-2" /> Dashboard
                     </Link>
                   )}
                   {userRole === 'teacher' && (

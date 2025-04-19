@@ -182,6 +182,20 @@ export default function Home() {
     fetchPopularBooks();
   }, []);
   
+  useEffect(() => {
+    // Check if user is logged in and redirect to dashboard
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      
+      if (token && userData) {
+        router.push('/dashboard');
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
+  
   const handleNextCategory = () => {
     // Get only categories that have books
     const availableCategories = getAvailableCategories();
