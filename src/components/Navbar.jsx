@@ -3,7 +3,7 @@
 import { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { JournalBookmark, List, X } from 'react-bootstrap-icons';
+import { JournalBookmark, List, X, Person } from 'react-bootstrap-icons';
 import { AuthContext } from '@/components/context/AuthContext';
 
 export default function Navbar() {
@@ -72,8 +72,12 @@ export default function Navbar() {
         <div className="hidden md:flex items-center space-x-6">
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard" className="text-white hover:text-[var(--color-text-light)] transition duration-300">
-                Dashboard
+              <Link 
+                href="/dashboard" 
+                className="flex items-center space-x-2 bg-[var(--color-text-secondary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-text-light)] transition duration-300"
+              >
+                <Person className="text-xl" />
+                <span>Dashboard</span>
               </Link>
               <button 
                 onClick={handleLogout} 
@@ -104,10 +108,11 @@ export default function Navbar() {
                 <>
                   <Link 
                     href="/dashboard" 
-                    className="text-white hover:text-[var(--color-text-light)] transition duration-300"
+                    className="flex items-center space-x-2 bg-[var(--color-text-secondary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-text-light)] transition duration-300"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Dashboard
+                    <Person className="text-xl" />
+                    <span>Dashboard</span>
                   </Link>
                   <button 
                     onClick={handleLogout} 
