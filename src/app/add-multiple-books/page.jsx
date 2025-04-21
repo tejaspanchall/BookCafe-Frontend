@@ -487,12 +487,6 @@ export default function AddMultipleBooks() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex items-center mb-8">
-        <Link 
-          href="/add-book"
-          className="mr-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-        >
-          <ArrowLeft className="text-xl" />
-        </Link>
         <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Add Multiple Books</h1>
       </div>
       
@@ -650,6 +644,14 @@ export default function AddMultipleBooks() {
           </div>
         )}
       </div>
+      <div className="text-center mt-6">
+            <Link 
+              href="/dashboard" 
+              className="text-[var(--color-link)] hover:underline font-medium"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
     </div>
   );
 } 

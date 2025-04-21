@@ -3,7 +3,7 @@
 import { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PersonFill, JournalBookmark, PlusCircle, List, X } from 'react-bootstrap-icons';
+import { JournalBookmark, List, X } from 'react-bootstrap-icons';
 import { AuthContext } from '@/components/context/AuthContext';
 
 export default function Navbar() {
@@ -68,20 +68,13 @@ export default function Navbar() {
           {mobileMenuOpen ? <X size={24} /> : <List size={24} />}
         </button>
 
-        {/* Desktop menu - unchanged from original */}
+        {/* Desktop menu */}
         <div className="hidden md:flex items-center space-x-6">
           {isLoggedIn ? (
             <>
-              {userName && (
-                <Link href="/my-library" className="text-white hover:text-[var(--color-text-light)] flex items-center">
-                  <PersonFill className="mr-1" /> {userName.firstname}'s Library
-                </Link>
-              )}
-              {userRole === 'teacher' && (
-                <Link href="/add-book" className="bg-[var(--color-text-secondary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-text-light)] hover:text-white flex items-center transition duration-300">
-                  <PlusCircle className="mr-1" /> Add Book
-                </Link>
-              )}
+              <Link href="/dashboard" className="text-white hover:text-[var(--color-text-light)] transition duration-300">
+                Dashboard
+              </Link>
               <button 
                 onClick={handleLogout} 
                 className="text-white hover:text-[red] focus:outline-none transition duration-300"
@@ -102,31 +95,20 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu - only visible when toggled on small screens */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[var(--color-primary)] border-t border-[rgba(255,255,255,0.1)] mt-4 py-4 fixed top-[60px] w-full left-0 shadow-md z-40">
           <div className="container mx-auto px-4">
             <div className="flex flex-col space-y-4">
               {isLoggedIn ? (
                 <>
-                  {userName && (
-                    <Link 
-                      href="/my-library" 
-                      className="text-white hover:text-[var(--color-text-light)] flex items-center"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <PersonFill className="mr-2" /> {userName.firstname}'s Library
-                    </Link>
-                  )}
-                  {userRole === 'teacher' && (
-                    <Link 
-                      href="/add-book" 
-                      className="bg-[var(--color-text-secondary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-text-light)] hover:text-white flex items-center transition duration-300 w-full"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <PlusCircle className="mr-2" /> Add Book
-                    </Link>
-                  )}
+                  <Link 
+                    href="/dashboard" 
+                    className="text-white hover:text-[var(--color-text-light)] transition duration-300"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
                   <button 
                     onClick={handleLogout} 
                     className="text-white hover:text-[red] focus:outline-none transition duration-300 text-left"

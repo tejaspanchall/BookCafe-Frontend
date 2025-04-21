@@ -591,7 +591,7 @@ export default function AddBook() {
     <div className="max-w-3xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-[var(--color-text-primary)]">Add Books</h1>
       
-      {renderOptionButtons()}
+      {/* {renderOptionButtons()} */}
       
       {activeOption === 'single' ? (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -883,10 +883,10 @@ export default function AddBook() {
           
           <div className="text-center mt-6">
             <Link 
-              href="/catalog" 
+              href="/dashboard" 
               className="text-[var(--color-link)] hover:underline font-medium"
             >
-              Back to Catalog
+              Back to Dashboard
             </Link>
           </div>
         </div>
