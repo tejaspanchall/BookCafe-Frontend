@@ -89,75 +89,81 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* User Profile Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <div className="flex items-center space-x-4">
-          <div className="bg-[var(--color-primary)] p-4 rounded-full">
-            <PersonFill className="text-white text-3xl" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{`${user?.firstname} ${user?.lastname}`}</h1>
-            <p className="text-gray-600">{user?.email}</p>
-            <p className="text-[var(--color-primary)] font-semibold capitalize">{user?.role}</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section with Welcome */}
+      <div className="w-full bg-[var(--color-primary)] text-white py-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-col items-center text-center">
+            <span className="text-white/70 uppercase tracking-wider text-sm font-medium mb-3">Welcome Back</span>
+            <h1 className="text-4xl font-bold mb-3 tracking-tight">{`${user?.firstname} ${user?.lastname}`}</h1>
+            <div className="h-1 w-24 bg-white/20 rounded-full mb-4"></div>
+            <p className="text-white/80 font-medium mb-2 lowercase">{user?.email}</p>
+            <p className="text-white/90 font-semibold capitalize px-3 py-1 bg-white/10 rounded-full text-sm mb-6">{user?.role}</p>
+            <p className="text-lg text-white/80 max-w-2xl font-light leading-relaxed">
+              {user?.role === 'teacher' 
+                ? "From this dashboard, you can view your library, add new books, manage multiple books at once, and export book data. Select any card below to get started."
+                : "From this dashboard, you can view your borrowed books, check your reading history, and manage your library activities. Select any card below to get started."}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* My Library Card */}
-        <div 
-          className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition duration-300"
-          onClick={() => router.push('/my-library')}
-        >
-          <div className="flex items-center space-x-4 mb-4">
-            <BookFill className="text-[var(--color-primary)] text-2xl" />
-            <h2 className="text-xl font-semibold">My Library</h2>
+      <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* My Library Card */}
+          <div 
+            className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-gray-200"
+            onClick={() => router.push('/my-library')}
+          >
+            <div className="flex items-center space-x-4 mb-4">
+              <BookFill className="text-[var(--color-primary)] text-2xl" />
+              <h2 className="text-xl font-semibold">My Library</h2>
+            </div>
+            <p className="text-gray-600">Access your borrowed books and reading history</p>
           </div>
-          <p className="text-gray-600">Access your borrowed books and reading history</p>
+
+          {user?.role === 'teacher' && (
+            <>
+              <div 
+                className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-gray-200"
+                onClick={() => router.push('/add-book')}
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <PlusCircle className="text-[var(--color-primary)] text-2xl" />
+                  <h2 className="text-xl font-semibold">Add Book</h2>
+                </div>
+                <p className="text-gray-600">Add a new book to the library catalog</p>
+              </div>
+
+              <div 
+                className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-gray-200"
+                onClick={() => router.push('/add-multiple-books')}
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <PlusCircle className="text-[var(--color-text-secondary)] text-2xl" />
+                  <h2 className="text-xl font-semibold">Add Multiple Books</h2>
+                </div>
+                <p className="text-gray-600">Add multiple books at once using a spreadsheet</p>
+              </div>
+
+              <div 
+                className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-gray-200"
+                onClick={handleExportBooks}
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  {isExporting ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    <Download className="text-[var(--color-primary)] text-2xl" />
+                  )}
+                  <h2 className="text-xl font-semibold">Export Books</h2>
+                </div>
+                <p className="text-gray-600">Download all books data as Excel spreadsheet</p>
+              </div>
+            </>
+          )}
         </div>
-
-        {user?.role === 'teacher' && (
-          <>
-            <div 
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition duration-300"
-              onClick={() => router.push('/add-book')}
-            >
-              <div className="flex items-center space-x-4 mb-4">
-                <PlusCircle className="text-[var(--color-primary)] text-2xl" />
-                <h2 className="text-xl font-semibold">Add Book</h2>
-              </div>
-              <p className="text-gray-600">Add a new book to the library catalog</p>
-            </div>
-
-            <div 
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition duration-300"
-              onClick={() => router.push('/add-multiple-books')}
-            >
-              <div className="flex items-center space-x-4 mb-4">
-                <PlusCircle className="text-[var(--color-text-secondary)] text-2xl" />
-                <h2 className="text-xl font-semibold">Add Multiple Books</h2>
-              </div>
-              <p className="text-gray-600">Add multiple books at once using a spreadsheet</p>
-            </div>
-
-            <div 
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition duration-300"
-              onClick={handleExportBooks}
-            >
-              <div className="flex items-center space-x-4 mb-4">
-                {isExporting ? (
-                  <LoadingSpinner size="sm" />
-                ) : (
-                  <Download className="text-[var(--color-primary)] text-2xl" />
-                )}
-                <h2 className="text-xl font-semibold">Export Books</h2>
-              </div>
-              <p className="text-gray-600">Download all books data as Excel spreadsheet</p>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );
