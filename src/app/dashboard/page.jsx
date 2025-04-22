@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { PersonFill, BookFill, PlusCircle, Download } from 'react-bootstrap-icons';
+import { PersonFill, BookFill, PlusCircle, Download, ClockFill } from 'react-bootstrap-icons';
 import Swal from 'sweetalert2';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { AuthContext } from '@/components/context/AuthContext';
 
-export default function Dashboard() {
+const Dashboard = () => {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
   const router = useRouter();
   const { token, isTeacher } = useContext(AuthContext);
@@ -125,6 +125,18 @@ export default function Dashboard() {
 
           {user?.role === 'teacher' && (
             <>
+              {/* Recent Books Card - Only for teachers */}
+              <div 
+                className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-gray-200"
+                onClick={() => router.push('/recent-books')}
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <ClockFill className="text-[var(--color-primary)] text-2xl" />
+                  <h2 className="text-xl font-semibold">Recent Books</h2>
+                </div>
+                <p className="text-gray-600">View recently added books to the catalog by you</p>
+              </div>
+
               <div 
                 className="bg-white rounded-xl shadow-sm p-6 cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 hover:border-gray-200"
                 onClick={() => router.push('/add-book')}
@@ -167,4 +179,6 @@ export default function Dashboard() {
       </div>
     </div>
   );
-} 
+};
+
+export default Dashboard; 
