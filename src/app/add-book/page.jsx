@@ -741,10 +741,10 @@ export default function AddBook() {
           
           <div className="text-center pt-2">
             <Link 
-              href="/catalog" 
+              href="/dashboard" 
               className="text-[var(--color-link)] hover:underline font-medium"
             >
-              Back to Catalog
+              Back to Dashboard
             </Link>
           </div>
         </form>
