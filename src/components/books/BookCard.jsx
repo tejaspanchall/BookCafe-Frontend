@@ -1,10 +1,15 @@
 'use client';
 import React from "react";
 
-const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) => {
+const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove, showLiveToggle, onToggleLive }) => {
   const handleRemove = (e) => {
     e.stopPropagation();
     onRemove(book.id);
+  };
+
+  const handleToggleLive = (e) => {
+    e.stopPropagation();
+    onToggleLive(book.id);
   };
 
   const imageUrl = getImageUrl(book.image);
@@ -81,6 +86,32 @@ const BookCard = ({ book, onClick, getImageUrl, showRemoveButton, onRemove }) =>
               }}
             >
               ×
+            </button>
+          )}
+
+          {/* Live Toggle Button */}
+          {showLiveToggle && (
+            <button
+              onClick={handleToggleLive}
+              className="absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-bold z-30 group-hover:z-50 transition-all duration-200"
+              style={{ 
+                backgroundColor: book.is_live ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)',
+                backdropFilter: 'blur(4px)',
+                color: 'white',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = book.is_live ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = book.is_live ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)';
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+              }}
+            >
+              {book.is_live ? 'Live' : 'Hidden'}
             </button>
           )}
         </div>

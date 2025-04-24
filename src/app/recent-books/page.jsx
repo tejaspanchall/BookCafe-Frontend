@@ -4,6 +4,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { AuthContext } from '@/components/context/AuthContext';
+import Swal from 'sweetalert2';
 
 export default function RecentBooks() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -31,6 +32,42 @@ export default function RecentBooks() {
       console.error('Error fetching recent books:', error);
       setRecentBooks([]);
       setLoading(false);
+    }
+  };
+
+  const handleToggleLive = async (bookId) => {
+    try {
+      const response = await fetch(`${BACKEND}/books/${bookId}/toggle-live`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to toggle book status');
+      
+      const data = await response.json();
+      
+      // Update the book in the list
+      setRecentBooks(books => books.map(book => 
+        book.id === bookId ? { ...book, is_live: !book.is_live } : book
+      ));
+
+      // Show success message
+      Swal.fire({
+        title: 'Success!',
+        text: data.message,
+        icon: 'success',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
+    } catch (error) {
+      console.error('Error toggling book status:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to toggle book status',
+        icon: 'error',
+        confirmButtonColor: 'var(--color-button-primary)'
+      });
     }
   };
 
@@ -66,7 +103,12 @@ export default function RecentBooks() {
                 />
               </div>
               <div className="flex-grow">
-                <h3 className="font-semibold text-lg">{book.title}</h3>
+                <h3 
+                  onClick={() => router.push(`/book/${book.id}`)}
+                  className="font-semibold text-lg hover:text-[var(--color-primary)] cursor-pointer transition-colors"
+                >
+                  {book.title}
+                </h3>
                 <p className="text-gray-600 text-sm">
                   {book.authors?.map(author => author.name).join(', ')}
                 </p>
@@ -74,12 +116,26 @@ export default function RecentBooks() {
                   <span>Added on {new Date(book.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
-              <button
-                onClick={() => router.push(`/book/${book.id}`)}
-                className="ml-4 px-4 py-2 bg-[var(--color-button-primary)] text-white rounded-md hover:bg-opacity-90 transition-colors"
-              >
-                View Details
-              </button>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${book.is_live ? 'text-green-600' : 'text-red-600'}`}>
+                  {book.is_live ? 'Live' : 'Hidden'}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={book.is_live}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleToggleLive(book.id);
+                    }}
+                  />
+                  <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--color-primary)] rounded-full peer 
+                    peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] 
+                    after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 
+                    after:w-5 after:transition-all peer-checked:bg-green-500`}></div>
+                </label>
+              </div>
             </div>
           ))}
           {recentBooks.length === 0 && (
