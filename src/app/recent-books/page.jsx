@@ -13,10 +13,6 @@ export default function RecentBooks() {
   const [loading, setLoading] = useState(true);
   const [recentBooks, setRecentBooks] = useState([]);
 
-  useEffect(() => {
-    fetchRecentBooks();
-  }, []);
-
   const fetchRecentBooks = async () => {
     try {
       const response = await fetch(`${BACKEND}/books/recent`, {
@@ -34,6 +30,31 @@ export default function RecentBooks() {
       setLoading(false);
     }
   };
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    fetchRecentBooks();
+  }, []);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchRecentBooks();
+    }, 30000); // 30 seconds
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Add event listener for custom event that can be triggered when a new book is added
+  useEffect(() => {
+    const handleBookAdded = () => {
+      fetchRecentBooks();
+    };
+
+    window.addEventListener('bookAdded', handleBookAdded);
+    return () => window.removeEventListener('bookAdded', handleBookAdded);
+  }, []);
 
   const handleToggleLive = async (bookId) => {
     try {
