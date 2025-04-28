@@ -154,7 +154,7 @@ const Dashboard = () => {
               >
                 <div className="flex items-center space-x-4 mb-4">
                   <PlusCircle className="text-[var(--color-text-secondary)] text-2xl" />
-                  <h2 className="text-xl font-semibold">Add Multiple Books</h2>
+                  <h2 className="text-xl font-semibold">Import Books</h2>
                 </div>
                 <p className="text-gray-600">Add multiple books at once using a spreadsheet</p>
               </div>
