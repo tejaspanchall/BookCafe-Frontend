@@ -34,6 +34,13 @@ export default function AddBook() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingFileId, setProcessingFileId] = useState(null);
 
+  const validateISBN = (isbn) => {
+    // Remove any hyphens or spaces from the ISBN
+    const cleanISBN = isbn.replace(/[-\s]/g, '');
+    // Check if the ISBN contains only digits and is either 10 or 13 digits long
+    return /^\d{10}$|^\d{13}$/.test(cleanISBN);
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -78,6 +85,11 @@ export default function AddBook() {
         if (!book[field] || !book[field].trim()) {
           throw new Error(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
         }
+      }
+
+      // Validate ISBN format
+      if (!validateISBN(book.isbn)) {
+        throw new Error('ISBN must be either 10 or 13 digits');
       }
 
       if (book.authors.length === 0) {
@@ -660,18 +672,25 @@ export default function AddBook() {
             <label className="block mb-2 text-[var(--color-text-primary)] font-medium">ISBN</label>
             <input
               type="text"
-              className="w-full p-3 bg-transparent rounded focus:outline-none"
+              className={`w-full p-3 bg-transparent rounded focus:outline-none ${
+                book.isbn && !validateISBN(book.isbn) ? 'border-red-500' : ''
+              }`}
               style={{ 
                 color: 'var(--color-text-primary)',
-                borderColor: 'var(--color-border)',
+                borderColor: book.isbn && !validateISBN(book.isbn) ? '' : 'var(--color-border)',
                 borderWidth: '1px',
               }}
-              placeholder="Enter ISBN number"
+              placeholder="Enter ISBN number (10 or 13 digits)"
               value={book.isbn}
               onChange={(e) => setBook({ ...book, isbn: e.target.value })}
               required
               disabled={isLoading}
             />
+            {book.isbn && !validateISBN(book.isbn) && (
+              <p className="mt-1 text-sm text-red-500">
+                ISBN must be either 10 or 13 digits (hyphens and spaces are allowed)
+              </p>
+            )}
           </div>
           
           <div>
@@ -726,12 +745,12 @@ export default function AddBook() {
               type="submit" 
               className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               style={{ 
-                backgroundColor: isLoading ? 'var(--color-text-light)' : 'var(--color-button-primary)',
+                backgroundColor: isLoading || !validateISBN(book.isbn) ? 'var(--color-text-light)' : 'var(--color-button-primary)',
                 color: 'var(--color-bg-primary)', 
               }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
-              disabled={isLoading}
+              onMouseOver={(e) => !isLoading && validateISBN(book.isbn) && (e.currentTarget.style.backgroundColor = 'var(--color-button-hover)')}
+              onMouseOut={(e) => !isLoading && validateISBN(book.isbn) && (e.currentTarget.style.backgroundColor = 'var(--color-button-primary)')}
+              disabled={isLoading || !validateISBN(book.isbn)}
             >
               {isLoading ? (
                 <LoadingSpinner size="w-5 h-5" color="text-white" />

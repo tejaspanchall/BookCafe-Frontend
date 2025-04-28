@@ -39,6 +39,13 @@ export default function EditBook() {
   const [validationErrors, setValidationErrors] = useState({});
   const [previewUrl, setPreviewUrl] = useState('');
 
+  const validateISBN = (isbn) => {
+    // Remove any hyphens or spaces from the ISBN
+    const cleanISBN = isbn.replace(/[-\s]/g, '');
+    // Check if the ISBN contains only digits and is either 10 or 13 digits long
+    return /^\d{10}$|^\d{13}$/.test(cleanISBN);
+  };
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -196,6 +203,11 @@ export default function EditBook() {
         errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
       }
     });
+
+    // Validate ISBN format
+    if (!validateISBN(editedBook.isbn)) {
+      errors.isbn = 'ISBN must be either 10 or 13 digits';
+    }
 
     if (editedBook.authors.length === 0) {
       errors.authors = 'At least one author is required';
@@ -540,16 +552,20 @@ export default function EditBook() {
             name="isbn"
             value={editedBook.isbn}
             onChange={handleInputChange}
-            className="w-full p-3 bg-transparent rounded focus:outline-none"
+            className={`w-full p-3 bg-transparent rounded focus:outline-none ${
+              validationErrors.isbn || (editedBook.isbn && !validateISBN(editedBook.isbn)) ? 'border-red-500' : ''
+            }`}
             style={{ 
               color: 'var(--color-text-primary)',
-              borderColor: validationErrors.isbn ? "red" : 'var(--color-border)',
+              borderColor: validationErrors.isbn || (editedBook.isbn && !validateISBN(editedBook.isbn)) ? '' : 'var(--color-border)',
               borderWidth: '1px',
             }}
-            placeholder="Enter ISBN number"
+            placeholder="Enter ISBN number (10 or 13 digits)"
           />
-          {validationErrors.isbn && (
-            <p className="text-red-500 text-sm mt-1">{validationErrors.isbn}</p>
+          {(validationErrors.isbn || (editedBook.isbn && !validateISBN(editedBook.isbn))) && (
+            <p className="text-red-500 text-sm mt-1">
+              {validationErrors.isbn || 'ISBN must be either 10 or 13 digits (hyphens and spaces are allowed)'}
+            </p>
           )}
         </div>
 
@@ -607,14 +623,14 @@ export default function EditBook() {
         <div className="pt-4">
           <button
             type="submit"
-            disabled={isSaving}
-            className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 rounded-lg text-lg font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             style={{ 
-              backgroundColor: isSaving ? 'var(--color-text-light)' : 'var(--color-button-primary)',
+              backgroundColor: isSaving || !validateISBN(editedBook.isbn) ? 'var(--color-text-light)' : 'var(--color-button-primary)',
               color: 'var(--color-bg-primary)', 
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-hover)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-button-primary)'}
+            onMouseOver={(e) => !isSaving && validateISBN(editedBook.isbn) && (e.currentTarget.style.backgroundColor = 'var(--color-button-hover)')}
+            onMouseOut={(e) => !isSaving && validateISBN(editedBook.isbn) && (e.currentTarget.style.backgroundColor = 'var(--color-button-primary)')}
+            disabled={isSaving || !validateISBN(editedBook.isbn)}
           >
             {isSaving ? <div className="flex justify-center items-center"><LoadingSpinner size="w-5 h-5" color="text-white" /></div> : 'Save Changes'}
           </button>
