@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search } from 'react-bootstrap-icons';
+import { useState, useEffect, useRef } from 'react';
+import { Search, PencilSquare, Trash, X } from 'react-bootstrap-icons';
 
 export default function ProductsPage() {
   const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
@@ -11,6 +11,34 @@ export default function ProductsPage() {
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
+  
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState(null);
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    price: '',
+    stock_value: '0'
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Separate refs for add modal
+  const addNameRef = useRef(null);
+  const addCategoryRef = useRef(null);
+  const addPriceRef = useRef(null);
+  const addStockRef = useRef(null);
+  
+  // Separate refs for edit modal
+  const editNameRef = useRef(null);
+  const editCategoryRef = useRef(null);
+  const editPriceRef = useRef(null);
+  const editStockRef = useRef(null);
 
   useEffect(() => {
     fetchProducts();
@@ -113,6 +141,204 @@ export default function ProductsPage() {
       setIsLoading(false);
     }
   };
+  
+  const handleAddProduct = async () => {
+    setIsSubmitting(true);
+    const errors = validateForm();
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND}/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          category: formData.category || null,
+          price: parseFloat(formData.price),
+          stock_value: parseInt(formData.stock_value || 0)
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Server responded with ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Product added:', data);
+      
+      // Refresh product list
+      await fetchProducts();
+      
+      // Close modal and reset form
+      resetForm();
+      setShowAddModal(false);
+      
+    } catch (error) {
+      console.error("Error adding product:", error);
+      setFormErrors({ submit: "Failed to add product: " + error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleEditProduct = async () => {
+    if (!currentProduct) return;
+    
+    setIsSubmitting(true);
+    const errors = validateForm();
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND}/products/${currentProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          category: formData.category || null,
+          price: parseFloat(formData.price),
+          stock_value: parseInt(formData.stock_value || 0)
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Server responded with ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Product updated:', data);
+      
+      // Refresh product list
+      await fetchProducts();
+      
+      // Close modal and reset form
+      resetForm();
+      setShowEditModal(false);
+      
+    } catch (error) {
+      console.error("Error updating product:", error);
+      setFormErrors({ submit: "Failed to update product: " + error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleDeleteProduct = async () => {
+    if (!currentProduct) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch(`${BACKEND}/products/${currentProduct.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      
+      // Refresh product list
+      await fetchProducts();
+      
+      // Close modal
+      setShowDeleteModal(false);
+      
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      setMessage("Failed to delete product. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const openEditModal = (product) => {
+    setCurrentProduct(product);
+    setFormData({
+      name: product.name,
+      category: product.category || '',
+      price: product.price.toString(),
+      stock_value: product.stock_value.toString()
+    });
+    setFormErrors({});
+    setShowEditModal(true);
+  };
+  
+  const openDeleteModal = (product) => {
+    setCurrentProduct(product);
+    setShowDeleteModal(true);
+  };
+  
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      category: '',
+      price: '',
+      stock_value: '0'
+    });
+    setFormErrors({});
+    setCurrentProduct(null);
+  };
+  
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+    }
+    
+    if (!formData.price) {
+      errors.price = "Price is required";
+    } else if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) < 0) {
+      errors.price = "Price must be a positive number";
+    }
+    
+    if (formData.stock_value && (isNaN(parseInt(formData.stock_value)) || parseInt(formData.stock_value) < 0)) {
+      errors.stock_value = "Stock must be a non-negative number";
+    }
+    
+    return errors;
+  };
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Prevent re-render on every keystroke for better UX
+    e.persist && e.persist();
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
 
   // Product List Item Component
   const ProductListItem = ({ product, index }) => {
@@ -134,13 +360,358 @@ export default function ProductsPage() {
           <span className="tabular-nums">{stockValue}</span>
         </td>
         <td className="py-3 px-2 text-right">${product.price}</td>
+        <td className="py-3 px-2 text-center">
+          <div className="flex justify-center space-x-2">
+            <button 
+              className="text-blue-500 hover:text-blue-700"
+              onClick={() => openEditModal(product)}
+            >
+              <PencilSquare size={16} />
+            </button>
+            <button 
+              className="text-red-500 hover:text-red-700"
+              onClick={() => openDeleteModal(product)}
+            >
+              <Trash size={16} />
+            </button>
+          </div>
+        </td>
       </tr>
+    );
+  };
+  
+  // Add Product Modal
+  const AddProductModal = () => {
+    const handleOutsideClick = (e) => {
+      if (e.target === e.currentTarget) {
+        setShowAddModal(false);
+      }
+    };
+    
+    // Stop propagation to prevent losing focus
+    const stopPropagation = (e) => {
+      e.stopPropagation();
+    };
+    
+    // Focus on first input field when modal opens
+    useEffect(() => {
+      if (addNameRef.current) {
+        addNameRef.current.focus();
+      }
+    }, []);
+    
+    return (
+      <div 
+        className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
+        onClick={handleOutsideClick}
+      >
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md" onClick={stopPropagation}>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">Add New Product</h2>
+            <button onClick={() => setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleAddProduct(); }}>
+            <div className="space-y-5">
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                  Product Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  ref={addNameRef}
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  placeholder="Enter product name"
+                />
+                {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  id="category"
+                  name="category"
+                  ref={addCategoryRef}
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  placeholder="Enter category (optional)"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">
+                  Price <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">₹</span>
+                  </div>
+                  <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    ref={addPriceRef}
+                    value={formData.price}
+                    onChange={handleChange}
+                    className={`w-full pl-8 pr-4 py-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                {formErrors.price && <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="stock_value">
+                  Initial Stock
+                </label>
+                <input
+                  type="number"
+                  id="stock_value"
+                  name="stock_value"
+                  ref={addStockRef}
+                  value={formData.stock_value}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${formErrors.stock_value ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  placeholder="0"
+                  min="0"
+                />
+                {formErrors.stock_value && <p className="text-red-500 text-xs mt-1">{formErrors.stock_value}</p>}
+              </div>
+            </div>
+            
+            {formErrors.submit && <p className="text-red-500 text-sm mt-4">{formErrors.submit}</p>}
+            
+            <div className="flex justify-end mt-6">
+              <button 
+                type="button" 
+                onClick={() => setShowAddModal(false)} 
+                className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Product'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+  
+  // Edit Product Modal
+  const EditProductModal = () => {
+    const handleOutsideClick = (e) => {
+      if (e.target === e.currentTarget) {
+        setShowEditModal(false);
+      }
+    };
+    
+    // Stop propagation to prevent losing focus
+    const stopPropagation = (e) => {
+      e.stopPropagation();
+    };
+    
+    // Focus on first input field when modal opens
+    useEffect(() => {
+      if (editNameRef.current) {
+        editNameRef.current.focus();
+      }
+    }, []);
+    
+    return (
+      <div 
+        className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
+        onClick={handleOutsideClick}
+      >
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md" onClick={stopPropagation}>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">Edit Product</h2>
+            <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-gray-700">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <form onSubmit={(e) => { e.preventDefault(); handleEditProduct(); }}>
+            <div className="space-y-5">
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-name">
+                  Product Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="edit-name"
+                  name="name"
+                  ref={editNameRef}
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  placeholder="Enter product name"
+                />
+                {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-category">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  id="edit-category"
+                  name="category"
+                  ref={editCategoryRef}
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  placeholder="Enter category (optional)"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-price">
+                  Price <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">₹</span>
+                  </div>
+                  <input
+                    type="number"
+                    id="edit-price"
+                    name="price"
+                    ref={editPriceRef}
+                    value={formData.price}
+                    onChange={handleChange}
+                    className={`w-full pl-8 pr-4 py-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                {formErrors.price && <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-stock">
+                  Stock
+                </label>
+                <input
+                  type="number"
+                  id="edit-stock"
+                  name="stock_value"
+                  ref={editStockRef}
+                  value={formData.stock_value}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border ${formErrors.stock_value ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  placeholder="0"
+                  min="0"
+                />
+                {formErrors.stock_value && <p className="text-red-500 text-xs mt-1">{formErrors.stock_value}</p>}
+              </div>
+            </div>
+            
+            {formErrors.submit && <p className="text-red-500 text-sm mt-4">{formErrors.submit}</p>}
+            
+            <div className="flex justify-end mt-6">
+              <button 
+                type="button" 
+                onClick={() => setShowEditModal(false)} 
+                className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Updating...' : 'Update Product'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+  
+  // Delete Confirmation Modal
+  const DeleteProductModal = () => {
+    const handleOutsideClick = (e) => {
+      if (e.target === e.currentTarget) {
+        setShowDeleteModal(false);
+      }
+    };
+    
+    return (
+      <div 
+        className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
+        onClick={handleOutsideClick}
+      >
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Delete Product</h2>
+            <button onClick={() => setShowDeleteModal(false)} className="text-gray-500 hover:text-gray-700">
+              <X size={20} />
+            </button>
+          </div>
+          
+          <p className="mb-6">
+            Are you sure you want to delete <span className="font-semibold">{currentProduct?.name}</span>? 
+            This action cannot be undone.
+          </p>
+          
+          <div className="flex justify-end">
+            <button 
+              type="button" 
+              onClick={() => setShowDeleteModal(false)} 
+              className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button 
+              type="button" 
+              onClick={handleDeleteProduct}
+              className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Deleting...' : 'Delete Product'}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   };
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Products</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Products</h1>
+        <button 
+          onClick={() => {
+            resetForm();
+            setShowAddModal(true);
+          }}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center"
+        >
+          + Add Product
+        </button>
+      </div>
       
       <div className="relative mb-6 max-w-md">
         <input 
@@ -177,6 +748,9 @@ export default function ProductsPage() {
                 <th scope="col" className="py-3 px-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
                 </th>
+                <th scope="col" className="py-3 px-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -202,6 +776,10 @@ export default function ProductsPage() {
           )}
         </div>
       )}
+      
+      {showAddModal && <AddProductModal />}
+      {showEditModal && <EditProductModal />}
+      {showDeleteModal && <DeleteProductModal />}
     </div>
   );
 } 
