@@ -23,7 +23,7 @@ export default function ProductsPage() {
     name: '',
     category: '',
     price: '',
-    stock_value: '0'
+    stock_value: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -299,7 +299,7 @@ export default function ProductsPage() {
       name: '',
       category: '',
       price: '',
-      stock_value: '0'
+      stock_value: ''
     });
     setFormErrors({});
     setCurrentProduct(null);
@@ -474,7 +474,7 @@ export default function ProductsPage() {
                   value={formData.stock_value}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded"
-                  placeholder="0"
+                  placeholder="99"
                   min="0"
                 />
                 {formErrors.stock_value && <p className="text-red-500 text-xs mt-1">{formErrors.stock_value}</p>}
@@ -592,7 +592,7 @@ export default function ProductsPage() {
                   value={formData.stock_value}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded"
-                  placeholder="0"
+                  placeholder="99"
                   min="0"
                 />
                 {formErrors.stock_value && <p className="text-red-500 text-xs mt-1">{formErrors.stock_value}</p>}
