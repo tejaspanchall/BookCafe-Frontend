@@ -115,20 +115,28 @@ export default function ProductsPage() {
   };
 
   // Product List Item Component
-  const ProductListItem = ({ product, index }) => (
-    <tr className="border-b border-gray-200 hover:bg-gray-50">
-      <td className="py-3 pl-4 pr-2 text-center">{index + 1}</td>
-      <td className="py-3 px-2">{product.name}</td>
-      <td className="py-3 px-2">
-        {product.category && (
-          <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">
-            {product.category}
-          </span>
-        )}
-      </td>
-      <td className="py-3 px-2 text-right">${product.price}</td>
-    </tr>
-  );
+  const ProductListItem = ({ product, index }) => {
+    // Get stock value directly from product
+    const stockValue = product.stock_value || 0;
+    
+    return (
+      <tr className="border-b border-gray-200 hover:bg-gray-50">
+        <td className="py-3 pl-4 pr-2 text-center">{index + 1}</td>
+        <td className="py-3 px-2">{product.name}</td>
+        <td className="py-3 px-2">
+          {product.category && (
+            <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">
+              {product.category}
+            </span>
+          )}
+        </td>
+        <td className="py-3 px-2 text-center">
+          <span className="tabular-nums">{stockValue}</span>
+        </td>
+        <td className="py-3 px-2 text-right">${product.price}</td>
+      </tr>
+    );
+  };
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-8">
@@ -162,6 +170,9 @@ export default function ProductsPage() {
                 </th>
                 <th scope="col" className="py-3 px-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Category
+                </th>
+                <th scope="col" className="py-3 px-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock
                 </th>
                 <th scope="col" className="py-3 px-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price
