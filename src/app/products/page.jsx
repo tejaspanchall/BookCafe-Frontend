@@ -28,17 +28,16 @@ export default function ProductsPage() {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Separate refs for add modal
-  const addNameRef = useRef(null);
-  const addCategoryRef = useRef(null);
-  const addPriceRef = useRef(null);
-  const addStockRef = useRef(null);
+  // Track active input to maintain focus
+  const [activeInput, setActiveInput] = useState(null);
   
-  // Separate refs for edit modal
-  const editNameRef = useRef(null);
-  const editCategoryRef = useRef(null);
-  const editPriceRef = useRef(null);
-  const editStockRef = useRef(null);
+  // Create refs for form inputs to manage focus
+  const inputRefs = {
+    name: useRef(null),
+    category: useRef(null),
+    price: useRef(null),
+    stock_value: useRef(null)
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -59,6 +58,13 @@ export default function ProductsPage() {
       }
     }
   }, [search]);
+  
+  // Effect to restore focus after state updates
+  useEffect(() => {
+    if (activeInput && inputRefs[activeInput]?.current) {
+      inputRefs[activeInput].current.focus();
+    }
+  }, [formData, activeInput]);
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -322,15 +328,16 @@ export default function ProductsPage() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Prevent re-render on every keystroke for better UX
-    e.persist && e.persist();
+    // Track which input is currently active
+    setActiveInput(name);
     
+    // Update form data without re-rendering the whole form
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
     
-    // Clear error for this field when user starts typing
+    // Clear error if needed
     if (formErrors[name]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -382,74 +389,57 @@ export default function ProductsPage() {
   
   // Add Product Modal
   const AddProductModal = () => {
-    const handleOutsideClick = (e) => {
-      if (e.target === e.currentTarget) {
-        setShowAddModal(false);
-      }
-    };
-    
-    // Stop propagation to prevent losing focus
-    const stopPropagation = (e) => {
-      e.stopPropagation();
-    };
-    
-    // Focus on first input field when modal opens
-    useEffect(() => {
-      if (addNameRef.current) {
-        addNameRef.current.focus();
-      }
-    }, []);
-    
     return (
-      <div 
-        className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
-        onClick={handleOutsideClick}
-      >
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md" onClick={stopPropagation}>
-          <div className="flex justify-between items-center mb-6">
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Add New Product</h2>
-            <button onClick={() => setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">
+            <button 
+              type="button"
+              onClick={() => setShowAddModal(false)} 
+              className="text-gray-500 hover:text-gray-700"
+            >
               <X size={20} />
             </button>
           </div>
           
           <form onSubmit={(e) => { e.preventDefault(); handleAddProduct(); }}>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                <label className="block text-gray-700 mb-1" htmlFor="add-name">
                   Product Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="name"
+                  id="add-name"
                   name="name"
-                  ref={addNameRef}
+                  ref={inputRefs.name}
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  className={`w-full px-3 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded`}
                   placeholder="Enter product name"
                 />
                 {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
               </div>
               
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+                <label className="block text-gray-700 mb-1" htmlFor="add-category">
                   Category
                 </label>
                 <input
                   type="text"
-                  id="category"
+                  id="add-category"
                   name="category"
-                  ref={addCategoryRef}
+                  ref={inputRefs.category}
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
                   placeholder="Enter category (optional)"
                 />
               </div>
               
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">
+                <label className="block text-gray-700 mb-1" htmlFor="add-price">
                   Price <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -458,12 +448,12 @@ export default function ProductsPage() {
                   </div>
                   <input
                     type="number"
-                    id="price"
+                    id="add-price"
                     name="price"
-                    ref={addPriceRef}
+                    ref={inputRefs.price}
                     value={formData.price}
                     onChange={handleChange}
-                    className={`w-full pl-8 pr-4 py-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                    className={`w-full pl-7 pr-3 py-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded`}
                     placeholder="0.00"
                     step="0.01"
                     min="0"
@@ -473,17 +463,17 @@ export default function ProductsPage() {
               </div>
               
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="stock_value">
+                <label className="block text-gray-700 mb-1" htmlFor="add-stock">
                   Initial Stock
                 </label>
                 <input
                   type="number"
-                  id="stock_value"
+                  id="add-stock"
                   name="stock_value"
-                  ref={addStockRef}
+                  ref={inputRefs.stock_value}
                   value={formData.stock_value}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${formErrors.stock_value ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
                   placeholder="0"
                   min="0"
                 />
@@ -493,17 +483,17 @@ export default function ProductsPage() {
             
             {formErrors.submit && <p className="text-red-500 text-sm mt-4">{formErrors.submit}</p>}
             
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-end mt-5">
               <button 
                 type="button" 
                 onClick={() => setShowAddModal(false)} 
-                className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : 'Save Product'}
@@ -517,74 +507,57 @@ export default function ProductsPage() {
   
   // Edit Product Modal
   const EditProductModal = () => {
-    const handleOutsideClick = (e) => {
-      if (e.target === e.currentTarget) {
-        setShowEditModal(false);
-      }
-    };
-    
-    // Stop propagation to prevent losing focus
-    const stopPropagation = (e) => {
-      e.stopPropagation();
-    };
-    
-    // Focus on first input field when modal opens
-    useEffect(() => {
-      if (editNameRef.current) {
-        editNameRef.current.focus();
-      }
-    }, []);
-    
     return (
-      <div 
-        className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50"
-        onClick={handleOutsideClick}
-      >
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md" onClick={stopPropagation}>
-          <div className="flex justify-between items-center mb-6">
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Edit Product</h2>
-            <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-gray-700">
+            <button 
+              type="button"
+              onClick={() => setShowEditModal(false)} 
+              className="text-gray-500 hover:text-gray-700"
+            >
               <X size={20} />
             </button>
           </div>
           
           <form onSubmit={(e) => { e.preventDefault(); handleEditProduct(); }}>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-name">
+                <label className="block text-gray-700 mb-1" htmlFor="edit-name">
                   Product Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="edit-name"
                   name="name"
-                  ref={editNameRef}
+                  ref={inputRefs.name}
                   value={formData.name}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  className={`w-full px-3 py-2 border ${formErrors.name ? 'border-red-500' : 'border-gray-300'} rounded`}
                   placeholder="Enter product name"
                 />
                 {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
               </div>
               
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-category">
+                <label className="block text-gray-700 mb-1" htmlFor="edit-category">
                   Category
                 </label>
                 <input
                   type="text"
                   id="edit-category"
                   name="category"
-                  ref={editCategoryRef}
+                  ref={inputRefs.category}
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
                   placeholder="Enter category (optional)"
                 />
               </div>
               
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-price">
+                <label className="block text-gray-700 mb-1" htmlFor="edit-price">
                   Price <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -595,10 +568,10 @@ export default function ProductsPage() {
                     type="number"
                     id="edit-price"
                     name="price"
-                    ref={editPriceRef}
+                    ref={inputRefs.price}
                     value={formData.price}
                     onChange={handleChange}
-                    className={`w-full pl-8 pr-4 py-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                    className={`w-full pl-7 pr-3 py-2 border ${formErrors.price ? 'border-red-500' : 'border-gray-300'} rounded`}
                     placeholder="0.00"
                     step="0.01"
                     min="0"
@@ -608,17 +581,17 @@ export default function ProductsPage() {
               </div>
               
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="edit-stock">
+                <label className="block text-gray-700 mb-1" htmlFor="edit-stock">
                   Stock
                 </label>
                 <input
                   type="number"
                   id="edit-stock"
                   name="stock_value"
-                  ref={editStockRef}
+                  ref={inputRefs.stock_value}
                   value={formData.stock_value}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${formErrors.stock_value ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded"
                   placeholder="0"
                   min="0"
                 />
@@ -628,17 +601,17 @@ export default function ProductsPage() {
             
             {formErrors.submit && <p className="text-red-500 text-sm mt-4">{formErrors.submit}</p>}
             
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-end mt-5">
               <button 
                 type="button" 
                 onClick={() => setShowEditModal(false)} 
-                className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                className="px-4 py-2 mr-2 text-sm text-gray-600 border border-gray-300 rounded"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Updating...' : 'Update Product'}
